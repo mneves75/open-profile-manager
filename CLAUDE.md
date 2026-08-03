@@ -8,8 +8,9 @@ The no-backward-compatibility, simplicity, layered-growth, modularity, dependenc
 
 - Shared behavior: `Sources/ProfileCore`
 - CLI: `Sources/opm`
-- macOS GUI: `Sources/OpenProfileManager`
-- Tests: `Tests/ProfileCoreTests`
+- macOS GUI and localization adapter: `Sources/OpenProfileManager`
+- Localization completeness gate: `Scripts/check_localizations.swift`
+- Tests: `Tests/ProfileCoreTests` and `Tests/OpenProfileManagerTests`
 - Distribution automation: `Scripts`
 - Architecture and security decisions: `docs`
 

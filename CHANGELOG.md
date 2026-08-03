@@ -4,14 +4,12 @@ All notable changes to this project are documented in this file. The format is b
 
 ## [Unreleased]
 
-### Changed
-
-- Human-readable status output no longer prints account email addresses; callers that explicitly request JSON retain the documented structured field.
-
-## [0.1.0] - 2026-08-02
+## [0.1.0] - 2026-08-03
 
 ### Added
 
+- Complete native macOS localization for `en-US` and `pt-BR`, selected automatically from the user's preferred system languages with an `en-US` fallback.
+- A deterministic localization gate that rejects missing, obsolete, incomplete, or placeholder-incompatible catalog entries.
 - Local profile management for isolated Codex homes.
 - Explicit CLI and native macOS GUI launch flows.
 - Read-only account and rate-limit status through the documented Codex app-server interface.
@@ -32,6 +30,11 @@ All notable changes to this project are documented in this file. The format is b
 - Private Finder-launcher publication, explicit bundle modes, bounded/nonblocking property-list inspection, and fail-closed dangling-symlink handling.
 - Descriptor-local `SIGPIPE` suppression for safe app-server failure when the child exits between protocol writes.
 - Public-repository community health files, private vulnerability-report routing, CODEOWNERS, SHA-pinned least-privilege CI, and privacy-sanitized examples and audit records.
+
+### Changed
+
+- Human-readable status output no longer prints account email addresses; callers that explicitly request JSON retain the documented structured field.
+- Native menus, views, accessibility labels, interpolated values, and GUI error messages now resolve through one localization boundary without translating profile data, paths, commands, or protocol values.
 
 [Unreleased]: https://github.com/mneves75/open-profile-manager/compare/v0.1.0...HEAD
 [0.1.0]: https://github.com/mneves75/open-profile-manager/releases/tag/v0.1.0

@@ -83,6 +83,7 @@ LOCALIZATION_CATALOG="$ROOT/Sources/OpenProfileManager/Resources/Localizable.xcs
 cp "$ROOT/Sources/OpenProfileManager/Resources/PrivacyInfo.xcprivacy" \
   "$STAGE_APP/Contents/Resources/PrivacyInfo.xcprivacy"
 test -f "$STAGE_APP/Contents/Resources/pt-BR.lproj/Localizable.strings"
+test -f "$STAGE_APP/Contents/Resources/en-US.lproj/Localizable.strings"
 test -f "$STAGE_APP/Contents/Resources/PrivacyInfo.xcprivacy"
 
 if [[ ! -f "$ROOT/Assets/OpenProfileManager.icns" ]]; then
@@ -95,7 +96,12 @@ cat > "$STAGE_APP/Contents/Info.plist" <<PLIST
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
-  <key>CFBundleDevelopmentRegion</key><string>en</string>
+  <key>CFBundleDevelopmentRegion</key><string>en-US</string>
+  <key>CFBundleLocalizations</key>
+  <array>
+    <string>en-US</string>
+    <string>pt-BR</string>
+  </array>
   <key>CFBundleDisplayName</key><string>$APP_NAME</string>
   <key>CFBundleExecutable</key><string>$EXECUTABLE_NAME</string>
   <key>CFBundleIconFile</key><string>OpenProfileManager</string>

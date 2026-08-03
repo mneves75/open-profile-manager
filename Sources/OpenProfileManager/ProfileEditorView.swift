@@ -31,42 +31,60 @@ struct ProfileEditorView: View {
     VStack(alignment: .leading, spacing: 20) {
       EditorHeader(isEditing: configuration.mode == .edit)
       Form {
-        TextField("Profile ID", text: $profileID, prompt: Text(verbatim: "work"))
-          .disabled(configuration.mode == .edit)
-          .textContentType(.username)
-        TextField("Display name", text: $displayName, prompt: Text(verbatim: "Work"))
+        TextField(
+          L10n.string("Profile ID"),
+          text: $profileID,
+          prompt: Text(verbatim: L10n.string("work"))
+        )
+        .disabled(configuration.mode == .edit)
+        .textContentType(.username)
+        TextField(
+          L10n.string("Display name"),
+          text: $displayName,
+          prompt: Text(verbatim: L10n.string("Work"))
+        )
         DirectoryField(
           title: "CODEX_HOME",
           text: $codexHome,
           prompt: "~/.codex"
         )
         DirectoryField(
-          title: "Desktop data directory (optional)",
+          title: L10n.string("Desktop data directory (optional)"),
           text: $guiDataDirectory,
-          prompt: "Managed automatically"
+          prompt: L10n.string("Managed automatically")
         )
       }
-      Text("Authentication remains managed by the official Codex CLI inside this home.")
-        .font(.caption)
-        .foregroundStyle(.secondary)
+      Text(
+        verbatim: L10n.string(
+          "Authentication remains managed by the official Codex CLI inside this home."
+        )
+      )
+      .font(.caption)
+      .foregroundStyle(.secondary)
       if let errorMessage {
         Label(errorMessage, systemImage: "exclamationmark.triangle.fill")
           .font(.callout)
           .foregroundStyle(.red)
-          .accessibilityLabel("Profile error: \(errorMessage)")
+          .accessibilityLabel(L10n.string("Profile error: %@", errorMessage))
       }
       HStack {
         Spacer()
-        Button("Cancel", role: .cancel) { dismiss() }
+        Button(L10n.string("Cancel"), role: .cancel) { dismiss() }
           .keyboardShortcut(.cancelAction)
-          .accessibilityLabel("Cancel")
-        Button(configuration.mode == .edit ? "Save Changes" : "Add Profile") {
+          .accessibilityLabel(L10n.string("Cancel"))
+        Button(
+          configuration.mode == .edit
+            ? L10n.string("Save Changes") : L10n.string("Add Profile")
+        ) {
           onSave(profileID, displayName, codexHome, guiDataDirectory)
         }
         .keyboardShortcut(.defaultAction)
         .buttonStyle(.borderedProminent)
         .disabled(!canSave)
-        .accessibilityLabel(configuration.mode == .edit ? "Save Changes" : "Add Profile")
+        .accessibilityLabel(
+          configuration.mode == .edit
+            ? L10n.string("Save Changes") : L10n.string("Add Profile")
+        )
       }
     }
     .padding(24)
@@ -92,25 +110,29 @@ private struct EditorHeader: View {
 
   var body: some View {
     VStack(alignment: .leading, spacing: 4) {
-      Text(isEditing ? "Edit Profile" : "Add Profile")
-        .font(.title2.bold())
-      Text("Use a separate Codex home for each account or workspace.")
-        .foregroundStyle(.secondary)
+      Text(
+        verbatim: isEditing ? L10n.string("Edit Profile") : L10n.string("Add Profile")
+      )
+      .font(.title2.bold())
+      Text(
+        verbatim: L10n.string("Use a separate Codex home for each account or workspace.")
+      )
+      .foregroundStyle(.secondary)
     }
   }
 }
 
 private struct DirectoryField: View {
-  let title: LocalizedStringResource
+  let title: String
   @Binding var text: String
-  let prompt: LocalizedStringResource
+  let prompt: String
 
   var body: some View {
     HStack {
       TextField(title, text: $text, prompt: Text(prompt))
         .font(.body.monospaced())
-      Button("Choose…") { chooseDirectory() }
-        .accessibilityLabel("Choose directory for \(String(localized: title))")
+      Button(L10n.string("Choose…")) { chooseDirectory() }
+        .accessibilityLabel(L10n.string("Choose directory for %@", title))
     }
   }
 

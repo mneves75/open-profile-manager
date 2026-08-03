@@ -5,6 +5,7 @@ ROOT=$(cd "$(dirname "$0")/.." && pwd)
 cd "$ROOT"
 
 Scripts/lint.sh
+swift Scripts/check_localizations.swift
 swift build
 swift test --parallel
 

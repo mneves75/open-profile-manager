@@ -7,6 +7,8 @@ Open Profile Manager is an unofficial, local-first macOS profile launcher for th
 
 It does **not** rotate accounts automatically, evade rate limits, copy credentials, or redistribute OpenAI software.
 
+The native app follows the macOS language preference automatically. It includes complete `en-US` and `pt-BR` localizations and falls back to `en-US` for unsupported languages. The stable `opm` CLI and JSON contracts remain in English.
+
 ## Why it exists
 
 Codex already supports `CODEX_HOME`, but remembering environment variables and keeping desktop-app sessions isolated is awkward. Open Profile Manager turns that mechanism into named profiles available from both a CLI and a native macOS app.
@@ -71,7 +73,7 @@ The generated profile launchers reference the canonical official app in `/Applic
 - Local upgrades stage and verify both artifacts before atomically replacing the installed CLI and app.
 - There is no telemetry, hosted service, or profile sync.
 
-See [SECURITY.md](SECURITY.md) for vulnerability reporting, [the threat model](docs/THREAT_MODEL.md) for the security design, and the [0.1.0 security audit](docs/SECURITY_AUDIT.md) for completed review evidence.
+See [SECURITY.md](SECURITY.md) for vulnerability reporting, [the threat model](docs/THREAT_MODEL.md) for the security design, and [the current security audit](docs/SECURITY_AUDIT.md) for completed review evidence.
 
 ## Compatibility note
 
@@ -79,7 +81,7 @@ See [SECURITY.md](SECURITY.md) for vulnerability reporting, [the threat model](d
 
 ## Project status
 
-Version 0.1.0 is the first public release line. See [PROJECT_STATUS.md](PROJECT_STATUS.md) and [CHANGELOG.md](CHANGELOG.md).
+Version 0.1.0 is the current source line. See [PROJECT_STATUS.md](PROJECT_STATUS.md) and [CHANGELOG.md](CHANGELOG.md).
 
 ## Contributing
 

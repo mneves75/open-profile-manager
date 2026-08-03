@@ -32,7 +32,7 @@ final class AppModel {
   var pendingRemoval: Profile?
   var isShowingRemoveConfirmation = false
   var isShowingAlert = false
-  var alertTitle: LocalizedStringResource = "Error"
+  var alertTitle = L10n.string("Error")
   var alertMessage = ""
 
   init() {
@@ -119,7 +119,7 @@ final class AppModel {
         ? nil
         : Self.fileURL(trimmedGUIPath, field: "GUI data directory")
     } catch {
-      editorErrorMessage = error.localizedDescription
+      editorErrorMessage = L10n.error(error)
       return
     }
     editorErrorMessage = nil
@@ -154,7 +154,7 @@ final class AppModel {
       }.value
       switch outcome {
       case .success(let result) where result.exitCode != 0:
-        showError(String(localized: "The desktop app could not be opened."))
+        showError(L10n.string("The desktop app could not be opened."))
       case .success:
         break
       case .failure(let message):
@@ -184,7 +184,7 @@ final class AppModel {
       }.value
       switch outcome {
       case .success(let url):
-        alertTitle = "Launcher Installed"
+        alertTitle = L10n.string("Launcher Installed")
         alertMessage = url.path
         isShowingAlert = true
       case .failure(let message):
@@ -258,11 +258,11 @@ final class AppModel {
   }
 
   private func showError(_ error: Error) {
-    showError(error.localizedDescription)
+    showError(L10n.error(error))
   }
 
   private func showError(_ message: String) {
-    alertTitle = "Error"
+    alertTitle = L10n.string("Error")
     alertMessage = message
     isShowingAlert = true
   }
@@ -271,7 +271,7 @@ final class AppModel {
     do {
       return .success(try manager.listProfiles())
     } catch {
-      return .failure(error.localizedDescription)
+      return .failure(L10n.error(error))
     }
   }
 
@@ -306,7 +306,7 @@ final class AppModel {
           ))
       }
     } catch {
-      return .failure(error.localizedDescription)
+      return .failure(L10n.error(error))
     }
   }
 
@@ -316,7 +316,7 @@ final class AppModel {
     do {
       return .success(try operation())
     } catch {
-      return .failure(error.localizedDescription)
+      return .failure(L10n.error(error))
     }
   }
 
