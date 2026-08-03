@@ -1,8 +1,18 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-NOTARY_PRIVATE_KEY=${APP_STORE_CONNECT_API_KEY_P8:-}
-unset APP_STORE_CONNECT_API_KEY_P8 || true
+unset \
+  APP_STORE_CONNECT_API_KEY_P8 \
+  ASC_BYPASS_KEYCHAIN \
+  ASC_CONFIG_PATH \
+  ASC_ISSUER_ID \
+  ASC_KEY_ID \
+  ASC_KEY_TYPE \
+  ASC_PROFILE \
+  ASC_PRIVATE_KEY \
+  ASC_PRIVATE_KEY_B64 \
+  ASC_PRIVATE_KEY_PATH \
+  ASC_STRICT_AUTH || true
 
 ROOT=$(cd "$(dirname "$0")/.." && pwd)
 cd "$ROOT"
@@ -108,9 +118,7 @@ done
 
 Scripts/check.sh
 Scripts/security-check.sh
-APP_STORE_CONNECT_API_KEY_P8="$NOTARY_PRIVATE_KEY" \
-  ARCHES="$ARCHES_VALUE" Scripts/sign-and-notarize.sh
-unset NOTARY_PRIVATE_KEY
+ARCHES="$ARCHES_VALUE" Scripts/sign-and-notarize.sh
 
 rm -f "$SBOM"
 if [[ -e "$ROOT/build/sbom-download" ]]; then
