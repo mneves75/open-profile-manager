@@ -4,6 +4,10 @@ All notable changes to this project are documented in this file. The format is b
 
 ## [Unreleased]
 
+### Changed
+
+- Human-readable status output no longer prints account email addresses; callers that explicitly request JSON retain the documented structured field.
+
 ## [0.1.0] - 2026-08-02
 
 ### Added

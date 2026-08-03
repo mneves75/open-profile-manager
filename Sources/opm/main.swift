@@ -335,11 +335,7 @@ private func printJSON<T: Encodable>(_ value: T) throws {
 private func printStatus(_ status: ProfileStatus) {
   var summary = "\(status.profileID.rawValue): \(status.state.rawValue)"
   if let account = status.account {
-    if let email = account.email {
-      summary += " (\(email))"
-    } else {
-      summary += " (\(account.type))"
-    }
+    summary += " (\(account.type))"
   }
   print(summary)
   if let primary = status.rateLimits?.primary {
