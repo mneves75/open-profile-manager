@@ -44,6 +44,7 @@ swift test --parallel
 Scripts/lint.sh
 Scripts/check.sh
 Scripts/package_app.sh
+Scripts/release.sh
 ```
 
 The current security baseline and residual distribution limitation are recorded in `docs/SECURITY_AUDIT.md`.

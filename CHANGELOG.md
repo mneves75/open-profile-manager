@@ -30,6 +30,7 @@ All notable changes to this project are documented in this file. The format is b
 - Private Finder-launcher publication, explicit bundle modes, bounded/nonblocking property-list inspection, and fail-closed dangling-symlink handling.
 - Descriptor-local `SIGPIPE` suppression for safe app-server failure when the child exits between protocol writes.
 - Public-repository community health files, private vulnerability-report routing, CODEOWNERS, SHA-pinned least-privilege CI, and privacy-sanitized examples and audit records.
+- A gated macOS release pipeline for universal Developer ID signing, Apple notarization, dSYMs, SPDX SBOMs, checksums, immutable GitHub Releases, and post-download verification.
 
 ### Changed
 
