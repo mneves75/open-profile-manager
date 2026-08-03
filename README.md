@@ -33,6 +33,8 @@ This installs `opm` under `~/.local/bin` and `Open Profile Manager.app` under `~
 
 Local installation requires a `Developer ID Application` or `Apple Development` identity in your login keychain. CI packaging may use an ad-hoc signature for build verification, but public downloadable artifacts must use Developer ID and Apple notarization.
 
+Public releases use a notarized universal app ZIP, matching dSYMs, an SPDX SBOM, and SHA-256 checksums. GitHub also provides source ZIP and `tar.gz` archives. See [the release procedure](docs/RELEASING.md).
+
 ## Quick start
 
 ```bash
