@@ -1,0 +1,11 @@
+id: no-system-shell
+language: Swift
+severity: error
+message: Do not launch a shell; execute a fixed binary with an explicit argument array.
+files:
+  - Sources/**/*.swift
+rule:
+  any:
+    - pattern: 'URL(fileURLWithPath: "/bin/sh")'
+    - pattern: 'URL(fileURLWithPath: "/bin/bash")'
+    - pattern: 'URL(fileURLWithPath: "/bin/zsh")'

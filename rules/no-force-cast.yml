@@ -1,0 +1,8 @@
+id: no-force-cast
+language: Swift
+severity: error
+message: Validate and cast safely; force-casts are forbidden in production code.
+files:
+  - Sources/**/*.swift
+rule:
+  pattern: $EXPRESSION as! $TYPE

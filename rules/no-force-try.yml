@@ -1,0 +1,8 @@
+id: no-force-try
+language: Swift
+severity: error
+message: Handle the error explicitly; force-try is forbidden in production code.
+files:
+  - Sources/**/*.swift
+rule:
+  pattern: try! $EXPRESSION

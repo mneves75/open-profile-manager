@@ -1,0 +1,8 @@
+id: no-fatal-error
+language: Swift
+severity: error
+message: Return a typed error instead of terminating the process.
+files:
+  - Sources/**/*.swift
+rule:
+  pattern: fatalError($$$ARGUMENTS)
