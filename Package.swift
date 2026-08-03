@@ -4,7 +4,7 @@ import PackageDescription
 
 let package = Package(
   name: "open-profile-manager",
-  defaultLocalization: "en",
+  defaultLocalization: "en-US",
   platforms: [
     .macOS(.v15)
   ],
@@ -40,6 +40,10 @@ let package = Package(
     .testTarget(
       name: "ProfileCoreTests",
       dependencies: ["ProfileCore"]
+    ),
+    .testTarget(
+      name: "OpenProfileManagerTests",
+      dependencies: ["OpenProfileManager", "ProfileCore"]
     ),
   ],
   swiftLanguageModes: [.v6]

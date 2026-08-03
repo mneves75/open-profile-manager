@@ -21,6 +21,8 @@ Open Profile Manager has one domain module and two thin adapters:
 
 The CLI and GUI are adapters at that seam. They may format or localize results, but they must not reimplement profile rules or construct launch commands themselves.
 
+The GUI resolves every user-facing string through its native bundle. `en-US` is the development localization and fallback; `pt-BR` is selected automatically when it is the user's preferred supported macOS language. Typed `ProfileCore` errors are localized only after they cross into the GUI adapter, while user data, paths, CLI commands, and stable protocol values remain unchanged. `Scripts/check_localizations.swift` keeps source keys, both translations, and format placeholders in sync.
+
 ## Data model
 
 A profile contains a stable lowercase identifier, a display name, an absolute `CODEX_HOME`, and an optional absolute GUI data directory. Authentication material is deliberately absent. The official Codex runtime owns credentials inside the selected home. The registry rejects equal or nested effective storage paths so two profiles cannot accidentally share authentication or desktop state.

@@ -1,11 +1,11 @@
-# Security audit — 0.1.0
+# Pre-production security audit — 0.2.0 source
 
-Date: 2026-08-02
+Date: 2026-08-03
 Scope: the complete source tree, local persistence, child-process protocol, CLI and GUI launch paths, Finder launchers, packaging scripts, dependencies, and CI configuration.
 
 ## Result
 
-No confirmed high-, medium-, or low-severity findings remain open in the 0.1.0 source. Every accepted finding discovered during the audit and repeated autoreview passes was fixed and covered by focused tests. The downloadable public-binary gate remains intentionally closed because a `Developer ID Application` certificate and Apple notarization are not yet available; this is a release-provenance limitation, not a source-code vulnerability.
+No confirmed critical-, high-, medium-, or low-severity findings remain open in the 0.2.0 source. The localization change does not alter authentication, persistence, process execution, or network boundaries. Every GUI format string is trusted catalog data, dynamic values are format arguments rather than executable input, placeholder parity is checked for both locales, and unexpected errors fail closed to a generic localized message. The downloadable public-binary gate remains intentionally closed because a `Developer ID Application` certificate and Apple notarization are not yet available; this is a release-provenance limitation, not a source-code vulnerability.
 
 ## Fixed findings
 
@@ -29,28 +29,29 @@ The live compatibility tests also found and fixed reliability defects in app-ser
 
 1. **Authentication:** delegated exclusively to the official Codex CLI under the selected `CODEX_HOME`. Conflicting global Codex credential/state overrides are removed; the project does not parse, migrate, print, or persist authentication tokens.
 2. **Authorization:** no server or multi-user boundary exists. Local profile changes run with the current macOS user's authority.
-3. **Input validation:** profile identifiers, names, paths, registry size/count, app-server output, and launcher metadata are bounded and validated.
+3. **Input validation:** profile identifiers, names, paths, registry size/count, app-server output, and launcher metadata are bounded and validated. Localization keys are static, and the gate rejects divergent format placeholders before packaging.
 4. **Injection:** child processes use fixed executable URLs and argument arrays. No user-controlled value is evaluated by a shell.
 5. **Cryptography:** the application performs no custom encryption or hashing. Distribution trust uses Apple code signing and notarization gates.
 6. **Secrets:** Gitleaks and TruffleHog found no verified or unverified secrets. The repository contains no credential fixtures or environment files.
 7. **Data protection:** registry and lock files are `0600`; managed and launcher directories are `0700`; symlinks, unsafe ancestors, and extended ACLs are rejected; writes use descriptor-relative operations, a unique temporary file, atomic rename, and durability syncs.
 8. **Dependencies:** the sole package dependency is Apple `swift-argument-parser` pinned to 1.8.2 in `Package.resolved`.
-9. **Logging and errors:** the project does not dump environments, account email addresses, raw authentication files, child stderr, or raw app-server payloads in human-readable output. User errors are bounded summaries; explicit JSON output retains its documented account field.
+9. **Logging and errors:** the project does not dump environments, account email addresses, raw authentication files, child stderr, or raw app-server payloads in human-readable output. The GUI localizes known typed errors and replaces unknown errors with a generic message; explicit JSON output retains its documented account field.
 10. **API security:** not applicable; the project exposes no HTTP service or listening socket. The Codex app-server child uses local stdio only.
-11. **Frontend security:** native SwiftUI only; there is no HTML rendering, script evaluation, web view, or remote content.
+11. **Frontend security:** native SwiftUI only; there is no HTML rendering, script evaluation, web view, or remote content. User-controlled profile values are rendered verbatim rather than reinterpreted as localization keys.
 12. **File upload:** not applicable.
 13. **Business logic:** profile selection is always explicit. Quota data never triggers automatic switching, credit consumption, or account rotation.
 14. **SSRF and outbound-service abuse:** not applicable; the project owns no network client. Network behavior belongs to independently installed official OpenAI software.
-15. **Infrastructure:** CI permissions are least-privilege, third-party actions are SHA-pinned, dependency review is enabled, and CodeQL analyzes Swift.
+15. **Infrastructure:** CI permissions are least-privilege, third-party actions are SHA-pinned, dependency review is enabled, CodeQL analyzes Swift, and the blocking local check validates both localization catalogs.
 16. **Supply chain:** deterministic build scripts, SBOM generation, secret scanning, code-sign verification, and a Developer ID/notarization release gate are present.
 
 ## Verification performed
 
-- `Scripts/check.sh`: strict Swift format, ast-grep rules, ShellCheck, debug build, CLI contract check, and 49 tests in 6 suites.
+- `Scripts/check.sh`: strict Swift format, ast-grep rules, ShellCheck, localization completeness and placeholder checks for 131 keys, debug build, CLI contract check, and 51 tests.
 - `Scripts/security-check.sh`: Gitleaks, TruffleHog, dependency resolution, diff checks, and privacy-manifest validation.
-- `$autoreview`: repeated Codex review passes drove the launch, persistence, installer, protocol, filesystem, UI, CI, and public-repository hardening listed above; the final core/test and docs/CI bundles reported no accepted or actionable findings.
-- Security-audit heuristics: secret scan, route enumeration, and risky-pattern scan. Route/auth and error-leak hits were reviewed as false positives caused by generic pattern matching against Swift method names and UI text.
-- Locally signed package: `codesign --verify --deep --strict` passed for the app and two generated Finder launchers; the native app exposed an onscreen layer-0 window.
+- `$autoreview`: `gpt-5.6-sol`/high found a frozen relative reset label, a localization checker that ignored unknown `%` directives, and English-only editor prompts. All three were fixed with a timeline-driven label, fail-closed directive parsing, and catalog-backed prompts; the final full rerun reported no actionable findings.
+- Security-audit heuristics: full-history secret scan, route enumeration, and risky-pattern scan. Route/auth and error-leak hits were reviewed as false positives caused by generic pattern matching against local Swift methods and `Label(..., systemImage:)`; the product has no HTTP service or listening socket.
+- GitHub security state: zero open Dependabot, CodeQL, or secret-scanning alerts at audit time; the latest `main` CI and CodeQL runs were successful before this unpushed change.
+- Locally signed package: `codesign --verify --deep --strict` passed with an Apple Development identity; the app bundle contains `en-US` and `pt-BR`, and isolated native-window renders verified the main profile and editor layouts in both languages without using real profile data.
 - Live integration: two sanitized test profiles returned status, passed expanded `doctor` checks under a restricted Finder-like `PATH`, and launched the official app with distinct data directories. No account identifiers or status payloads are retained in the repository.
 
 ## Residual limitations

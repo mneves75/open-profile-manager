@@ -73,7 +73,7 @@ final class OpenProfileManagerApp: NSObject, NSApplicationDelegate {
     window.identifier = NSUserInterfaceItemIdentifier("main")
     window.isReleasedWhenClosed = false
     window.isRestorable = false
-    window.title = localized("Open Profile Manager")
+    window.title = L10n.string("Open Profile Manager")
     window.center()
     mainWindow = window
     window.makeKeyAndOrderFront(nil)
@@ -92,19 +92,20 @@ final class OpenProfileManagerApp: NSObject, NSApplicationDelegate {
 
   private func appMenuItem() -> NSMenuItem {
     let item = NSMenuItem(
-      title: localized("Open Profile Manager"),
+      title: L10n.string("Open Profile Manager"),
       action: nil,
       keyEquivalent: ""
     )
-    let menu = NSMenu(title: localized("Open Profile Manager"))
+    let menu = NSMenu(title: L10n.string("Open Profile Manager"))
     menu.addItem(
-      withTitle: localized("About Open Profile Manager"),
-      action: #selector(NSApplication.orderFrontStandardAboutPanel(_:)),
+      withTitle: L10n.string("About Open Profile Manager"),
+      action: #selector(showAboutPanel),
       keyEquivalent: ""
     )
+    menu.items.last?.target = self
     menu.addItem(.separator())
     menu.addItem(
-      withTitle: localized("Quit Open Profile Manager"),
+      withTitle: L10n.string("Quit Open Profile Manager"),
       action: #selector(NSApplication.terminate(_:)),
       keyEquivalent: "q"
     )
@@ -113,10 +114,10 @@ final class OpenProfileManagerApp: NSObject, NSApplicationDelegate {
   }
 
   private func fileMenuItem() -> NSMenuItem {
-    let item = NSMenuItem(title: localized("File"), action: nil, keyEquivalent: "")
-    let menu = NSMenu(title: localized("File"))
+    let item = NSMenuItem(title: L10n.string("File"), action: nil, keyEquivalent: "")
+    let menu = NSMenu(title: L10n.string("File"))
     let newProfile = NSMenuItem(
-      title: localized("New Profile"),
+      title: L10n.string("New Profile"),
       action: #selector(presentNewProfile),
       keyEquivalent: "n"
     )
@@ -124,7 +125,7 @@ final class OpenProfileManagerApp: NSObject, NSApplicationDelegate {
     menu.addItem(newProfile)
     menu.addItem(.separator())
     menu.addItem(
-      withTitle: localized("Close Window"),
+      withTitle: L10n.string("Close Window"),
       action: #selector(NSWindow.performClose(_:)),
       keyEquivalent: "w"
     )
@@ -133,18 +134,19 @@ final class OpenProfileManagerApp: NSObject, NSApplicationDelegate {
   }
 
   private func editMenuItem() -> NSMenuItem {
-    let item = NSMenuItem(title: localized("Edit"), action: nil, keyEquivalent: "")
-    let menu = NSMenu(title: localized("Edit"))
-    menu.addItem(withTitle: localized("Undo"), action: Selector(("undo:")), keyEquivalent: "z")
-    menu.addItem(withTitle: localized("Redo"), action: Selector(("redo:")), keyEquivalent: "Z")
+    let item = NSMenuItem(title: L10n.string("Edit"), action: nil, keyEquivalent: "")
+    let menu = NSMenu(title: L10n.string("Edit"))
+    menu.addItem(withTitle: L10n.string("Undo"), action: Selector(("undo:")), keyEquivalent: "z")
+    menu.addItem(withTitle: L10n.string("Redo"), action: Selector(("redo:")), keyEquivalent: "Z")
     menu.addItem(.separator())
-    menu.addItem(withTitle: localized("Cut"), action: #selector(NSText.cut(_:)), keyEquivalent: "x")
     menu.addItem(
-      withTitle: localized("Copy"), action: #selector(NSText.copy(_:)), keyEquivalent: "c")
+      withTitle: L10n.string("Cut"), action: #selector(NSText.cut(_:)), keyEquivalent: "x")
     menu.addItem(
-      withTitle: localized("Paste"), action: #selector(NSText.paste(_:)), keyEquivalent: "v")
+      withTitle: L10n.string("Copy"), action: #selector(NSText.copy(_:)), keyEquivalent: "c")
     menu.addItem(
-      withTitle: localized("Select All"),
+      withTitle: L10n.string("Paste"), action: #selector(NSText.paste(_:)), keyEquivalent: "v")
+    menu.addItem(
+      withTitle: L10n.string("Select All"),
       action: #selector(NSText.selectAll(_:)),
       keyEquivalent: "a"
     )
@@ -153,15 +155,15 @@ final class OpenProfileManagerApp: NSObject, NSApplicationDelegate {
   }
 
   private func windowMenuItem() -> NSMenuItem {
-    let item = NSMenuItem(title: localized("Window"), action: nil, keyEquivalent: "")
-    let menu = NSMenu(title: localized("Window"))
+    let item = NSMenuItem(title: L10n.string("Window"), action: nil, keyEquivalent: "")
+    let menu = NSMenu(title: L10n.string("Window"))
     menu.addItem(
-      withTitle: localized("Minimize"),
+      withTitle: L10n.string("Minimize"),
       action: #selector(NSWindow.performMiniaturize(_:)),
       keyEquivalent: "m"
     )
     menu.addItem(
-      withTitle: localized("Zoom"),
+      withTitle: L10n.string("Zoom"),
       action: #selector(NSWindow.performZoom(_:)),
       keyEquivalent: ""
     )
@@ -171,8 +173,8 @@ final class OpenProfileManagerApp: NSObject, NSApplicationDelegate {
   }
 
   private func helpMenuItem() -> NSMenuItem {
-    let item = NSMenuItem(title: localized("Help"), action: nil, keyEquivalent: "")
-    item.submenu = NSMenu(title: localized("Help"))
+    let item = NSMenuItem(title: L10n.string("Help"), action: nil, keyEquivalent: "")
+    item.submenu = NSMenu(title: L10n.string("Help"))
     return item
   }
 
@@ -181,7 +183,10 @@ final class OpenProfileManagerApp: NSObject, NSApplicationDelegate {
     model.presentNewProfile()
   }
 
-  private func localized(_ key: String) -> String {
-    Bundle.main.localizedString(forKey: key, value: key, table: nil)
+  @objc private func showAboutPanel() {
+    NSApplication.shared.orderFrontStandardAboutPanel(
+      options: [.applicationName: L10n.string("Open Profile Manager")]
+    )
   }
+
 }

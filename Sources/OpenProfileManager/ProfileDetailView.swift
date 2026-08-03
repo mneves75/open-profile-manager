@@ -45,18 +45,22 @@ private struct ProfileHeader: View {
 
   var body: some View {
     VStack(alignment: .leading, spacing: 8) {
-      Text(displayName)
+      Text(verbatim: displayName)
         .font(.largeTitle.bold())
       HStack(spacing: 8) {
-        Text(profileID)
+        Text(verbatim: profileID)
           .font(.body.monospaced())
           .foregroundStyle(.secondary)
         StatusBadge(state: status?.state)
       }
       if let email = status?.account?.email {
-        Label(email, systemImage: "at")
-          .foregroundStyle(.secondary)
-          .textSelection(.enabled)
+        Label {
+          Text(verbatim: email)
+        } icon: {
+          Image(systemName: "at")
+        }
+        .foregroundStyle(.secondary)
+        .textSelection(.enabled)
       }
     }
   }
@@ -76,18 +80,24 @@ private struct ProfileActions: View {
 
   @ViewBuilder
   private var buttons: some View {
-    Button("Launch Desktop App", systemImage: "arrow.up.forward.app", action: onLaunch)
-      .buttonStyle(.borderedProminent)
-      .controlSize(.large)
-      .accessibilityLabel("Launch Desktop App")
     Button(
-      "Install Finder Launcher", systemImage: "macwindow.badge.plus", action: onInstallLauncher
+      L10n.string("Launch Desktop App"),
+      systemImage: "arrow.up.forward.app",
+      action: onLaunch
+    )
+    .buttonStyle(.borderedProminent)
+    .controlSize(.large)
+    .accessibilityLabel(L10n.string("Launch Desktop App"))
+    Button(
+      L10n.string("Install Finder Launcher"),
+      systemImage: "macwindow.badge.plus",
+      action: onInstallLauncher
     )
     .controlSize(.large)
-    .accessibilityLabel("Install Finder Launcher")
-    Button("Copy CLI Command", systemImage: "terminal", action: onCopyCLI)
+    .accessibilityLabel(L10n.string("Install Finder Launcher"))
+    Button(L10n.string("Copy CLI Command"), systemImage: "terminal", action: onCopyCLI)
       .controlSize(.large)
-      .accessibilityLabel("Copy CLI Command")
+      .accessibilityLabel(L10n.string("Copy CLI Command"))
   }
 }
 
@@ -96,24 +106,24 @@ private struct QuotaCard: View {
   let isRefreshing: Bool
 
   var body: some View {
-    GroupBox("Account Status") {
+    GroupBox(L10n.string("Account Status")) {
       VStack(alignment: .leading, spacing: 14) {
         if isRefreshing, status == nil {
-          ProgressView("Reading Codex status…")
+          ProgressView(L10n.string("Reading Codex status…"))
         } else if let status {
           if let primary = status.rateLimits?.primary {
-            QuotaWindowView(title: "Primary Window", window: primary)
+            QuotaWindowView(title: L10n.string("Primary Window"), window: primary)
           }
           if let secondary = status.rateLimits?.secondary {
             Divider()
-            QuotaWindowView(title: "Secondary Window", window: secondary)
+            QuotaWindowView(title: L10n.string("Secondary Window"), window: secondary)
           }
           if status.rateLimits == nil {
             StatusMessage(state: status.state)
               .foregroundStyle(.secondary)
           }
         } else {
-          Text("Status has not been read yet.")
+          Text(verbatim: L10n.string("Status has not been read yet."))
             .foregroundStyle(.secondary)
         }
       }
@@ -129,36 +139,43 @@ private struct StatusMessage: View {
   var body: some View {
     switch state {
     case .available:
-      Text("No quota data is available for this profile.")
+      Text(verbatim: L10n.string("No quota data is available for this profile."))
     case .notAuthenticated:
-      Text("Sign in to this profile with the Codex CLI, then refresh.")
+      Text(verbatim: L10n.string("Sign in to this profile with the Codex CLI, then refresh."))
     case .unavailable:
-      Text("Codex status is unavailable. Run opm doctor for details.")
+      Text(verbatim: L10n.string("Codex status is unavailable. Run opm doctor for details."))
     }
   }
 }
 
 private struct QuotaWindowView: View {
-  let title: LocalizedStringResource
+  let title: String
   let window: RateLimitWindow
 
   var body: some View {
     VStack(alignment: .leading, spacing: 8) {
       HStack {
-        Text(title)
+        Text(verbatim: title)
           .font(.headline)
         Spacer()
-        Text("\(window.usedPercent)% used")
+        Text(verbatim: L10n.string("%lld%% used", window.usedPercent))
           .font(.body.monospacedDigit())
       }
       ProgressView(value: Double(window.usedPercent), total: 100)
         .accessibilityLabel(title)
-        .accessibilityValue("\(window.usedPercent) percent used")
+        .accessibilityValue(L10n.string("%lld percent used", window.usedPercent))
       if let resetsAt = window.resetsAt {
         let resetDate = Date(timeIntervalSince1970: TimeInterval(resetsAt))
-        Text("Resets \(resetDate, style: .relative)")
+        TimelineView(.periodic(from: .now, by: 60)) { _ in
+          Text(
+            verbatim: L10n.string(
+              "Resets %@",
+              resetDate.formatted(.relative(presentation: .named).locale(L10n.locale))
+            )
+          )
           .font(.caption)
           .foregroundStyle(.secondary)
+        }
       }
     }
   }
@@ -169,12 +186,12 @@ private struct ProfilePaths: View {
   let guiDataDirectory: String?
 
   var body: some View {
-    GroupBox("Local Isolation") {
+    GroupBox(L10n.string("Local Isolation")) {
       VStack(alignment: .leading, spacing: 14) {
         PathRow(label: "CODEX_HOME", path: codexHome)
         PathRow(
-          label: "Desktop data",
-          path: guiDataDirectory ?? "Managed automatically for this profile"
+          label: L10n.string("Desktop data"),
+          path: guiDataDirectory ?? L10n.string("Managed automatically for this profile")
         )
       }
       .frame(maxWidth: .infinity, alignment: .leading)
@@ -184,15 +201,15 @@ private struct ProfilePaths: View {
 }
 
 private struct PathRow: View {
-  let label: LocalizedStringResource
+  let label: String
   let path: String
 
   var body: some View {
     VStack(alignment: .leading, spacing: 4) {
-      Text(label)
+      Text(verbatim: label)
         .font(.caption.weight(.semibold))
         .foregroundStyle(.secondary)
-      Text(path)
+      Text(verbatim: path)
         .font(.body.monospaced())
         .textSelection(.enabled)
     }
@@ -205,11 +222,16 @@ private struct ProfileManagement: View {
 
   var body: some View {
     HStack {
-      Button("Edit Profile", systemImage: "pencil", action: onEdit)
-        .accessibilityLabel("Edit Profile")
+      Button(L10n.string("Edit Profile"), systemImage: "pencil", action: onEdit)
+        .accessibilityLabel(L10n.string("Edit Profile"))
       Spacer()
-      Button("Remove Profile", systemImage: "trash", role: .destructive, action: onRemove)
-        .accessibilityLabel("Remove Profile")
+      Button(
+        L10n.string("Remove Profile"),
+        systemImage: "trash",
+        role: .destructive,
+        action: onRemove
+      )
+      .accessibilityLabel(L10n.string("Remove Profile"))
     }
   }
 }
@@ -226,12 +248,12 @@ private struct StatusBadge: View {
       .foregroundStyle(color)
   }
 
-  private var label: LocalizedStringResource {
+  private var label: String {
     switch state {
-    case .available: "Available"
-    case .notAuthenticated: "Sign-in required"
-    case .unavailable: "Unavailable"
-    case nil: "Checking…"
+    case .available: L10n.string("Available")
+    case .notAuthenticated: L10n.string("Sign-in required")
+    case .unavailable: L10n.string("Unavailable")
+    case nil: L10n.string("Checking…")
     }
   }
 

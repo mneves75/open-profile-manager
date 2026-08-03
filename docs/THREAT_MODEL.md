@@ -29,7 +29,7 @@
 - Application and managed-launcher property lists must be symlink-free regular files and are read nonblocking under a strict size cap.
 - Dependency pinning, secret scanning, static analysis, tests, signed release artifacts, and notarization gates.
 
-The completed 0.1.0 review and evidence are recorded in [SECURITY_AUDIT.md](SECURITY_AUDIT.md).
+The current review and evidence are recorded in [SECURITY_AUDIT.md](SECURITY_AUDIT.md).
 
 ## Explicit non-goals
 

@@ -4,9 +4,15 @@ All notable changes to this project are documented in this file. The format is b
 
 ## [Unreleased]
 
+### Added
+
+- Complete native macOS localization for `en-US` and `pt-BR`, selected automatically from the user's preferred system languages with an `en-US` fallback.
+- A deterministic localization gate that rejects missing, obsolete, incomplete, or placeholder-incompatible catalog entries.
+
 ### Changed
 
 - Human-readable status output no longer prints account email addresses; callers that explicitly request JSON retain the documented structured field.
+- Native menus, views, accessibility labels, interpolated values, and GUI error messages now resolve through one localization boundary without translating profile data, paths, commands, or protocol values.
 
 ## [0.1.0] - 2026-08-02
 

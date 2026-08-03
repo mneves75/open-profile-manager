@@ -15,8 +15,8 @@ struct ProfileSidebar: View {
       )
       .tag(profile.id)
     }
-    .navigationTitle("Profiles")
-    .accessibilityLabel("Codex profiles")
+    .navigationTitle(L10n.string("Profiles"))
+    .accessibilityLabel(L10n.string("Codex profiles"))
   }
 }
 
@@ -29,14 +29,14 @@ private struct ProfileRow: View {
     HStack(spacing: 10) {
       StatusIndicator(state: status?.state)
       VStack(alignment: .leading, spacing: 2) {
-        Text(displayName)
+        Text(verbatim: displayName)
           .font(.headline)
           .lineLimit(1)
         HStack(spacing: 6) {
-          Text(profileID)
+          Text(verbatim: profileID)
           if let planType = status?.account?.planType {
-            Text("•")
-            Text(planType.capitalized)
+            Text(verbatim: "•")
+            Text(verbatim: planType)
           }
         }
         .font(.caption)
@@ -45,7 +45,7 @@ private struct ProfileRow: View {
       }
       Spacer(minLength: 4)
       if let usedPercent = status?.rateLimits?.primary?.usedPercent {
-        Text("\(usedPercent)%")
+        Text(verbatim: "\(usedPercent)%")
           .font(.caption.monospacedDigit())
           .foregroundStyle(.secondary)
       }
@@ -73,12 +73,12 @@ private struct StatusIndicator: View {
     }
   }
 
-  private var label: LocalizedStringResource {
+  private var label: String {
     switch state {
-    case .available: "Available"
-    case .notAuthenticated: "Not authenticated"
-    case .unavailable: "Unavailable"
-    case nil: "Status unknown"
+    case .available: L10n.string("Available")
+    case .notAuthenticated: L10n.string("Not authenticated")
+    case .unavailable: L10n.string("Unavailable")
+    case nil: L10n.string("Status unknown")
     }
   }
 }

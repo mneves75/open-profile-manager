@@ -30,13 +30,13 @@ struct ContentView: View {
     }
     .toolbar {
       ToolbarItemGroup {
-        Button("Add Profile", systemImage: "plus", action: model.presentNewProfile)
-          .help("Add a Codex profile")
-        Button("Refresh", systemImage: "arrow.clockwise") {
+        Button(L10n.string("Add Profile"), systemImage: "plus", action: model.presentNewProfile)
+          .help(L10n.string("Add a Codex profile"))
+        Button(L10n.string("Refresh"), systemImage: "arrow.clockwise") {
           Task { await model.reload() }
         }
         .disabled(model.isRefreshing)
-        .help("Refresh account and quota status")
+        .help(L10n.string("Refresh account and quota status"))
       }
     }
     .sheet(item: $model.editor) { configuration in
@@ -54,19 +54,23 @@ struct ContentView: View {
       }
     }
     .alert(model.alertTitle, isPresented: $model.isShowingAlert) {
-      Button("OK", action: model.dismissAlert)
+      Button(L10n.string("OK"), action: model.dismissAlert)
     } message: {
-      Text(model.alertMessage)
+      Text(verbatim: model.alertMessage)
     }
     .confirmationDialog(
-      "Remove this profile?",
+      L10n.string("Remove this profile?"),
       isPresented: $model.isShowingRemoveConfirmation,
       titleVisibility: .visible
     ) {
-      Button("Remove Profile", role: .destructive, action: model.confirmRemoval)
-      Button("Cancel", role: .cancel) {}
+      Button(L10n.string("Remove Profile"), role: .destructive, action: model.confirmRemoval)
+      Button(L10n.string("Cancel"), role: .cancel) {}
     } message: {
-      Text("The profile entry is removed. Its Codex home and authentication data stay on disk.")
+      Text(
+        verbatim: L10n.string(
+          "The profile entry is removed. Its Codex home and authentication data stay on disk."
+        )
+      )
     }
     .task { model.start() }
   }
@@ -77,13 +81,17 @@ private struct EmptyProfilesView: View {
 
   var body: some View {
     ContentUnavailableView {
-      Label("No Profiles", systemImage: "person.crop.rectangle.stack")
+      Label(L10n.string("No Profiles"), systemImage: "person.crop.rectangle.stack")
     } description: {
-      Text("Add a Codex home to launch the CLI or desktop app with an explicit account.")
+      Text(
+        verbatim: L10n.string(
+          "Add a Codex home to launch the CLI or desktop app with an explicit account."
+        )
+      )
     } actions: {
-      Button("Add Profile", action: onAdd)
+      Button(L10n.string("Add Profile"), action: onAdd)
         .buttonStyle(.borderedProminent)
-        .accessibilityLabel("Add Profile")
+        .accessibilityLabel(L10n.string("Add Profile"))
     }
   }
 }

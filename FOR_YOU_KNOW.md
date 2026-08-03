@@ -14,6 +14,8 @@ The sharp edge is desktop compatibility. `CODEX_HOME` and quota reads are docume
 
 The other hard boundary is intentional: quota status informs a human choice. It never triggers account rotation. That keeps the tool useful without turning it into rate-limit circumvention.
 
+Localization follows the same front-desk boundary. `ProfileCore` keeps stable English diagnostics for the CLI and typed errors for callers; the native front desk translates those errors, menus, views, and accessibility text after they enter the GUI. macOS chooses `en-US` or `pt-BR` from the user's preferred languages, with English as the fallback. A small checker compares every source key with both catalog entries and their format placeholders, so a translated sentence cannot accidentally drop a profile ID, path, or number.
+
 One subtle protocol lesson came from the real integration test. Writing all JSONL requests correctly was not enough: closing stdin told `codex app-server` to shut down before it drained those requests. The status client therefore keeps the pipe open until it receives the bounded responses, then closes and terminates the child during cleanup. This is exactly why the project tests fixtures but still proves compatibility against the installed Codex version before release.
 
 The registry has a similar real-world concern: atomic rename prevents readers from seeing half a JSON file, but it does not prevent two writers from both reading the same old value and overwriting each other. The owner-only lock file serializes that full read-modify-write transaction. It lives in a reserved namespace, so a custom registry filename cannot collide with another registry's lock. Atomic storage and concurrency control solve different problems; both are needed.

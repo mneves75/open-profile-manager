@@ -2,7 +2,7 @@
 
 ## Current release line
 
-Version 0.1.0 — source release line ready; local installation workflow verified.
+Version 0.2.0 — source line ready; localized package verified and the existing local installation workflow retained.
 
 ## Scope
 
@@ -10,6 +10,7 @@ Version 0.1.0 — source release line ready; local installation workflow verifie
 - Codex CLI launching and official login/logout delegation
 - Read-only account and rate-limit status
 - Native macOS profile manager
+- Automatic native app localization for `en-US` and `pt-BR`
 - Per-profile Finder launchers
 - Developer-signing workflow with a closed notarization gate
 
@@ -18,7 +19,7 @@ Version 0.1.0 — source release line ready; local installation workflow verifie
 - Automatic quota-based account rotation
 - Credential sharing or cloud synchronization
 - Bundling or modifying OpenAI applications
-- Windows or Linux GUI support in 0.1.x
+- Windows or Linux GUI support in 0.2.x
 
 ## Release blocker
 
