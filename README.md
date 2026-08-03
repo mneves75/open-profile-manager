@@ -81,7 +81,7 @@ See [SECURITY.md](SECURITY.md) for vulnerability reporting, [the threat model](d
 
 ## Project status
 
-Version 0.2.0 is the current source line. See [PROJECT_STATUS.md](PROJECT_STATUS.md) and [CHANGELOG.md](CHANGELOG.md).
+Version 0.1.0 is the current source line. See [PROJECT_STATUS.md](PROJECT_STATUS.md) and [CHANGELOG.md](CHANGELOG.md).
 
 ## Contributing
 

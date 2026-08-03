@@ -1,11 +1,11 @@
-# Pre-production security audit — 0.2.0 source
+# Pre-production security audit — 0.1.0 source
 
 Date: 2026-08-03
 Scope: the complete source tree, local persistence, child-process protocol, CLI and GUI launch paths, Finder launchers, packaging scripts, dependencies, and CI configuration.
 
 ## Result
 
-No confirmed critical-, high-, medium-, or low-severity findings remain open in the 0.2.0 source. The localization change does not alter authentication, persistence, process execution, or network boundaries. Every GUI format string is trusted catalog data, dynamic values are format arguments rather than executable input, placeholder parity is checked for both locales, and unexpected errors fail closed to a generic localized message. The downloadable public-binary gate remains intentionally closed because a `Developer ID Application` certificate and Apple notarization are not yet available; this is a release-provenance limitation, not a source-code vulnerability.
+No confirmed critical-, high-, medium-, or low-severity findings remain open in the 0.1.0 source. The localization change does not alter authentication, persistence, process execution, or network boundaries. Every GUI format string is trusted catalog data, dynamic values are format arguments rather than executable input, placeholder parity is checked for both locales, and unexpected errors fail closed to a generic localized message. The downloadable public-binary gate remains intentionally closed because a `Developer ID Application` certificate and Apple notarization are not yet available; this is a release-provenance limitation, not a source-code vulnerability.
 
 ## Fixed findings
 

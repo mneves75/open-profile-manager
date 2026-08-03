@@ -2,7 +2,7 @@
 
 ## Current release line
 
-Version 0.2.0 — source line ready; localized package verified and the existing local installation workflow retained.
+Version 0.1.0 — source line ready; localized package verified and the existing local installation workflow retained.
 
 ## Scope
 
@@ -19,7 +19,7 @@ Version 0.2.0 — source line ready; localized package verified and the existing
 - Automatic quota-based account rotation
 - Credential sharing or cloud synchronization
 - Bundling or modifying OpenAI applications
-- Windows or Linux GUI support in 0.2.x
+- Windows or Linux GUI support in 0.1.x
 
 ## Release blocker
 
