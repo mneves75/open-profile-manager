@@ -17,7 +17,7 @@ The ZIP is the canonical app artifact because `ditto` preserves the macOS bundle
 ## Prerequisites
 
 - A `Developer ID Application` certificate and private key available to `codesign`.
-- App Store Connect API credentials in `APP_STORE_CONNECT_API_KEY_P8`, `APP_STORE_CONNECT_KEY_ID`, and `APP_STORE_CONNECT_ISSUER_ID`.
+- `asc` 3.4.0 or newer, with an authenticated default profile stored in the System Keychain and authorized for Apple notarization.
 - GitHub immutable releases enabled for the repository.
 - `APP_IDENTITY` set to the exact Developer ID identity.
 - Clean `main`, identical to `origin/main`, with successful CI for `HEAD`.
@@ -34,12 +34,14 @@ The foreground release performs the full gate:
 
 1. validates repository state, version, changelog, immutable releases, and CI;
 2. runs project checks and security scans;
-3. builds both `arm64` and `x86_64`, signs with hardened runtime and timestamp, and submits the app to `notarytool`;
+3. builds both `arm64` and `x86_64`, signs with hardened runtime and timestamp, and submits the app through the keychain-backed `asc` notarization client;
 4. staples and validates the ticket, checks system distribution policy, and generates matching dSYMs;
 5. downloads the CI SBOM and writes SHA-256 checksums;
 6. atomically reserves an annotated tag at the verified commit, then creates a draft GitHub Release from the matching changelog section;
 7. downloads every asset, verifies checksums, code signing, Gatekeeper policy, and stapling;
 8. publishes the immutable release and verifies GitHub's asset digests.
+
+The release wrapper disables `asc` telemetry, rejects mixed keychain/config/environment authentication, and verifies the required notarization command and flags before building.
 
 Immutable releases lock the tag and assets after publication and provide GitHub-signed release attestations verified by `gh release verify-asset`.
 If verification fails while the release is positively confirmed to remain a draft, the wrapper removes its own draft and deletes only the exact tag object reserved by that run, using a force-with-lease guard. An ambiguous GitHub response is preserved for manual reconciliation; the wrapper never guesses that an unknown release or tag is safe to delete.

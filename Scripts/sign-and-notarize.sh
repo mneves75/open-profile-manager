@@ -1,8 +1,18 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-NOTARY_PRIVATE_KEY=${APP_STORE_CONNECT_API_KEY_P8:-}
-unset APP_STORE_CONNECT_API_KEY_P8 || true
+unset \
+  APP_STORE_CONNECT_API_KEY_P8 \
+  ASC_BYPASS_KEYCHAIN \
+  ASC_CONFIG_PATH \
+  ASC_ISSUER_ID \
+  ASC_KEY_ID \
+  ASC_KEY_TYPE \
+  ASC_PROFILE \
+  ASC_PRIVATE_KEY \
+  ASC_PRIVATE_KEY_B64 \
+  ASC_PRIVATE_KEY_PATH \
+  ASC_STRICT_AUTH || true
 
 ROOT=$(cd "$(dirname "$0")/.." && pwd)
 cd "$ROOT"
@@ -41,24 +51,41 @@ if ! /usr/bin/security find-identity -v -p codesigning | grep -Fq "\"$APP_IDENTI
   echo "Developer ID identity is not available in the current keychain search list" >&2
   exit 1
 fi
-if [[ -z "$NOTARY_PRIVATE_KEY" ]]; then
-  echo "Missing APP_STORE_CONNECT_API_KEY_P8" >&2
+if ! command -v asc >/dev/null 2>&1; then
+  echo "asc is required for notarization" >&2
   exit 1
 fi
-for required_name in \
-  APP_STORE_CONNECT_KEY_ID \
-  APP_STORE_CONNECT_ISSUER_ID; do
-  if [[ -z "${!required_name:-}" ]]; then
-    echo "Missing $required_name" >&2
+if ! command -v jq >/dev/null 2>&1; then
+  echo "jq is required to validate asc authentication" >&2
+  exit 1
+fi
+if ! asc_notarization_help=$(ASC_TELEMETRY_DISABLED=1 asc notarization submit --help 2>&1); then
+  echo "The installed asc does not support notarization submit" >&2
+  exit 1
+fi
+for required_flag in --file --wait --timeout; do
+  if [[ "$asc_notarization_help" != *"$required_flag"* ]]; then
+    echo "The installed asc notarization client does not support $required_flag" >&2
     exit 1
   fi
 done
+asc_auth_status=$(
+  ASC_STRICT_AUTH=true ASC_TELEMETRY_DISABLED=1 asc auth status --output json
+)
+if ! jq -e '
+  .storageBackend == "System Keychain"
+  and .environmentCredentialsProvided == false
+  and any(.credentials[]; .isDefault == true and .storedIn == "keychain")
+  and all(.credentials[]; .isDefault != true or .storedIn == "keychain")
+' <<< "$asc_auth_status" >/dev/null; then
+  echo "asc must use a System Keychain profile without environment credentials" >&2
+  exit 1
+fi
 
 rm -f "$APP_ZIP" "$DSYM_ZIP" "$CHECKSUMS"
 
 NOTARIZATION_TEMP_DIR=$(mktemp -d "${TMPDIR:-/tmp}/open-profile-manager-notarize.XXXXXX")
 chmod 0700 "$NOTARIZATION_TEMP_DIR"
-API_KEY_PATH="$NOTARIZATION_TEMP_DIR/notary-api-key.p8"
 NOTARIZATION_ZIP="$NOTARIZATION_TEMP_DIR/OpenProfileManagerNotarize.zip"
 DSYM_STAGE="$NOTARIZATION_TEMP_DIR/Open-Profile-Manager-$MARKETING_VERSION-dSYMs"
 trap 'rm -r "$NOTARIZATION_TEMP_DIR"' EXIT
@@ -72,19 +99,10 @@ if find "$APP" -name '._*' -print -quit | grep -q .; then
 fi
 
 /usr/bin/ditto --norsrc -c -k --keepParent "$APP" "$NOTARIZATION_ZIP"
-normalized_private_key=${NOTARY_PRIVATE_KEY//\\n/$'\n'}
-(
-  umask 077
-  printf '%s' "$normalized_private_key" > "$API_KEY_PATH"
-)
-unset NOTARY_PRIVATE_KEY normalized_private_key
-/usr/bin/xcrun notarytool submit "$NOTARIZATION_ZIP" \
-  --key "$API_KEY_PATH" \
-  --key-id "$APP_STORE_CONNECT_KEY_ID" \
-  --issuer "$APP_STORE_CONNECT_ISSUER_ID" \
+ASC_STRICT_AUTH=true ASC_TELEMETRY_DISABLED=1 asc notarization submit \
+  --file "$NOTARIZATION_ZIP" \
   --wait \
   --timeout 30m
-rm -f "$API_KEY_PATH"
 
 /usr/bin/xcrun stapler staple "$APP"
 /usr/bin/xattr -cr "$APP"
