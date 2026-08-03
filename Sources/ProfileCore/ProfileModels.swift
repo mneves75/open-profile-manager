@@ -169,7 +169,7 @@ public struct Profile: Codable, Equatable, Sendable {
     guard path.hasPrefix("/") else {
       throw ProfileCoreError.invalidAbsolutePath(field: field, path: path)
     }
-    return try normalizedAbsoluteURL(URL(fileURLWithPath: path), field: field)
+    return try normalizedAbsoluteURL(URL(fileURLWithPath: path, isDirectory: true), field: field)
   }
 
   public func effectiveGUIDataDirectory(applicationSupportDirectory: URL) throws -> URL {
