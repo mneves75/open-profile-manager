@@ -5,15 +5,15 @@ import ProfileCore
 
 @main
 enum OPMEntryPoint {
-  static func main() {
+  static func main() async {
     if LauncherBundleMode.runIfNeeded() {
       return
     }
-    OPMCommand.main()
+    await OPMCommand.main()
   }
 }
 
-struct OPMCommand: ParsableCommand {
+struct OPMCommand: AsyncParsableCommand {
   static let configuration = CommandConfiguration(
     commandName: "opm",
     abstract: "Manage explicit, isolated local Codex profiles.",
@@ -149,8 +149,10 @@ struct RunCommand: ParsableCommand {
   var codexArguments: [String] = []
 
   func run() throws {
-    let result = try manager().executeCodex(profileID: profile, arguments: codexArguments)
-    guard result.exitCode == 0 else { throw ExitCode(result.exitCode) }
+    try manager().replaceCurrentProcessWithCodex(
+      profileID: profile,
+      arguments: codexArguments
+    )
   }
 }
 
@@ -159,8 +161,7 @@ struct LoginCommand: ParsableCommand {
   @Argument var profile: String
 
   func run() throws {
-    let result = try manager().executeCodex(profileID: profile, arguments: ["login"])
-    guard result.exitCode == 0 else { throw ExitCode(result.exitCode) }
+    try manager().replaceCurrentProcessWithCodex(profileID: profile, arguments: ["login"])
   }
 }
 
@@ -169,12 +170,11 @@ struct LogoutCommand: ParsableCommand {
   @Argument var profile: String
 
   func run() throws {
-    let result = try manager().executeCodex(profileID: profile, arguments: ["logout"])
-    guard result.exitCode == 0 else { throw ExitCode(result.exitCode) }
+    try manager().replaceCurrentProcessWithCodex(profileID: profile, arguments: ["logout"])
   }
 }
 
-struct StatusCommand: ParsableCommand {
+struct StatusCommand: AsyncParsableCommand {
   static let configuration = CommandConfiguration(commandName: "status")
 
   @Argument(help: "Profile ID. Omit with --all to inspect every profile.")
@@ -191,7 +191,7 @@ struct StatusCommand: ParsableCommand {
     }
   }
 
-  func run() throws {
+  func run() async throws {
     let profileManager = try manager()
     let ids: [String]
     if let profile {
@@ -199,7 +199,7 @@ struct StatusCommand: ParsableCommand {
     } else {
       ids = try profileManager.listProfiles().map(\.id.rawValue)
     }
-    let statuses = try ids.map { try profileManager.status(profileID: $0) }
+    let statuses = try await profileManager.statuses(profileIDs: ids)
     if json {
       try printJSON(statuses)
     } else if statuses.isEmpty {

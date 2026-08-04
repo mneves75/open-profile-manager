@@ -31,10 +31,12 @@ The registry lives in the user's Application Support directory. Private-path tra
 
 ## Launch behavior
 
-- CLI launch executes the discovered `codex` binary directly with `CODEX_HOME` in its child environment.
+- CLI `run`, `login`, and `logout` replace the `opm` process image with the discovered `codex` binary and its isolated environment. Keeping the same PID and foreground process group preserves terminal job control, signals, and the Codex exit status.
 - GUI launch executes `/usr/bin/open` directly with a new-instance request, explicit `CODEX_HOME` forwarding, the independently installed app path, and a per-profile `--user-data-dir`.
 - Generated Finder launchers call `opm app launch <profile-id>`. They contain no credentials.
 - The canonical installed ChatGPT/Codex app remains the update owner. Launchers reference it rather than copying it, so official in-app updates continue normally.
+
+Status reads remain child processes because `opm` must exchange bounded JSONL with each app-server and aggregate the result. `ProfileCore` loads the registry once per batch, preserves requested order, and runs at most four app-server reads concurrently; both adapters use that same implementation.
 
 ## Compatibility
 

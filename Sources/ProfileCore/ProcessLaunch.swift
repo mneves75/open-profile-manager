@@ -84,6 +84,54 @@ public enum ProcessExecutor {
     process.waitUntilExit()
     return ProcessResult(exitCode: process.terminationStatus)
   }
+
+  public static func replaceCurrentProcess(with plan: ProcessPlan) throws -> Never {
+    let executableName = plan.executableURL.lastPathComponent
+    var arguments = try duplicateCStrings(
+      [plan.executableURL.path] + plan.arguments,
+      executableName: executableName
+    )
+    defer { freeCStrings(&arguments) }
+    var environment = try duplicateCStrings(
+      plan.environment.map { "\($0.key)=\($0.value)" },
+      executableName: executableName
+    )
+    defer { freeCStrings(&environment) }
+
+    _ = plan.executableURL.path.withCString { executable in
+      arguments.withUnsafeMutableBufferPointer { argumentBuffer in
+        environment.withUnsafeMutableBufferPointer { environmentBuffer in
+          execve(executable, argumentBuffer.baseAddress, environmentBuffer.baseAddress)
+        }
+      }
+    }
+    throw ProfileCoreError.processLaunchFailed(executableName)
+  }
+
+  private static func duplicateCStrings(
+    _ strings: [String],
+    executableName: String
+  ) throws -> [UnsafeMutablePointer<CChar>?] {
+    guard strings.allSatisfy({ !$0.utf8.contains(0) }) else {
+      throw ProfileCoreError.processLaunchFailed(executableName)
+    }
+    var result: [UnsafeMutablePointer<CChar>?] = strings.map {
+      $0.withCString(strdup)
+    }
+    guard result.allSatisfy({ $0 != nil }) else {
+      freeCStrings(&result)
+      throw ProfileCoreError.processLaunchFailed(executableName)
+    }
+    result.append(nil)
+    return result
+  }
+
+  private static func freeCStrings(_ strings: inout [UnsafeMutablePointer<CChar>?]) {
+    for string in strings {
+      free(string)
+    }
+    strings.removeAll(keepingCapacity: false)
+  }
 }
 
 public struct LaunchPlanner: Sendable {

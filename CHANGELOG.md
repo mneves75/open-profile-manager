@@ -4,6 +4,16 @@ All notable changes to this project are documented in this file. The format is b
 
 ## [Unreleased]
 
+## [0.1.1] - 2026-08-04
+
+### Fixed
+
+- Preserve terminal ownership for interactive `run`, `login`, and `logout` sessions by replacing `opm` with Codex, with a PTY regression covering PID, foreground process group, arguments, and bidirectional input.
+
+### Changed
+
+- Read profile status concurrently through one bounded `ProfileCore` implementation shared by the CLI and native app, reducing the two-profile `status --all` median from 1,642 ms to 788 ms in the release benchmark.
+
 ## [0.1.0] - 2026-08-03
 
 ### Added
@@ -37,5 +47,6 @@ All notable changes to this project are documented in this file. The format is b
 - Human-readable status output no longer prints account email addresses; callers that explicitly request JSON retain the documented structured field.
 - Native menus, views, accessibility labels, interpolated values, and GUI error messages now resolve through one localization boundary without translating profile data, paths, commands, or protocol values.
 
-[Unreleased]: https://github.com/mneves75/open-profile-manager/compare/v0.1.0...HEAD
+[Unreleased]: https://github.com/mneves75/open-profile-manager/compare/v0.1.1...HEAD
+[0.1.1]: https://github.com/mneves75/open-profile-manager/releases/tag/v0.1.1
 [0.1.0]: https://github.com/mneves75/open-profile-manager/releases/tag/v0.1.0

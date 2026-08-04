@@ -2,7 +2,7 @@
 
 ## Current release line
 
-Version 0.1.0 — source line ready; localized package verified and the existing local installation workflow retained.
+Version 0.1.1 — release candidate. Version 0.1.0 is the current published GitHub Release.
 
 ## Scope
 
@@ -12,7 +12,7 @@ Version 0.1.0 — source line ready; localized package verified and the existing
 - Native macOS profile manager
 - Automatic native app localization for `en-US` and `pt-BR`
 - Per-profile Finder launchers
-- Developer-signing workflow with a closed notarization gate
+- Developer ID signing, Apple notarization, and immutable GitHub Release workflow
 
 ## Non-goals
 
@@ -21,8 +21,8 @@ Version 0.1.0 — source line ready; localized package verified and the existing
 - Bundling or modifying OpenAI applications
 - Windows or Linux GUI support in 0.1.x
 
-## Release blocker
+## Release readiness
 
-The public source is available at [github.com/mneves75/open-profile-manager](https://github.com/mneves75/open-profile-manager). A downloadable macOS binary requires a valid `Developer ID Application` identity and successful Apple notarization.
+The 0.1.1 candidate fixes interactive terminal ownership for `run`, `login`, and `logout`, adds a PTY integration regression, and centralizes bounded concurrent status reads in `ProfileCore`. The two-profile release benchmark improved from a 1,642 ms median to 788 ms, while inexpensive commands did not regress materially.
 
-The source, package, signing, diagnostics, two-profile isolation, and native-window flows passed the documented local verification without recording account identifiers. See [the security audit](docs/SECURITY_AUDIT.md) for the evidence and residual distribution limitation.
+Stable Xcode 26.6 checks, 54 tests, the Xcode 27 beta compatibility build/tests, secret scans, and the local security gate pass. Publication still requires the release commit's remote CI and CodeQL runs followed by the signed, notarized release workflow. See [the security audit](docs/SECURITY_AUDIT.md) for evidence.
