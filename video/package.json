@@ -1,0 +1,41 @@
+{
+  "name": "video",
+  "version": "1.0.0",
+  "description": "Product videos for Open Profile Manager",
+  "repository": "https://github.com/mneves75/open-profile-manager",
+  "license": "MIT",
+  "private": true,
+  "dependencies": {
+    "@remotion/cli": "4.0.500",
+    "@remotion/google-fonts": "4.0.500",
+    "react": "19.2.3",
+    "react-dom": "19.2.3",
+    "remotion": "4.0.500"
+  },
+  "devDependencies": {
+    "@remotion/eslint-config-flat": "4.0.500",
+    "@types/react": "19.2.7",
+    "@types/web": "0.0.166",
+    "eslint": "9.39.5",
+    "prettier": "3.8.1",
+    "typescript": "5.9.3"
+  },
+  "scripts": {
+    "render:gui": "npm run sfx && remotion render GuiTutorial out/gui-tutorial.mp4",
+    "sfx": "node scripts/gen-sfx.mjs",
+    "dev": "npm run sfx && remotion studio",
+    "build": "npm run sfx && remotion bundle",
+    "render:launch": "npm run sfx && remotion render Launch out/launch.mp4",
+    "render:tutorial": "npm run sfx && remotion render Tutorial out/tutorial.mp4",
+    "upgrade": "remotion upgrade",
+    "lint": "eslint src && tsc"
+  },
+  "allowScripts": {
+    "esbuild@0.28.1": true
+  },
+  "overrides": {
+    "fast-uri": "3.1.5",
+    "brace-expansion@1": "1.1.18",
+    "brace-expansion@2": "2.1.4"
+  }
+}

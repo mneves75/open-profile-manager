@@ -4,6 +4,14 @@ All notable changes to this project are documented in this file. The format is b
 
 ## [Unreleased]
 
+### Added
+
+- A public, responsive GitHub Pages product site with privacy-safe launch, CLI, and native-app tutorial videos.
+
+### Changed
+
+- Refined the native macOS app with a clearer profile sidebar, status hierarchy, detail cards, and editor layout while preserving the existing explicit-launch workflow.
+
 ## [0.1.1] - 2026-08-04
 
 ### Fixed

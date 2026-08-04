@@ -17,10 +17,11 @@ Ship an unofficial MIT-licensed, local-first profile manager for Codex CLI and t
 ## Active work
 
 - Version 0.1.1 is released. New changes belong under the existing 0.1.1-to-HEAD `Unreleased` changelog line.
+- The current `Unreleased` work adds a graphite native-app redesign, three Remotion product videos, and a static GitHub Pages product site.
 
 ## Project environment
 
-- Native macOS 15+ Swift 6 package; no iOS, Android, React Native, web, or Argent-compatible target.
+- Native macOS 15+ Swift 6 package; no iOS, Android, React Native, or Argent-compatible target. A dependency-free static product site lives in `docs/`, and Remotion authoring tools live in `video/`.
 - Build and verification entry points are `swift build`, `swift test --parallel`, `Scripts/check.sh`, `Scripts/package_app.sh`, and `Scripts/security-check.sh`.
 - `version.env` is the packaging version source; `swift-argument-parser` 1.8.2 is the sole pinned package dependency.
 

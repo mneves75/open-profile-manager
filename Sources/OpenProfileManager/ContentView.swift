@@ -11,21 +11,24 @@ struct ContentView: View {
         statuses: model.statuses,
         selection: $model.selectedProfileID
       )
-      .navigationSplitViewColumnWidth(min: 250, ideal: 290, max: 360)
+      .navigationSplitViewColumnWidth(min: 260, ideal: 300, max: 380)
     } detail: {
-      if let profile = model.selectedProfile {
-        ProfileDetailView(
-          profile: profile,
-          status: model.statuses[profile.id],
-          isRefreshing: model.isRefreshing,
-          onLaunch: { model.launchApp(for: profile) },
-          onInstallLauncher: { model.installLauncher(for: profile) },
-          onCopyCLI: { model.copyCLICommand(for: profile) },
-          onEdit: { model.presentEditor(for: profile) },
-          onRemove: { model.requestRemoval(of: profile) }
-        )
-      } else {
-        EmptyProfilesView(onAdd: model.presentNewProfile)
+      ZStack {
+        AppVisualStyle.canvas.ignoresSafeArea()
+        if let profile = model.selectedProfile {
+          ProfileDetailView(
+            profile: profile,
+            status: model.statuses[profile.id],
+            isRefreshing: model.isRefreshing,
+            onLaunch: { model.launchApp(for: profile) },
+            onInstallLauncher: { model.installLauncher(for: profile) },
+            onCopyCLI: { model.copyCLICommand(for: profile) },
+            onEdit: { model.presentEditor(for: profile) },
+            onRemove: { model.requestRemoval(of: profile) }
+          )
+        } else {
+          EmptyProfilesView(onAdd: model.presentNewProfile)
+        }
       }
     }
     .toolbar {
@@ -73,6 +76,7 @@ struct ContentView: View {
       )
     }
     .task { model.start() }
+    .preferredColorScheme(.dark)
   }
 }
 

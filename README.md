@@ -3,6 +3,8 @@
 [![CI](https://github.com/mneves75/open-profile-manager/actions/workflows/ci.yml/badge.svg)](https://github.com/mneves75/open-profile-manager/actions/workflows/ci.yml)
 [![CodeQL](https://github.com/mneves75/open-profile-manager/actions/workflows/codeql.yml/badge.svg)](https://github.com/mneves75/open-profile-manager/actions/workflows/codeql.yml)
 
+[Product site](https://mneves75.github.io/open-profile-manager/) · [Download the latest notarized release](https://github.com/mneves75/open-profile-manager/releases/latest)
+
 Open Profile Manager is an unofficial, local-first macOS profile launcher for the Codex CLI and the ChatGPT/Codex desktop app. It keeps each account's Codex state in a separate `CODEX_HOME`, shows read-only account and quota status, and lets you explicitly choose which profile to launch.
 
 It does **not** rotate accounts automatically, evade rate limits, copy credentials, or redistribute OpenAI software.

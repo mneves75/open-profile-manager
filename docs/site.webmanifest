@@ -1,0 +1,8 @@
+{
+  "name": "Open Profile Manager",
+  "short_name": "OPM",
+  "description": "An unofficial, local-first profile launcher for Codex CLI and the ChatGPT/Codex macOS app.",
+  "start_url": "/open-profile-manager/",
+  "scope": "/open-profile-manager/",
+  "display": "standalone"
+}
