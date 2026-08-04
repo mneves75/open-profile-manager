@@ -16,7 +16,7 @@ Ship an unofficial MIT-licensed, local-first profile manager for Codex CLI and t
 
 ## Active work
 
-- The 0.1.1 release candidate fixes interactive terminal job control and centralizes bounded concurrent status reads. Local gates are green; remote CI/CodeQL and signed release publication remain.
+- Version 0.1.1 is released. New changes belong under the existing 0.1.1-to-HEAD `Unreleased` changelog line.
 
 ## Project environment
 
@@ -28,7 +28,8 @@ Ship an unofficial MIT-licensed, local-first profile manager for Codex CLI and t
 
 - Fifty-four tests pass under Xcode 26.6, including PTY process replacement, exec failure/NUL handling, concurrent ordered status reads, GUI error-interpolation coverage, descriptor-relative and ACL-aware registry privacy, firmlink-aware profile-directory isolation, persisted-invariant validation, private launcher publication, bounded plist inspection, descriptor-safe app-server writes, system/per-user app discovery, symlink-safe diagnostics, and hostile protocol output. Xcode 27 beta also builds and passes all 54 tests.
 - The native app contains 131 complete keys in both `en-US` and `pt-BR`; macOS preference selection and unsupported-language fallback were proven against a signed package, and isolated native renders covered the main profile and editor layouts in both languages.
-- The 0.1.1 pre-production security review has no open confirmed findings; Gitleaks, TruffleHog, dependency resolution, privacy-manifest validation, and generic security heuristics are clean after manual triage.
-- Version 0.1.0 is published as a Developer ID-signed, notarized, stapled, immutable GitHub Release. Version 0.1.1 is not yet tagged or released.
+- The 0.1.1 security review has no open confirmed findings; Gitleaks, TruffleHog, dependency resolution, privacy-manifest validation, generic security heuristics, remote CodeQL, Dependabot, and secret-scanning state are clean after manual triage.
+- Version 0.1.1 is published from commit `c5754b1` as a Developer ID-signed, notarized, stapled, immutable GitHub Release with verified ZIP, dSYMs, SPDX SBOM, checksums, and attestations.
 - Local CLI, GUI, Finder-launcher, signing, and two-profile isolation flows passed without retaining account identifiers in the repository.
 - Release-mode `status --all` with two configured profiles improved from a 1,642 ms median to 788 ms at load averages 5.63/6.20/7.09; `--version`, profile list, doctor, and `run ... --version` did not regress materially.
+- The public 0.1.1 ZIP was downloaded, signature/staple verified, and launched under an isolated `CFFIXED_USER_HOME` before release closeout.
