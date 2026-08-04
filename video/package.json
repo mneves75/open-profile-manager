@@ -32,5 +32,10 @@
   },
   "allowScripts": {
     "esbuild@0.28.1": true
+  },
+  "overrides": {
+    "fast-uri": "3.1.5",
+    "brace-expansion@1": "1.1.18",
+    "brace-expansion@2": "2.1.4"
   }
 }
