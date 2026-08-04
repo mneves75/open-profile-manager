@@ -1,13 +1,11 @@
-# Pre-production security audit — 0.1.1 candidate
+# Security audit — 0.1.1 release
 
 Date: 2026-08-04
 Scope: the complete source tree, local persistence, child-process protocol, CLI and GUI launch paths, Finder launchers, packaging scripts, dependencies, and CI configuration.
 
 ## Result
 
-No confirmed critical-, high-, medium-, or low-severity findings remain open in the 0.1.1 candidate. Interactive Codex launch now crosses the POSIX process-replacement boundary directly: the implementation rejects embedded NUL bytes, passes validated argument and environment arrays without a shell, terminates both C vectors with `nil`, and frees every allocation if `execve` returns. Desktop launch and bounded app-server status retain Foundation `Process` because those workflows must return to `opm`.
-
-The 0.1.0 public artifact proved the Developer ID, notarization, stapling, Gatekeeper, SBOM, checksum, and immutable-release pipeline. Version 0.1.1 must repeat those gates from its exact green release commit before publication.
+No confirmed critical-, high-, medium-, or low-severity findings remain open in the 0.1.1 release. Interactive Codex launch now crosses the POSIX process-replacement boundary directly: the implementation rejects embedded NUL bytes, passes validated argument and environment arrays without a shell, terminates both C vectors with `nil`, and frees every allocation if `execve` returns. Desktop launch and bounded app-server status retain Foundation `Process` because those workflows must return to `opm`.
 
 ## Fixed findings
 
@@ -59,9 +57,10 @@ The live compatibility tests also found and fixed reliability defects in termina
 - `$autoreview --mode local`: Codex `gpt-5.6-sol`/high reviewed the complete candidate while `Scripts/check.sh` ran in parallel; it reported no accepted or actionable findings and rated the patch correct with 0.9 confidence.
 - Security-audit heuristics: full-history secret scan, route enumeration, and risky-pattern scan. Route/auth and error-leak hits were reviewed as false positives caused by generic pattern matching against local Swift methods and `Label(..., systemImage:)`; the product has no HTTP service or listening socket.
 - Release benchmark: two-profile `status --all` improved from a 1,642 ms median to 788 ms at load averages 5.63/6.20/7.09; cheap CLI commands did not regress materially.
-- GitHub security state: zero open Dependabot, CodeQL, or secret-scanning alerts on 2026-08-04; the latest `main` CI and CodeQL runs were successful. The 0.1.1 release commit must repeat the remote checks.
+- GitHub security state: zero open Dependabot, CodeQL, or secret-scanning alerts on 2026-08-04; CI and CodeQL passed for exact release commit `c5754b1`.
 - Locally signed package: `codesign --verify --deep --strict` passed with an Apple Development identity; the app bundle contains `en-US` and `pt-BR`, and isolated native-window renders verified the main profile and editor layouts in both languages without using real profile data.
 - Live integration: two sanitized test profiles returned status, passed expanded `doctor` checks under a restricted Finder-like `PATH`, and launched the official app with distinct data directories. No account identifiers or status payloads are retained in the repository.
+- Distribution: `v0.1.1` resolves to `c5754b1`; Apple accepted notarization submission `5e5f7581-f245-432d-80b5-0abe2a85d473`. Developer ID verification, stapling, Gatekeeper, matching dSYMs, SPDX SBOM, checksums, GitHub asset attestations, immutable publication, redownload, and isolated-home launch from the public ZIP passed.
 
 ## Residual limitations
 

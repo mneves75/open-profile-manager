@@ -2,7 +2,7 @@
 
 ## Current release line
 
-Version 0.1.1 — release candidate. Version 0.1.0 is the current published GitHub Release.
+Version 0.1.1 — published as an immutable, signed, notarized, and stapled [GitHub Release](https://github.com/mneves75/open-profile-manager/releases/tag/v0.1.1).
 
 ## Scope
 
@@ -21,8 +21,8 @@ Version 0.1.1 — release candidate. Version 0.1.0 is the current published GitH
 - Bundling or modifying OpenAI applications
 - Windows or Linux GUI support in 0.1.x
 
-## Release readiness
+## Release evidence
 
-The 0.1.1 candidate fixes interactive terminal ownership for `run`, `login`, and `logout`, adds a PTY integration regression, and centralizes bounded concurrent status reads in `ProfileCore`. The two-profile release benchmark improved from a 1,642 ms median to 788 ms, while inexpensive commands did not regress materially.
+Version 0.1.1 fixes interactive terminal ownership for `run`, `login`, and `logout`, adds a PTY integration regression, and centralizes bounded concurrent status reads in `ProfileCore`. The two-profile release benchmark improved from a 1,642 ms median to 788 ms, while inexpensive commands did not regress materially.
 
-Stable Xcode 26.6 checks, 54 tests, the Xcode 27 beta compatibility build/tests, secret scans, and the local security gate pass. Publication still requires the release commit's remote CI and CodeQL runs followed by the signed, notarized release workflow. See [the security audit](docs/SECURITY_AUDIT.md) for evidence.
+Tag `v0.1.1` resolves to release commit `c5754b1`. Stable Xcode 26.6 checks, 54 tests, the Xcode 27 beta compatibility build/tests, remote CI/CodeQL, secret scans, Apple notarization, Gatekeeper, stapling, redownloaded checksums, GitHub asset attestations, and a launch from the public ZIP under an isolated home all passed. See [the security audit](docs/SECURITY_AUDIT.md) for evidence.

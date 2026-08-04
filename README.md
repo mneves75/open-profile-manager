@@ -85,7 +85,7 @@ See [SECURITY.md](SECURITY.md) for vulnerability reporting, [the threat model](d
 
 ## Project status
 
-Version 0.1.1 is the current source line. The latest published release remains 0.1.0 until the 0.1.1 release gates complete. See [PROJECT_STATUS.md](PROJECT_STATUS.md) and [CHANGELOG.md](CHANGELOG.md).
+Version 0.1.1 is the current source line and [published GitHub Release](https://github.com/mneves75/open-profile-manager/releases/tag/v0.1.1). See [PROJECT_STATUS.md](PROJECT_STATUS.md) and [CHANGELOG.md](CHANGELOG.md).
 
 ## Contributing
 
