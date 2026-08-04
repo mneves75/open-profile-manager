@@ -15,6 +15,10 @@ All notable changes to this project are documented in this file. The format is b
 - Refined the native macOS app with a clearer profile sidebar, status hierarchy, detail cards, and editor layout while preserving the existing explicit-launch workflow.
 - Removed account email addresses from the native app's human-readable status surface; explicit CLI JSON retains the documented structured field.
 
+### Fixed
+
+- Resolve packaged app and CLI binaries through SwiftPM's reported build directory so clean local installations work across current toolchains.
+
 ### Security
 
 - Added automated npm dependency monitoring and blocking web/video validation to pull requests and Pages deployment.

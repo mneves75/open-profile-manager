@@ -38,7 +38,9 @@ done
 product_path() {
   local product=$1
   local architecture=$2
-  printf '%s/.build/%s-apple-macosx/%s/%s' "$ROOT" "$architecture" "$CONFIGURATION" "$product"
+  local bin_path
+  bin_path=$(swift build -c "$CONFIGURATION" --arch "$architecture" --show-bin-path)
+  printf '%s/%s' "$bin_path" "$product"
 }
 
 STAGE_ROOT=$(mktemp -d "${TMPDIR:-/tmp}/open-profile-manager-package.XXXXXX")
