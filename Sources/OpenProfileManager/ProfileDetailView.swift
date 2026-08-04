@@ -13,7 +13,7 @@ struct ProfileDetailView: View {
 
   var body: some View {
     ScrollView {
-      VStack(alignment: .leading, spacing: 22) {
+      VStack(alignment: .leading, spacing: 18) {
         ProfileHeader(
           displayName: profile.displayName,
           profileID: profile.id.rawValue,
@@ -32,8 +32,10 @@ struct ProfileDetailView: View {
         ProfileManagement(onEdit: onEdit, onRemove: onRemove)
       }
       .padding(28)
-      .frame(maxWidth: 760, alignment: .leading)
+      .frame(maxWidth: 820, alignment: .leading)
+      .frame(maxWidth: .infinity, alignment: .center)
     }
+    .background(AppVisualStyle.canvas)
     .navigationTitle(profile.displayName)
   }
 }
@@ -44,25 +46,39 @@ private struct ProfileHeader: View {
   let status: ProfileStatus?
 
   var body: some View {
-    VStack(alignment: .leading, spacing: 8) {
-      Text(verbatim: displayName)
-        .font(.largeTitle.bold())
-      HStack(spacing: 8) {
+    HStack(alignment: .top, spacing: 18) {
+      Image(systemName: "person.crop.rectangle.stack.fill")
+        .font(.system(size: 24, weight: .semibold))
+        .foregroundStyle(.white)
+        .frame(width: 52, height: 52)
+        .background(.tint, in: RoundedRectangle(cornerRadius: 15, style: .continuous))
+        .accessibilityHidden(true)
+
+      VStack(alignment: .leading, spacing: 7) {
+        Text(verbatim: displayName)
+          .font(.largeTitle.weight(.bold))
+          .lineLimit(2)
         Text(verbatim: profileID)
-          .font(.body.monospaced())
+          .font(.callout.monospaced().weight(.medium))
           .foregroundStyle(.secondary)
-        StatusBadge(state: status?.state)
-      }
-      if let email = status?.account?.email {
-        Label {
-          Text(verbatim: email)
-        } icon: {
-          Image(systemName: "at")
+          .textSelection(.enabled)
+        if let email = status?.account?.email {
+          Label {
+            Text(verbatim: email)
+          } icon: {
+            Image(systemName: "at")
+          }
+          .font(.callout)
+          .foregroundStyle(.secondary)
+          .textSelection(.enabled)
         }
-        .foregroundStyle(.secondary)
-        .textSelection(.enabled)
       }
+
+      Spacer(minLength: 12)
+      StatusBadge(state: status?.state)
     }
+    .padding(22)
+    .editorialCard()
   }
 }
 
@@ -72,9 +88,9 @@ private struct ProfileActions: View {
   let onCopyCLI: () -> Void
 
   var body: some View {
-    ViewThatFits {
+    ViewThatFits(in: .horizontal) {
       HStack(spacing: 10) { buttons }
-      VStack(alignment: .leading, spacing: 10) { buttons }
+      VStack(spacing: 10) { buttons }
     }
   }
 
@@ -82,7 +98,7 @@ private struct ProfileActions: View {
   private var buttons: some View {
     Button(
       L10n.string("Launch Desktop App"),
-      systemImage: "arrow.up.forward.app",
+      systemImage: "arrow.up.forward.app.fill",
       action: onLaunch
     )
     .buttonStyle(.borderedProminent)
@@ -93,9 +109,11 @@ private struct ProfileActions: View {
       systemImage: "macwindow.badge.plus",
       action: onInstallLauncher
     )
+    .buttonStyle(.bordered)
     .controlSize(.large)
     .accessibilityLabel(L10n.string("Install Finder Launcher"))
     Button(L10n.string("Copy CLI Command"), systemImage: "terminal", action: onCopyCLI)
+      .buttonStyle(.bordered)
       .controlSize(.large)
       .accessibilityLabel(L10n.string("Copy CLI Command"))
   }
@@ -106,10 +124,14 @@ private struct QuotaCard: View {
   let isRefreshing: Bool
 
   var body: some View {
-    GroupBox(L10n.string("Account Status")) {
-      VStack(alignment: .leading, spacing: 14) {
+    DetailCard(
+      title: L10n.string("Account Status"),
+      systemImage: "gauge.with.dots.needle.67percent"
+    ) {
+      VStack(alignment: .leading, spacing: 18) {
         if isRefreshing, status == nil {
           ProgressView(L10n.string("Reading Codex status…"))
+            .controlSize(.small)
         } else if let status {
           if let primary = status.rateLimits?.primary {
             QuotaWindowView(title: L10n.string("Primary Window"), window: primary)
@@ -127,8 +149,6 @@ private struct QuotaCard: View {
             .foregroundStyle(.secondary)
         }
       }
-      .frame(maxWidth: .infinity, alignment: .leading)
-      .padding(.vertical, 6)
     }
   }
 }
@@ -153,15 +173,16 @@ private struct QuotaWindowView: View {
   let window: RateLimitWindow
 
   var body: some View {
-    VStack(alignment: .leading, spacing: 8) {
-      HStack {
+    VStack(alignment: .leading, spacing: 10) {
+      HStack(alignment: .firstTextBaseline) {
         Text(verbatim: title)
           .font(.headline)
         Spacer()
         Text(verbatim: L10n.string("%lld%% used", window.usedPercent))
-          .font(.body.monospacedDigit())
+          .font(.title3.monospacedDigit().weight(.semibold))
       }
       ProgressView(value: Double(window.usedPercent), total: 100)
+        .progressViewStyle(.linear)
         .accessibilityLabel(title)
         .accessibilityValue(L10n.string("%lld percent used", window.usedPercent))
       if let resetsAt = window.resetsAt {
@@ -186,16 +207,15 @@ private struct ProfilePaths: View {
   let guiDataDirectory: String?
 
   var body: some View {
-    GroupBox(L10n.string("Local Isolation")) {
-      VStack(alignment: .leading, spacing: 14) {
+    DetailCard(title: L10n.string("Local Isolation"), systemImage: "lock.shield.fill") {
+      VStack(alignment: .leading, spacing: 16) {
         PathRow(label: "CODEX_HOME", path: codexHome)
+        Divider()
         PathRow(
           label: L10n.string("Desktop data"),
           path: guiDataDirectory ?? L10n.string("Managed automatically for this profile")
         )
       }
-      .frame(maxWidth: .infinity, alignment: .leading)
-      .padding(.vertical, 6)
     }
   }
 }
@@ -205,13 +225,14 @@ private struct PathRow: View {
   let path: String
 
   var body: some View {
-    VStack(alignment: .leading, spacing: 4) {
+    VStack(alignment: .leading, spacing: 6) {
       Text(verbatim: label)
         .font(.caption.weight(.semibold))
         .foregroundStyle(.secondary)
       Text(verbatim: path)
-        .font(.body.monospaced())
+        .font(.callout.monospaced())
         .textSelection(.enabled)
+        .fixedSize(horizontal: false, vertical: true)
     }
   }
 }
@@ -221,7 +242,7 @@ private struct ProfileManagement: View {
   let onRemove: () -> Void
 
   var body: some View {
-    HStack {
+    HStack(spacing: 12) {
       Button(L10n.string("Edit Profile"), systemImage: "pencil", action: onEdit)
         .accessibilityLabel(L10n.string("Edit Profile"))
       Spacer()
@@ -233,6 +254,31 @@ private struct ProfileManagement: View {
       )
       .accessibilityLabel(L10n.string("Remove Profile"))
     }
+    .padding(.horizontal, 4)
+  }
+}
+
+private struct DetailCard<Content: View>: View {
+  let title: String
+  let systemImage: String
+  let content: Content
+
+  init(title: String, systemImage: String, @ViewBuilder content: () -> Content) {
+    self.title = title
+    self.systemImage = systemImage
+    self.content = content()
+  }
+
+  var body: some View {
+    VStack(alignment: .leading, spacing: 18) {
+      Label(title, systemImage: systemImage)
+        .font(.headline)
+        .foregroundStyle(.secondary)
+      content
+    }
+    .frame(maxWidth: .infinity, alignment: .leading)
+    .padding(20)
+    .editorialCard()
   }
 }
 
@@ -240,12 +286,13 @@ private struct StatusBadge: View {
   let state: ProfileStatusState?
 
   var body: some View {
-    Text(label)
-      .font(.caption.weight(.medium))
-      .padding(.horizontal, 8)
-      .padding(.vertical, 3)
+    Label(label, systemImage: symbol)
+      .font(.caption.weight(.semibold))
+      .padding(.horizontal, 10)
+      .padding(.vertical, 6)
       .background(color.opacity(0.14), in: Capsule())
       .foregroundStyle(color)
+      .accessibilityLabel(label)
   }
 
   private var label: String {
@@ -257,12 +304,34 @@ private struct StatusBadge: View {
     }
   }
 
+  private var symbol: String {
+    switch state {
+    case .available: "checkmark.circle.fill"
+    case .notAuthenticated: "person.crop.circle.badge.exclamationmark"
+    case .unavailable: "exclamationmark.triangle.fill"
+    case nil: "clock"
+    }
+  }
+
   private var color: Color {
     switch state {
     case .available: .green
     case .notAuthenticated: .orange
     case .unavailable: .red
     case nil: .secondary
+    }
+  }
+}
+
+extension View {
+  fileprivate func editorialCard() -> some View {
+    self.background(
+      AppVisualStyle.sidebar,
+      in: RoundedRectangle(cornerRadius: 18, style: .continuous)
+    )
+    .overlay {
+      RoundedRectangle(cornerRadius: 18, style: .continuous)
+        .stroke(AppVisualStyle.hairline, lineWidth: 1)
     }
   }
 }

@@ -1,0 +1,190 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Open Profile Manager is an unofficial, local-first macOS launcher for explicitly switching Codex CLI and app profiles.">
+  <meta name="theme-color" content="#0a0a0a">
+  <meta name="referrer" content="strict-origin-when-cross-origin">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self' data:; media-src 'self'; script-src 'self'; style-src 'self'; object-src 'none'; base-uri 'none'; form-action 'none'; upgrade-insecure-requests">
+  <link rel="canonical" href="https://mneves75.github.io/open-profile-manager/">
+  <link rel="manifest" href="site.webmanifest">
+  <link rel="stylesheet" href="styles.css">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="Open Profile Manager">
+  <meta property="og:title" content="Open Profile Manager — profiles, without the ritual">
+  <meta property="og:description" content="Choose a local profile. Launch Codex. Stay in control.">
+  <meta property="og:url" content="https://mneves75.github.io/open-profile-manager/">
+  <meta property="og:image" content="https://mneves75.github.io/open-profile-manager/assets/opm-orbit.png">
+  <meta property="og:image:alt" content="Three isolated profile windows orbiting the Open Profile Manager control plane">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Open Profile Manager — profiles, without the ritual">
+  <meta name="twitter:description" content="Choose a local profile. Launch Codex. Stay in control.">
+  <meta name="twitter:image" content="https://mneves75.github.io/open-profile-manager/assets/opm-orbit.png">
+  <title>Open Profile Manager — profiles, without the ritual</title>
+</head>
+<body>
+  <a class="skip-link" href="#main-content">Skip to content</a>
+
+  <header class="nav">
+    <a class="brand" href="#top" aria-label="Open Profile Manager home">OPM</a>
+    <nav aria-label="Primary navigation">
+      <a href="#why">Why OPM</a>
+      <a href="#demo">Demo</a>
+      <a href="#features">Features</a>
+      <a href="#privacy">Privacy</a>
+      <a href="#install">Install</a>
+    </nav>
+    <a class="button button-secondary" href="https://github.com/mneves75/open-profile-manager">View on GitHub</a>
+  </header>
+
+  <main id="main-content">
+    <section class="hero" id="top" aria-labelledby="hero-title">
+      <div class="hero-copy">
+        <p class="eyebrow">Local-first profile launcher for macOS</p>
+        <h1 id="hero-title">Profiles, without the ritual.</h1>
+        <p class="lede">Choose a profile. Launch Codex CLI or the macOS app. Switching is always explicit—and authentication stays with the official Codex tools.</p>
+        <div class="hero-actions">
+          <a class="button button-primary" href="#install">Install OPM</a>
+          <a class="text-link" href="#demo">See it work <span aria-hidden="true">↓</span></a>
+        </div>
+        <p class="compatibility">Free and open source · MIT · macOS 15+</p>
+      </div>
+      <div class="hero-visual">
+        <img class="hero-art" src="assets/opm-orbit.png" width="1672" height="941" alt="Three isolated profile windows orbiting an Open Profile Manager control plane">
+      </div>
+    </section>
+
+    <section id="why" aria-labelledby="why-title">
+      <div class="section-heading">
+        <p class="eyebrow">Why OPM</p>
+        <h2 id="why-title">One deliberate choice replaces a fragile routine.</h2>
+      </div>
+      <div class="bento-grid">
+        <article class="bento-card bento-card-wide">
+          <p class="card-kicker">The problem</p>
+          <h3>Profiles live apart. Your workflow should not.</h3>
+          <p>Separate <code>CODEX_HOME</code> directories are useful, but remembering paths and rebuilding launch commands is busywork.</p>
+        </article>
+        <article class="bento-card">
+          <p class="card-kicker">The choice</p>
+          <h3>No silent switching.</h3>
+          <p>You select every profile yourself. Quota status informs; it never triggers account rotation.</p>
+        </article>
+        <article class="bento-card">
+          <p class="card-kicker">The boundary</p>
+          <h3>Your tokens stay untouched.</h3>
+          <p>OPM never reads, copies, decodes, migrates, prints, or stores authentication tokens.</p>
+        </article>
+        <article class="bento-card bento-card-wide">
+          <p class="card-kicker">The result</p>
+          <h3>A small control plane for local profiles.</h3>
+          <p>Keep profiles isolated, see their status, and launch the right official Codex surface with a clear, explicit action.</p>
+        </article>
+      </div>
+    </section>
+
+    <section id="demo" aria-labelledby="demo-title">
+      <div class="section-heading">
+        <p class="eyebrow">See the workflow</p>
+        <h2 id="demo-title">From profile to focused session.</h2>
+        <p>Videos load only when you play them.</p>
+      </div>
+      <div class="video-grid">
+        <figure class="video-card">
+          <video controls preload="none" playsinline poster="media/launch-poster.jpg" aria-label="Launch a Codex session with a selected profile">
+            <source src="media/launch.mp4" type="video/mp4">
+            <track kind="captions" srclang="en" label="English" src="media/sfx-captions.vtt" default>
+            Your browser does not support embedded video. <a href="media/launch.mp4">Download the launch demo</a>.
+          </video>
+          <figcaption><strong>Launch</strong><span>Pick a profile and open a new session.</span></figcaption>
+        </figure>
+        <figure class="video-card">
+          <video controls preload="none" playsinline poster="media/tutorial-poster.jpg" aria-label="Manage profiles with the OPM command-line interface">
+            <source src="media/tutorial.mp4" type="video/mp4">
+            <track kind="captions" srclang="en" label="English" src="media/sfx-captions.vtt" default>
+            Your browser does not support embedded video. <a href="media/tutorial.mp4">Download the CLI tutorial</a>.
+          </video>
+          <figcaption><strong>CLI tutorial</strong><span>Use the focused <code>opm</code> command-line workflow.</span></figcaption>
+        </figure>
+        <figure class="video-card">
+          <video controls preload="none" playsinline poster="media/gui-tutorial-poster.jpg" aria-label="Manage and launch profiles in the OPM macOS app">
+            <source src="media/gui-tutorial.mp4" type="video/mp4">
+            <track kind="captions" srclang="en" label="English" src="media/sfx-captions.vtt" default>
+            Your browser does not support embedded video. <a href="media/gui-tutorial.mp4">Download the app tutorial</a>.
+          </video>
+          <figcaption><strong>App tutorial</strong><span>Use the same profile model in a native macOS interface.</span></figcaption>
+        </figure>
+      </div>
+    </section>
+
+    <section id="features" aria-labelledby="features-title">
+      <div class="section-heading">
+        <p class="eyebrow">What it does</p>
+        <h2 id="features-title">A profile manager, kept intentionally narrow.</h2>
+      </div>
+      <div class="feature-grid">
+        <article>
+          <h3>Explicit launches</h3>
+          <p>Select the profile first, then launch Codex CLI or the independently installed macOS app.</p>
+        </article>
+        <article>
+          <h3>Useful status</h3>
+          <p>Read profile and quota status without turning it into automatic account selection.</p>
+        </article>
+        <article>
+          <h3>CLI and native app</h3>
+          <p>Use a concise command-line tool or a focused AppKit and SwiftUI interface.</p>
+        </article>
+        <article>
+          <h3>English + Português</h3>
+          <p>Use the macOS experience in English or Português.</p>
+        </article>
+      </div>
+    </section>
+
+    <section id="privacy" aria-labelledby="privacy-title">
+      <div class="privacy-copy">
+        <p class="eyebrow">Privacy by boundary</p>
+        <h2 id="privacy-title">Local profiles. Official authentication.</h2>
+        <p>OPM stores local profile configuration and launch preferences. Authentication remains owned by the official <code>codex</code> executable inside each profile's <code>CODEX_HOME</code>.</p>
+      </div>
+      <ul class="privacy-list">
+        <li>No OPM telemetry or hosted service</li>
+        <li>No credential sharing</li>
+        <li>No hidden fallback between accounts</li>
+        <li>No automatic quota-driven rotation</li>
+      </ul>
+    </section>
+
+    <section id="install" aria-labelledby="install-title">
+      <div class="section-heading">
+        <p class="eyebrow">Install</p>
+        <h2 id="install-title">Install from source locally.</h2>
+        <p>Requires macOS 15 or later. Install the official Codex CLI separately.</p>
+      </div>
+      <div class="command-block">
+        <pre tabindex="0"><code id="install-command">git clone https://github.com/mneves75/open-profile-manager.git &amp;&amp; cd open-profile-manager &amp;&amp; Scripts/bootstrap.sh &amp;&amp; Scripts/check.sh &amp;&amp; Scripts/install-local.sh</code></pre>
+        <button class="copy-button" type="button" data-copy-target="install-command" aria-label="Copy install command" aria-live="polite">Copy</button>
+      </div>
+      <p class="install-note">Prefer to inspect first? <a href="https://github.com/mneves75/open-profile-manager#build-and-install-locally">Read the installation guide</a>.</p>
+    </section>
+
+    <section class="final-cta" aria-labelledby="cta-title">
+      <p class="eyebrow">Keep the choice yours</p>
+      <h2 id="cta-title">Launch the profile you meant to use.</h2>
+      <div class="cta-actions">
+        <a class="button button-primary" href="#install">Install OPM</a>
+        <a class="button button-secondary" href="https://github.com/mneves75/open-profile-manager">Explore the source</a>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <p><strong>Open Profile Manager</strong> is unofficial software and is not affiliated with or endorsed by OpenAI.</p>
+    <p><a href="https://github.com/mneves75/open-profile-manager">GitHub</a> · <a href="https://github.com/mneves75/open-profile-manager/blob/main/LICENSE">MIT License</a></p>
+  </footer>
+
+  <script src="app.js" defer></script>
+</body>
+</html>
