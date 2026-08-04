@@ -6,6 +6,7 @@
 - User profile names and local filesystem paths
 - Integrity of commands launched under the user's account
 - Integrity and provenance of distributed macOS artifacts
+- Integrity of the public documentation site and downloadable media
 
 ## Trust boundaries
 
@@ -14,6 +15,7 @@
 - `codex app-server` is a child process with untrusted JSONL output and bounded response time.
 - Interactive Codex launch replaces the CLI process image and crosses from validated Swift values into POSIX `argv` and `envp` C strings.
 - The independently installed ChatGPT/Codex app is outside this project's ownership.
+- The public GitHub Pages site is untrusted browser input but has no authenticated state, forms, backend, analytics, or user-controlled content.
 
 ## Required mitigations
 
@@ -30,6 +32,7 @@
 - Generated launchers contain identifiers and executable paths only, never credentials; publication requires a private destination and explicit owner-only bundle modes.
 - Application and managed-launcher property lists must be symlink-free regular files and are read nonblocking under a strict size cap.
 - Dependency pinning, secret scanning, static analysis, tests, signed release artifacts, and notarization gates.
+- The website loads scripts, styles, images, and videos from its own Pages origin under a restrictive content security policy; pull requests and deployment both validate the JavaScript and Remotion sources.
 
 The current review and evidence are recorded in [SECURITY_AUDIT.md](SECURITY_AUDIT.md).
 

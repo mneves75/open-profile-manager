@@ -1,0 +1,5 @@
+^\.git/
+^\.build/
+^build/
+^video/node_modules/
+^video/out/

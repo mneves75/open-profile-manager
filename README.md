@@ -78,6 +78,7 @@ The generated profile launchers reference the canonical official app in `/Applic
 - Each profile must use distinct, non-overlapping Codex and GUI data directories; existing private directories must already satisfy the owner-only security policy.
 - Local upgrades stage and verify both artifacts before atomically replacing the installed CLI and app.
 - There is no telemetry, hosted service, or profile sync.
+- Human-readable CLI and native-app status omit account email addresses; callers that explicitly request CLI JSON retain the documented structured field.
 
 See [SECURITY.md](SECURITY.md) for vulnerability reporting, [the threat model](docs/THREAT_MODEL.md) for the security design, and [the current security audit](docs/SECURITY_AUDIT.md) for completed review evidence.
 
@@ -87,7 +88,7 @@ See [SECURITY.md](SECURITY.md) for vulnerability reporting, [the threat model](d
 
 ## Project status
 
-Version 0.1.1 is the current source line and [published GitHub Release](https://github.com/mneves75/open-profile-manager/releases/tag/v0.1.1). See [PROJECT_STATUS.md](PROJECT_STATUS.md) and [CHANGELOG.md](CHANGELOG.md).
+Version 0.1.2 is the current source line. Version 0.1.1 remains the latest [published GitHub Release](https://github.com/mneves75/open-profile-manager/releases/tag/v0.1.1). See [PROJECT_STATUS.md](PROJECT_STATUS.md) and [CHANGELOG.md](CHANGELOG.md).
 
 ## Contributing
 

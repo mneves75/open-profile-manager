@@ -15,7 +15,8 @@ if git rev-parse --verify HEAD >/dev/null 2>&1; then
 fi
 
 if command -v trufflehog >/dev/null 2>&1; then
-  trufflehog filesystem --no-update --fail --fail-on-scan-errors --results verified .
+  trufflehog filesystem --no-update --fail --fail-on-scan-errors --force-skip-binaries \
+    --exclude-paths "$ROOT/.trufflehog-exclude-paths" --results verified .
 else
   echo "Note: trufflehog is not installed; gitleaks completed successfully." >&2
 fi

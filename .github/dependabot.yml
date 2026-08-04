@@ -22,3 +22,14 @@ updates:
     labels:
       - dependencies
       - security
+  - package-ecosystem: npm
+    directory: /video
+    schedule:
+      interval: weekly
+      day: monday
+      time: "10:00"
+      timezone: Etc/UTC
+    open-pull-requests-limit: 5
+    labels:
+      - dependencies
+      - security

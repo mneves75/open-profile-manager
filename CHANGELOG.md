@@ -4,6 +4,8 @@ All notable changes to this project are documented in this file. The format is b
 
 ## [Unreleased]
 
+## [0.1.2] - 2026-08-04
+
 ### Added
 
 - A public, responsive GitHub Pages product site with privacy-safe launch, CLI, and native-app tutorial videos.
@@ -11,6 +13,12 @@ All notable changes to this project are documented in this file. The format is b
 ### Changed
 
 - Refined the native macOS app with a clearer profile sidebar, status hierarchy, detail cards, and editor layout while preserving the existing explicit-launch workflow.
+- Removed account email addresses from the native app's human-readable status surface; explicit CLI JSON retains the documented structured field.
+
+### Security
+
+- Added automated npm dependency monitoring and blocking web/video validation to pull requests and Pages deployment.
+- Scoped TruffleHog to repository source instead of generated dependency and build trees, eliminating binary scan errors without weakening tracked-source or full-history secret checks.
 
 ## [0.1.1] - 2026-08-04
 
@@ -55,6 +63,7 @@ All notable changes to this project are documented in this file. The format is b
 - Human-readable status output no longer prints account email addresses; callers that explicitly request JSON retain the documented structured field.
 - Native menus, views, accessibility labels, interpolated values, and GUI error messages now resolve through one localization boundary without translating profile data, paths, commands, or protocol values.
 
-[Unreleased]: https://github.com/mneves75/open-profile-manager/compare/v0.1.1...HEAD
+[Unreleased]: https://github.com/mneves75/open-profile-manager/compare/v0.1.2...HEAD
+[0.1.2]: https://github.com/mneves75/open-profile-manager/compare/v0.1.1...v0.1.2
 [0.1.1]: https://github.com/mneves75/open-profile-manager/releases/tag/v0.1.1
 [0.1.0]: https://github.com/mneves75/open-profile-manager/releases/tag/v0.1.0

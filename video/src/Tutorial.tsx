@@ -171,7 +171,7 @@ export const Tutorial: React.FC = () => (
             { out: "Installed CLI: ~/.local/bin/opm" },
             { out: "Installed app: ~/Applications/Open Profile Manager.app" },
             { cmd: "opm version", cpf: 2 },
-            { out: "0.1.1" },
+            { out: "0.1.2" },
           ]}
         />
       </Series.Sequence>

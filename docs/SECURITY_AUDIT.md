@@ -1,11 +1,11 @@
-# Security audit — 0.1.1 release
+# Security audit — 0.1.2 release candidate
 
 Date: 2026-08-04
-Scope: the complete source tree, local persistence, child-process protocol, CLI and GUI launch paths, Finder launchers, packaging scripts, dependencies, and CI configuration.
+Scope: the complete source tree, local persistence, child-process protocol, CLI and GUI launch paths, Finder launchers, packaging scripts, the static GitHub Pages site, Remotion authoring sources, dependencies, and CI configuration.
 
 ## Result
 
-No confirmed critical-, high-, medium-, or low-severity findings remain open in the 0.1.1 release. Interactive Codex launch now crosses the POSIX process-replacement boundary directly: the implementation rejects embedded NUL bytes, passes validated argument and environment arrays without a shell, terminates both C vectors with `nil`, and frees every allocation if `execve` returns. Desktop launch and bounded app-server status retain Foundation `Process` because those workflows must return to `opm`.
+No confirmed critical-, high-, medium-, or low-severity findings remain open in the 0.1.2 release candidate. The review revalidated the 0.1.1 native security boundary and extended it to the new public site and video toolchain. It removed the account email from the native human-readable UI, added npm dependency monitoring and blocking web/video validation, and eliminated generated dependency/build trees from the TruffleHog filesystem scan so binary-decoder errors cannot obscure repository-source results.
 
 ## Fixed findings
 
@@ -28,6 +28,9 @@ No confirmed critical-, high-, medium-, or low-severity findings remain open in 
 | Apple notarization could wait indefinitely when a submission remained in progress | Low | The foreground `asc` wait is bounded to 30 minutes and leaves timed-out submissions available for reconciliation | ShellCheck and final autoreview |
 | The release client could disclose pseudonymous command telemetry | Low | Every release-time `asc` invocation sets `ASC_TELEMETRY_DISABLED=1` | Final autoreview and release-script inspection |
 | An older `asc` could fail only after the signed app was built | Low | The release preflight verifies `notarization submit` and its required file, wait, and timeout flags before building; 3.4.0 is the documented baseline | Capability preflight, ShellCheck, and final autoreview |
+| The native detail view displayed the authenticated account email even though safe human-readable CLI output deliberately omits it | Low | Removed the email from the native UI; only callers explicitly requesting the documented CLI JSON field can receive it | SwiftUI source review, repository search, and signed isolated-home launch |
+| The new Remotion npm lockfile was outside automated dependency monitoring | Low | Added a weekly Dependabot npm entry scoped to `/video` | Dependabot configuration review and YAML validation |
+| Pages could deploy without validating its JavaScript or the Remotion TypeScript source, while TruffleHog scanned generated dependency binaries and logged decoder errors | Low | Added the existing lint/typecheck plus JavaScript syntax checks to pull-request CI and Pages deployment; excluded generated build/dependency trees and forced binary skipping in the working-tree secret scan | Clean npm install/audit/lint, clean source-only TruffleHog scan, and workflow review |
 
 The live compatibility tests also found and fixed reliability defects in terminal job control, app-server pipe lifetime, and LaunchServices environment forwarding. Status concurrency now belongs to `ProfileCore`, is limited to four child processes, preserves requested order, and is shared by the CLI and GUI. Earlier review bounded JSONL record counts as well as bytes, enforced the output cap after every response stage, suppressed descriptor-local `SIGPIPE` during app-server writes, taught `doctor` to validate missing paths, executables, and app bundles, made launcher bundle identifiers injective, surfaced nonzero LaunchServices exits, made app discovery include per-user installations, and made local CLI/app upgrades stage, verify, and atomically replace each artifact.
 
@@ -40,10 +43,10 @@ The live compatibility tests also found and fixed reliability defects in termina
 5. **Cryptography:** the application performs no custom encryption or hashing. Distribution trust uses Apple code signing and notarization gates.
 6. **Secrets:** Gitleaks and TruffleHog found no verified or unverified secrets. The repository contains no credential fixtures or environment files. Both release entrypoints clear legacy, `asc` credential, and authentication-routing variables before invoking project code, then require strict authentication through the default System Keychain profile without temporary key files. Release-time `asc` telemetry is disabled.
 7. **Data protection:** registry and lock files are `0600`; managed and launcher directories are `0700`; symlinks, unsafe ancestors, and extended ACLs are rejected; writes use descriptor-relative operations, a unique temporary file, atomic rename, and durability syncs.
-8. **Dependencies:** the sole package dependency is Apple `swift-argument-parser` pinned to 1.8.2 in `Package.resolved`.
+8. **Dependencies:** the native package uses Apple `swift-argument-parser` pinned to 1.8.2. Remotion and its React toolchain are pinned by `video/package-lock.json`, report zero npm audit findings, and are covered by a scoped Dependabot entry.
 9. **Logging and errors:** the project does not dump environments, account email addresses, raw authentication files, child stderr, or raw app-server payloads in human-readable output. The GUI localizes known typed errors and replaces unknown errors with a generic message; explicit JSON output retains its documented account field.
 10. **API security:** not applicable; the project exposes no HTTP service or listening socket. The Codex app-server child uses local stdio only.
-11. **Frontend security:** native SwiftUI only; there is no HTML rendering, script evaluation, web view, or remote content. User-controlled profile values are rendered verbatim rather than reinterpreted as localization keys.
+11. **Frontend security:** the native app has no HTML rendering, script evaluation, web view, or remote content. User-controlled profile values are rendered verbatim rather than reinterpreted as localization keys. The public site is static, has no forms, authenticated state, analytics, external scripts, or user-controlled content, and restricts content loading to its own origin with a meta content security policy.
 12. **File upload:** not applicable.
 13. **Business logic:** profile selection is always explicit. Quota data never triggers automatic switching, credit consumption, or account rotation.
 14. **SSRF and outbound-service abuse:** not applicable; the project owns no network client. Network behavior belongs to independently installed official OpenAI software.
@@ -52,17 +55,19 @@ The live compatibility tests also found and fixed reliability defects in termina
 
 ## Verification performed
 
-- `Scripts/check.sh`: strict Swift format, ast-grep rules, ShellCheck, localization completeness and placeholder checks for 131 keys, debug build, PTY integration, CLI contract check, and 54 tests under Xcode 26.6. Xcode 27 beta also builds and passes all 54 tests.
-- `Scripts/security-check.sh`: Gitleaks, TruffleHog, dependency resolution, diff checks, and privacy-manifest validation.
-- `$autoreview --mode local`: Codex `gpt-5.6-sol`/high reviewed the complete candidate while `Scripts/check.sh` ran in parallel; it reported no accepted or actionable findings and rated the patch correct with 0.9 confidence.
+- `Scripts/check.sh`: strict Swift format, ast-grep rules, ShellCheck, localization completeness and placeholder checks for 131 keys, debug build, PTY integration, CLI contract check, and all 54 tests passed under Xcode 26.6.
+- `Scripts/security-check.sh`: Gitleaks scanned the working tree and all 20 commits with no leaks; TruffleHog scanned 147 source chunks with zero verified or unverified secrets and no scan errors; dependency resolution, diff checks, and privacy-manifest validation passed.
+- `npm ci --prefix video`, `npm audit --audit-level=low`, `node --check docs/app.js`, and `npm --prefix video run lint`: clean install, zero vulnerabilities, valid JavaScript, ESLint, and TypeScript.
 - Security-audit heuristics: full-history secret scan, route enumeration, and risky-pattern scan. Route/auth and error-leak hits were reviewed as false positives caused by generic pattern matching against local Swift methods and `Label(..., systemImage:)`; the product has no HTTP service or listening socket.
 - Release benchmark: two-profile `status --all` improved from a 1,642 ms median to 788 ms at load averages 5.63/6.20/7.09; cheap CLI commands did not regress materially.
-- GitHub security state: zero open Dependabot, CodeQL, or secret-scanning alerts on 2026-08-04; CI and CodeQL passed for exact release commit `c5754b1`.
-- Locally signed package: `codesign --verify --deep --strict` passed with an Apple Development identity; the app bundle contains `en-US` and `pt-BR`, and isolated native-window renders verified the main profile and editor layouts in both languages without using real profile data.
+- GitHub security state: zero open Dependabot, CodeQL, or secret-scanning alerts on 2026-08-04.
+- Locally signed package: the 0.1.2/build 4 app passed `codesign --verify --deep --strict` with a Developer ID Application identity, hardened runtime, no added entitlements, both localizations, and a privacy manifest. It launched with one synthetic profile under an isolated home; macOS denied automated window capture because Screen Recording permission is unavailable in this environment.
+- Media and browser QA: the affected tutorial was rerendered at 1920×1080 with H.264/AAC for 85.056 seconds, and its 0.1.2 frame was inspected. Desktop and 390×844 browser renders, the accessibility tree, zero console/page errors, and real tutorial playback all passed.
 - Live integration: two sanitized test profiles returned status, passed expanded `doctor` checks under a restricted Finder-like `PATH`, and launched the official app with distinct data directories. No account identifiers or status payloads are retained in the repository.
 - Distribution: `v0.1.1` resolves to `c5754b1`; Apple accepted notarization submission `5e5f7581-f245-432d-80b5-0abe2a85d473`. Developer ID verification, stapling, Gatekeeper, matching dSYMs, SPDX SBOM, checksums, GitHub asset attestations, immutable publication, redownload, and isolated-home launch from the public ZIP passed.
 
 ## Residual limitations
 
 - The desktop `--user-data-dir` adapter is empirical and may change when the official app changes. It was verified against the supported desktop-app discovery and launch flow on the audit date.
-- Every public downloadable version must be signed with `Developer ID Application`, notarized by Apple, stapled, and assessed by Gatekeeper. The release script enforces this per version; passing 0.1.0 does not waive the 0.1.1 gate.
+- GitHub Pages does not provide repository-controlled response headers. The static site therefore uses a meta content security policy; header-only protections would require a different host. The current site has no authenticated state, form submission, or sensitive action that would justify that migration.
+- Every public downloadable version must be signed with `Developer ID Application`, notarized by Apple, stapled, and assessed by Gatekeeper. Passing an earlier release gate never waives those checks for a later version.
