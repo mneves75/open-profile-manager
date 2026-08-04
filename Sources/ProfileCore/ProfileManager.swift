@@ -62,13 +62,13 @@ public struct ProfileManager: Sendable {
     )
   }
 
-  public func executeCodex(
+  public func replaceCurrentProcessWithCodex(
     profileID: String,
     arguments: [String],
     codexExecutable: URL? = nil
-  ) throws -> ProcessResult {
-    try ProcessExecutor.execute(
-      codexPlan(
+  ) throws -> Never {
+    try ProcessExecutor.replaceCurrentProcess(
+      with: codexPlan(
         profileID: profileID,
         arguments: arguments,
         codexExecutable: codexExecutable
@@ -94,6 +94,49 @@ public struct ProfileManager: Sendable {
     codexExecutable: URL? = nil
   ) throws -> ProfileStatus {
     service.readStatus(for: try profile(id: profileID), codexExecutable: codexExecutable)
+  }
+
+  public func statuses(
+    profileIDs: [String],
+    service: CodexStatusService = CodexStatusService(),
+    codexExecutable: URL? = nil
+  ) async throws -> [ProfileStatus] {
+    let profilesByID = Dictionary(uniqueKeysWithValues: try listProfiles().map { ($0.id, $0) })
+    let selectedProfiles = try profileIDs.map { rawID in
+      let id = try ProfileID(rawID)
+      guard let profile = profilesByID[id] else {
+        throw ProfileCoreError.profileNotFound(rawID)
+      }
+      return profile
+    }
+    guard !selectedProfiles.isEmpty else { return [] }
+
+    return await withTaskGroup(
+      of: (Int, ProfileStatus).self,
+      returning: [ProfileStatus].self
+    ) { group in
+      var remaining = selectedProfiles.enumerated().makeIterator()
+      for _ in 0..<min(4, selectedProfiles.count) {
+        guard let (index, profile) = remaining.next() else { break }
+        group.addTask {
+          (index, service.readStatus(for: profile, codexExecutable: codexExecutable))
+        }
+      }
+
+      var results = [ProfileStatus?](repeating: nil, count: selectedProfiles.count)
+      while let (index, status) = await group.next() {
+        results[index] = status
+        if let (nextIndex, nextProfile) = remaining.next() {
+          group.addTask {
+            (
+              nextIndex,
+              service.readStatus(for: nextProfile, codexExecutable: codexExecutable)
+            )
+          }
+        }
+      }
+      return results.compactMap { $0 }
+    }
   }
 
   public func doctor(profileID: String? = nil) throws -> DoctorReport {

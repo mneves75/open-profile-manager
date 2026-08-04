@@ -12,11 +12,13 @@
 - CLI and GUI input enters `ProfileCore` as untrusted data.
 - The local filesystem may contain symlinks, unexpected mode bits or extended ACLs, or malformed registry data.
 - `codex app-server` is a child process with untrusted JSONL output and bounded response time.
+- Interactive Codex launch replaces the CLI process image and crosses from validated Swift values into POSIX `argv` and `envp` C strings.
 - The independently installed ChatGPT/Codex app is outside this project's ownership.
 
 ## Required mitigations
 
 - Strict profile-ID grammar and absolute normalized paths; no shell evaluation.
+- Interactive process replacement rejects embedded NUL bytes, uses null-terminated argument/environment vectors, and invokes the validated executable directly with `execve`.
 - Profile launch and status remove global Codex credential/state overrides before applying the selected `CODEX_HOME`.
 - Descriptor-relative registry operations with owner-only permissions, no unsafe extended ACLs, durable atomic replacement, and a cross-process writer lock in a reserved namespace.
 - Bounded registry size/profile count and bounded app-server fields.

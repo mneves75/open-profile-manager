@@ -229,32 +229,12 @@ final class AppModel {
   }
 
   private func refreshStatuses(for profiles: [Profile], using manager: ProfileManager) async {
-    let maximumConcurrentReads = 4
-    let refreshed = await withTaskGroup(
-      of: ProfileStatus?.self,
-      returning: [ProfileID: ProfileStatus].self
-    ) { group in
-      var remainingProfiles = profiles.makeIterator()
-      for _ in 0..<min(maximumConcurrentReads, profiles.count) {
-        guard let profile = remainingProfiles.next() else { break }
-        group.addTask {
-          try? manager.status(profileID: profile.id.rawValue)
-        }
-      }
-      var result: [ProfileID: ProfileStatus] = [:]
-      while let status = await group.next() {
-        if let status {
-          result[status.profileID] = status
-        }
-        if let profile = remainingProfiles.next() {
-          group.addTask {
-            try? manager.status(profileID: profile.id.rawValue)
-          }
-        }
-      }
-      return result
-    }
-    statuses = refreshed
+    let refreshed = await Task.detached(priority: .userInitiated) {
+      try? await manager.statuses(profileIDs: profiles.map(\.id.rawValue))
+    }.value
+    statuses = Dictionary(
+      uniqueKeysWithValues: (refreshed ?? []).map { ($0.profileID, $0) }
+    )
   }
 
   private func showError(_ error: Error) {

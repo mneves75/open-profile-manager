@@ -60,6 +60,8 @@ opm launcher install research
 
 Run `opm --help` for the complete command reference.
 
+`opm run`, `opm login`, and `opm logout` replace the launcher process with the official Codex executable. The Codex process therefore keeps the terminal PID, foreground process group, signals, and exit status required by interactive sessions. Desktop launch remains a separate `/usr/bin/open` process.
+
 ## How updates work
 
 The generated profile launchers reference the canonical official app in `/Applications`; they never copy it. ChatGPT/Codex therefore keeps updating through its own updater. Open Profile Manager updates independently. Re-run `opm launcher install <profile>` only if the `opm` executable moves or a launcher needs to be refreshed.
@@ -83,7 +85,7 @@ See [SECURITY.md](SECURITY.md) for vulnerability reporting, [the threat model](d
 
 ## Project status
 
-Version 0.1.0 is the current source line. See [PROJECT_STATUS.md](PROJECT_STATUS.md) and [CHANGELOG.md](CHANGELOG.md).
+Version 0.1.1 is the current source line. The latest published release remains 0.1.0 until the 0.1.1 release gates complete. See [PROJECT_STATUS.md](PROJECT_STATUS.md) and [CHANGELOG.md](CHANGELOG.md).
 
 ## Contributing
 

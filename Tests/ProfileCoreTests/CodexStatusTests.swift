@@ -188,6 +188,59 @@ struct CodexStatusTests {
     #expect(status.message == "Codex app-server exceeded the status output limit.")
   }
 
+  @Test("Batch status reads run concurrently and preserve requested order")
+  func readsStatusesConcurrently() async throws {
+    let root = FileManager.default.temporaryDirectory
+      .appendingPathComponent("CodexStatusBatchTests-\(UUID().uuidString)", isDirectory: true)
+    defer { try? FileManager.default.removeItem(at: root) }
+    try FileManager.default.createDirectory(at: root, withIntermediateDirectories: false)
+    #expect(chmod(root.path, 0o700) == 0)
+
+    let registryDirectory = root.appendingPathComponent("registry", isDirectory: true)
+    let manager = try ProfileManager(
+      registryURL: registryDirectory.appendingPathComponent("profiles.json"),
+      applicationSupportDirectory: registryDirectory
+    )
+    for id in ["alpha", "beta"] {
+      _ = try manager.addProfile(
+        id: id,
+        displayName: id.capitalized,
+        codexHome: root.appendingPathComponent("\(id)-home", isDirectory: true)
+      )
+    }
+
+    let executable = root.appendingPathComponent("fake-codex")
+    let script = """
+      #!/bin/sh
+      barrier=$(/usr/bin/dirname "$CODEX_HOME")
+      profile=$(/usr/bin/basename "$CODEX_HOME")
+      /usr/bin/touch "$barrier/ready-$profile"
+      attempts=0
+      while [ ! -f "$barrier/ready-alpha-home" ] || [ ! -f "$barrier/ready-beta-home" ]; do
+        attempts=$((attempts + 1))
+        [ "$attempts" -lt 200 ] || exit 1
+        /bin/sleep 0.01
+      done
+      IFS= read -r _
+      printf '%s\n' '{"id":1,"result":{}}'
+      IFS= read -r _
+      IFS= read -r _
+      IFS= read -r _
+      printf '%s\n' '{"id":2,"result":{"account":{"type":"chatgpt"},"requiresOpenaiAuth":true}}'
+      printf '%s\n' '{"id":3,"result":{"rateLimits":{"primary":{"usedPercent":1}}}}'
+      """
+    try Data(script.utf8).write(to: executable)
+    #expect(chmod(executable.path, 0o700) == 0)
+
+    let statuses = try await manager.statuses(
+      profileIDs: ["beta", "alpha"],
+      service: CodexStatusService(timeout: 3),
+      codexExecutable: executable
+    )
+    #expect(statuses.map(\.profileID.rawValue) == ["beta", "alpha"])
+    #expect(statuses.allSatisfy { $0.state == .available })
+  }
+
   private func testProfile() throws -> Profile {
     try Profile(
       id: ProfileID("status"),

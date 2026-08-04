@@ -1,11 +1,13 @@
-# Pre-production security audit — 0.1.0 source
+# Pre-production security audit — 0.1.1 candidate
 
-Date: 2026-08-03
+Date: 2026-08-04
 Scope: the complete source tree, local persistence, child-process protocol, CLI and GUI launch paths, Finder launchers, packaging scripts, dependencies, and CI configuration.
 
 ## Result
 
-No confirmed critical-, high-, medium-, or low-severity findings remain open in the 0.1.0 source. The localization change does not alter authentication, persistence, process execution, or network boundaries. Every GUI format string is trusted catalog data, dynamic values are format arguments rather than executable input, placeholder parity is checked for both locales, and unexpected errors fail closed to a generic localized message. The downloadable public-binary gate remains intentionally closed because a `Developer ID Application` certificate and Apple notarization are not yet available; this is a release-provenance limitation, not a source-code vulnerability.
+No confirmed critical-, high-, medium-, or low-severity findings remain open in the 0.1.1 candidate. Interactive Codex launch now crosses the POSIX process-replacement boundary directly: the implementation rejects embedded NUL bytes, passes validated argument and environment arrays without a shell, terminates both C vectors with `nil`, and frees every allocation if `execve` returns. Desktop launch and bounded app-server status retain Foundation `Process` because those workflows must return to `opm`.
+
+The 0.1.0 public artifact proved the Developer ID, notarization, stapling, Gatekeeper, SBOM, checksum, and immutable-release pipeline. Version 0.1.1 must repeat those gates from its exact green release commit before publication.
 
 ## Fixed findings
 
@@ -18,6 +20,7 @@ No confirmed critical-, high-, medium-, or low-severity findings remain open in 
 | macOS extended ACLs could grant other local users access despite owner-only mode bits | Medium | Existing private directories, every traversed ancestor, and registry files reject unsafe extended ACLs; newly created private objects remove inherited ACLs before validation | Direct and inherited leaf/ancestor ACL regression tests plus live `doctor` checks |
 | Two profiles could select overlapping Codex or GUI storage and silently share authentication state | High | Registry validation rejects equal, nested, reserved, derived, alias, and macOS firmlink-equivalent paths both during mutation and persisted-data loading | Explicit, persisted, physical-alias, firmlink, and derived-directory isolation tests |
 | Process-global Codex credential or SQLite overrides could supersede the selected profile | High | CLI, GUI, login, and status plans remove `CODEX_ACCESS_TOKEN`, `CODEX_API_KEY`, `OPENAI_API_KEY`, and `CODEX_SQLITE_HOME` before setting the selected `CODEX_HOME`; ordinary provider variables remain available | Environment-isolation regression plus live status under deliberately invalid overrides |
+| Interactive Codex ran as a background process group and could be stopped by terminal input | Low | `run`, `login`, and `logout` now replace `opm` with the validated Codex executable via `execve`, preserving PID, foreground process group, signals, and exit status | PTY regression for all three commands plus exec failure and embedded-NUL tests |
 | Display names and paths accepted terminal control characters | Low | Added byte limits and rejected control characters; the filesystem root is also rejected as a profile directory | Validation regression tests |
 | Finder launchers accepted a symlinked executable and ignored signing failure | Low | Require a regular executable file and fail installation when local signing fails | Symlink regression test and live signature verification |
 | Finder launcher publication trusted unsafe destinations and unbounded property lists | High | Destinations must be private, current-user-owned, symlink-free directories; bundle modes are explicit; application and managed-launcher property lists are nonblocking regular files capped at 256 KiB | Destination, mode, FIFO, oversized-file, and dangling-symlink regression tests |
@@ -28,14 +31,14 @@ No confirmed critical-, high-, medium-, or low-severity findings remain open in 
 | The release client could disclose pseudonymous command telemetry | Low | Every release-time `asc` invocation sets `ASC_TELEMETRY_DISABLED=1` | Final autoreview and release-script inspection |
 | An older `asc` could fail only after the signed app was built | Low | The release preflight verifies `notarization submit` and its required file, wait, and timeout flags before building; 3.4.0 is the documented baseline | Capability preflight, ShellCheck, and final autoreview |
 
-The live compatibility tests also found and fixed reliability defects in app-server pipe lifetime and LaunchServices environment forwarding. Later review bounded GUI status refresh to four child processes, bounded JSONL record counts as well as bytes, enforced the output cap after every response stage, suppressed descriptor-local `SIGPIPE` during app-server writes, taught `doctor` to validate missing paths, executables, and app bundles, made launcher bundle identifiers injective, surfaced nonzero LaunchServices exits, made app discovery include per-user installations, and made local CLI/app upgrades stage, verify, and atomically replace each artifact. The status transport stays open until responses arrive, and app launch plans pass `CODEX_HOME` with `/usr/bin/open --env` while retaining a validated, isolated data directory.
+The live compatibility tests also found and fixed reliability defects in terminal job control, app-server pipe lifetime, and LaunchServices environment forwarding. Status concurrency now belongs to `ProfileCore`, is limited to four child processes, preserves requested order, and is shared by the CLI and GUI. Earlier review bounded JSONL record counts as well as bytes, enforced the output cap after every response stage, suppressed descriptor-local `SIGPIPE` during app-server writes, taught `doctor` to validate missing paths, executables, and app bundles, made launcher bundle identifiers injective, surfaced nonzero LaunchServices exits, made app discovery include per-user installations, and made local CLI/app upgrades stage, verify, and atomically replace each artifact.
 
 ## Review by domain
 
 1. **Authentication:** delegated exclusively to the official Codex CLI under the selected `CODEX_HOME`. Conflicting global Codex credential/state overrides are removed; the project does not parse, migrate, print, or persist authentication tokens.
 2. **Authorization:** no server or multi-user boundary exists. Local profile changes run with the current macOS user's authority.
 3. **Input validation:** profile identifiers, names, paths, registry size/count, app-server output, and launcher metadata are bounded and validated. Localization keys are static, and the gate rejects divergent format placeholders before packaging.
-4. **Injection:** child processes use fixed executable URLs and argument arrays. No user-controlled value is evaluated by a shell.
+4. **Injection:** child processes and process replacement use fixed executable URLs and explicit argument/environment arrays. Embedded NUL bytes are rejected and no user-controlled value is evaluated by a shell.
 5. **Cryptography:** the application performs no custom encryption or hashing. Distribution trust uses Apple code signing and notarization gates.
 6. **Secrets:** Gitleaks and TruffleHog found no verified or unverified secrets. The repository contains no credential fixtures or environment files. Both release entrypoints clear legacy, `asc` credential, and authentication-routing variables before invoking project code, then require strict authentication through the default System Keychain profile without temporary key files. Release-time `asc` telemetry is disabled.
 7. **Data protection:** registry and lock files are `0600`; managed and launcher directories are `0700`; symlinks, unsafe ancestors, and extended ACLs are rejected; writes use descriptor-relative operations, a unique temporary file, atomic rename, and durability syncs.
@@ -51,15 +54,16 @@ The live compatibility tests also found and fixed reliability defects in app-ser
 
 ## Verification performed
 
-- `Scripts/check.sh`: strict Swift format, ast-grep rules, ShellCheck, localization completeness and placeholder checks for 131 keys, debug build, CLI contract check, and 51 tests.
+- `Scripts/check.sh`: strict Swift format, ast-grep rules, ShellCheck, localization completeness and placeholder checks for 131 keys, debug build, PTY integration, CLI contract check, and 54 tests under Xcode 26.6. Xcode 27 beta also builds and passes all 54 tests.
 - `Scripts/security-check.sh`: Gitleaks, TruffleHog, dependency resolution, diff checks, and privacy-manifest validation.
-- `$autoreview`: `gpt-5.6-sol`/high found and verified localization defects plus release-process risks in tag ownership, ambiguous cleanup, GitHub authentication context, private-key inheritance, architecture parsing, and unbounded notarization. Each accepted finding was fixed; the final consolidated rerun reported no actionable findings.
+- `$autoreview --mode local`: Codex `gpt-5.6-sol`/high reviewed the complete candidate while `Scripts/check.sh` ran in parallel; it reported no accepted or actionable findings and rated the patch correct with 0.9 confidence.
 - Security-audit heuristics: full-history secret scan, route enumeration, and risky-pattern scan. Route/auth and error-leak hits were reviewed as false positives caused by generic pattern matching against local Swift methods and `Label(..., systemImage:)`; the product has no HTTP service or listening socket.
-- GitHub security state: zero open Dependabot, CodeQL, or secret-scanning alerts at audit time; the latest `main` CI and CodeQL runs were successful before this unpushed change.
+- Release benchmark: two-profile `status --all` improved from a 1,642 ms median to 788 ms at load averages 5.63/6.20/7.09; cheap CLI commands did not regress materially.
+- GitHub security state: zero open Dependabot, CodeQL, or secret-scanning alerts on 2026-08-04; the latest `main` CI and CodeQL runs were successful. The 0.1.1 release commit must repeat the remote checks.
 - Locally signed package: `codesign --verify --deep --strict` passed with an Apple Development identity; the app bundle contains `en-US` and `pt-BR`, and isolated native-window renders verified the main profile and editor layouts in both languages without using real profile data.
 - Live integration: two sanitized test profiles returned status, passed expanded `doctor` checks under a restricted Finder-like `PATH`, and launched the official app with distinct data directories. No account identifiers or status payloads are retained in the repository.
 
 ## Residual limitations
 
 - The desktop `--user-data-dir` adapter is empirical and may change when the official app changes. It was verified against the supported desktop-app discovery and launch flow on the audit date.
-- A public downloadable app must not be published until it is signed with `Developer ID Application`, notarized by Apple, stapled, and assessed by Gatekeeper. Source publication and local development-signed use are not blocked.
+- Every public downloadable version must be signed with `Developer ID Application`, notarized by Apple, stapled, and assessed by Gatekeeper. The release script enforces this per version; passing 0.1.0 does not waive the 0.1.1 gate.
