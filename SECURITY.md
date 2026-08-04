@@ -12,4 +12,4 @@ You should receive an acknowledgement within seven days. Please allow time for v
 
 ## Security boundary
 
-Open Profile Manager stores profile labels and local paths. The official Codex runtime owns authentication data under each `CODEX_HOME`; this project must never read or transfer that material. The project has no hosted backend or telemetry.
+Open Profile Manager stores profile labels and local paths. The official Codex runtime owns authentication data under each `CODEX_HOME`; this project must never read or transfer that material. The public website is a static GitHub Pages artifact with no backend, form submission, analytics, or telemetry.

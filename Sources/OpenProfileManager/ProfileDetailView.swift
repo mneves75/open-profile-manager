@@ -62,16 +62,6 @@ private struct ProfileHeader: View {
           .font(.callout.monospaced().weight(.medium))
           .foregroundStyle(.secondary)
           .textSelection(.enabled)
-        if let email = status?.account?.email {
-          Label {
-            Text(verbatim: email)
-          } icon: {
-            Image(systemName: "at")
-          }
-          .font(.callout)
-          .foregroundStyle(.secondary)
-          .textSelection(.enabled)
-        }
       }
 
       Spacer(minLength: 12)
