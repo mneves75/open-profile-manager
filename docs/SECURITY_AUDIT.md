@@ -1,11 +1,11 @@
-# Security audit — 0.1.2 release candidate
+# Security audit — 0.1.2 release
 
 Date: 2026-08-04
 Scope: the complete source tree, local persistence, child-process protocol, CLI and GUI launch paths, Finder launchers, packaging scripts, the static GitHub Pages site, Remotion authoring sources, dependencies, and CI configuration.
 
 ## Result
 
-No confirmed critical-, high-, medium-, or low-severity findings remain open in the 0.1.2 release candidate. The review revalidated the 0.1.1 native security boundary and extended it to the new public site and video toolchain. It removed the account email from the native human-readable UI, added npm dependency monitoring and blocking web/video validation, and eliminated generated dependency/build trees from the TruffleHog filesystem scan so binary-decoder errors cannot obscure repository-source results.
+No confirmed critical-, high-, medium-, or low-severity findings remain open in the 0.1.2 release. The review revalidated the 0.1.1 native security boundary and extended it to the new public site and video toolchain. It removed the account email from the native human-readable UI, added npm dependency monitoring and blocking web/video validation, and eliminated generated dependency/build trees from the TruffleHog filesystem scan so binary-decoder errors cannot obscure repository-source results.
 
 ## Fixed findings
 
@@ -56,15 +56,15 @@ The live compatibility tests also found and fixed reliability defects in termina
 ## Verification performed
 
 - `Scripts/check.sh`: strict Swift format, ast-grep rules, ShellCheck, localization completeness and placeholder checks for 131 keys, debug build, PTY integration, CLI contract check, and all 54 tests passed under Xcode 26.6.
-- `Scripts/security-check.sh`: Gitleaks scanned the working tree and all 20 commits with no leaks; TruffleHog scanned 147 source chunks with zero verified or unverified secrets and no scan errors; dependency resolution, diff checks, and privacy-manifest validation passed.
+- `Scripts/security-check.sh`: Gitleaks scanned the working tree and all 25 commits with no leaks; TruffleHog scanned 147 source chunks with zero verified or unverified secrets and no scan errors; dependency resolution, diff checks, and privacy-manifest validation passed.
 - `npm ci --prefix video`, `npm audit --audit-level=low`, `node --check docs/app.js`, and `npm --prefix video run lint`: clean install, zero vulnerabilities, valid JavaScript, ESLint, and TypeScript.
 - Security-audit heuristics: full-history secret scan, route enumeration, and risky-pattern scan. Route/auth and error-leak hits were reviewed as false positives caused by generic pattern matching against local Swift methods and `Label(..., systemImage:)`; the product has no HTTP service or listening socket.
 - Release benchmark: two-profile `status --all` improved from a 1,642 ms median to 788 ms at load averages 5.63/6.20/7.09; cheap CLI commands did not regress materially.
 - GitHub security state: zero open Dependabot, CodeQL, or secret-scanning alerts on 2026-08-04.
-- Locally signed package: the 0.1.2/build 4 app passed `codesign --verify --deep --strict` with a Developer ID Application identity, hardened runtime, no added entitlements, both localizations, and a privacy manifest. It launched with one synthetic profile under an isolated home; macOS denied automated window capture because Screen Recording permission is unavailable in this environment.
+- Released package: the 0.1.2/build 4 app passed `codesign --verify --deep --strict` with a Developer ID Application identity, hardened runtime, no added entitlements, both localizations, and a privacy manifest. The public universal ZIP launched under an isolated home.
 - Media and browser QA: the affected tutorial was rerendered at 1920×1080 with H.264/AAC for 85.056 seconds, and its 0.1.2 frame was inspected. Desktop and 390×844 browser renders, the accessibility tree, zero console/page errors, and real tutorial playback all passed.
 - Live integration: two sanitized test profiles returned status, passed expanded `doctor` checks under a restricted Finder-like `PATH`, and launched the official app with distinct data directories. No account identifiers or status payloads are retained in the repository.
-- Distribution: `v0.1.1` resolves to `c5754b1`; Apple accepted notarization submission `5e5f7581-f245-432d-80b5-0abe2a85d473`. Developer ID verification, stapling, Gatekeeper, matching dSYMs, SPDX SBOM, checksums, GitHub asset attestations, immutable publication, redownload, and isolated-home launch from the public ZIP passed.
+- Distribution: `v0.1.2` resolves to `e4470b4`; Apple accepted notarization submission `6887baa0-e68b-4ffd-8923-a85212a5e43b`. Developer ID verification, universal architecture checks, stapling, Gatekeeper, matching dSYMs, SPDX SBOM, checksums, GitHub asset attestations, immutable publication, redownload, isolated-home launch, and public asset/source HTTP checks passed.
 
 ## Residual limitations
 

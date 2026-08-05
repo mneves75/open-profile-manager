@@ -27,7 +27,8 @@ Apple Development, Apple Distribution, Mac App Distribution, and ad-hoc identiti
 ## Release
 
 ```bash
-APP_IDENTITY='Developer ID Application: Name (TEAMID)' Scripts/release.sh
+DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer \
+  APP_IDENTITY='Developer ID Application: Name (TEAMID)' Scripts/release.sh
 ```
 
 The foreground release performs the full gate:
@@ -42,6 +43,8 @@ The foreground release performs the full gate:
 8. publishes the immutable release and verifies GitHub's asset digests.
 
 The release wrapper disables `asc` telemetry, rejects mixed keychain/config/environment authentication, and verifies the required notarization command and flags before building.
+
+Keep the stable Xcode app selected explicitly for public packaging. Xcode 27 beta compatibility builds and tests are useful, but its SwiftPM output layout currently places sequential architecture builds in one shared product directory.
 
 Immutable releases lock the tag and assets after publication and provide GitHub-signed release attestations verified by `gh release verify-asset`.
 If verification fails while the release is positively confirmed to remain a draft, the wrapper removes its own draft and deletes only the exact tag object reserved by that run, using a force-with-lease guard. An ambiguous GitHub response is preserved for manual reconciliation; the wrapper never guesses that an unknown release or tag is safe to delete.
