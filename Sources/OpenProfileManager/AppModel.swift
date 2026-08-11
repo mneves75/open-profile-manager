@@ -230,10 +230,10 @@ final class AppModel {
 
   private func refreshStatuses(for profiles: [Profile], using manager: ProfileManager) async {
     let refreshed = await Task.detached(priority: .userInitiated) {
-      try? await manager.statuses(profileIDs: profiles.map(\.id.rawValue))
+      await manager.statuses(profiles: profiles)
     }.value
     statuses = Dictionary(
-      uniqueKeysWithValues: (refreshed ?? []).map { ($0.profileID, $0) }
+      uniqueKeysWithValues: refreshed.map { ($0.profileID, $0) }
     )
   }
 

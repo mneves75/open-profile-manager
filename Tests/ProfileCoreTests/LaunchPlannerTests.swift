@@ -96,7 +96,7 @@ struct LaunchPlannerTests {
     try FileManager.default.createDirectory(at: codexHome, withIntermediateDirectories: false)
     #expect(chmod(codexHome.path, 0o700) == 0)
     let profile = try testProfile(codexHome: codexHome)
-    let planner = try LaunchPlanner(
+    let planner = try LaunchPlanner.acceptingTestApplications(
       applicationSupportDirectory: root.appendingPathComponent("support"))
     let plan = try planner.appPlan(for: profile, explicitAppURL: app)
 
@@ -122,7 +122,10 @@ struct LaunchPlannerTests {
     let valid = root.appendingPathComponent("Codex.app", isDirectory: true)
     try FileManager.default.createDirectory(at: malformed, withIntermediateDirectories: false)
     try createApplication(at: valid)
-    let planner = try LaunchPlanner(applicationSupportDirectory: root)
+    let planner = try LaunchPlanner(
+      applicationSupportDirectory: root,
+      applicationSignatureValidator: { $0 == valid.standardizedFileURL }
+    )
 
     #expect(
       try planner.discoverApplication(
@@ -151,7 +154,10 @@ struct LaunchPlannerTests {
     try Data(repeating: 0x20, count: 262_145).write(
       to: oversized.appendingPathComponent("Contents/Info.plist")
     )
-    let planner = try LaunchPlanner(applicationSupportDirectory: root)
+    let planner = try LaunchPlanner(
+      applicationSupportDirectory: root,
+      applicationSignatureValidator: { $0 == valid.standardizedFileURL }
+    )
 
     #expect(
       try planner.discoverApplication(
@@ -167,11 +173,45 @@ struct LaunchPlannerTests {
     defer { try? FileManager.default.removeItem(at: root) }
     let app = root.appendingPathComponent("Applications/ChatGPT.app", isDirectory: true)
     try createApplication(at: app)
-    let planner = try LaunchPlanner(applicationSupportDirectory: root)
+    let planner = try LaunchPlanner(
+      applicationSupportDirectory: root,
+      applicationSignatureValidator: { $0 == app.standardizedFileURL }
+    )
 
     #expect(
       try planner.discoverApplication(explicitAppURL: nil, homeDirectory: root)
         == app.standardizedFileURL
+    )
+  }
+
+  @Test("Application discovery fails closed on unsigned or wrong-identity bundles")
+  func rejectsUnsignedAndWrongIdentityApplications() throws {
+    let root = try privateTemporaryDirectory()
+    defer { try? FileManager.default.removeItem(at: root) }
+    let unsigned = root.appendingPathComponent("Unsigned.app", isDirectory: true)
+    let wrongBundleID = root.appendingPathComponent("WrongBundle.app", isDirectory: true)
+    let accepted = root.appendingPathComponent("Accepted.app", isDirectory: true)
+    try createApplication(at: unsigned)
+    try createApplication(at: wrongBundleID, bundleIdentifier: "dev.openprofilemanager.test")
+    try createApplication(at: accepted)
+
+    let defaultPlanner = try LaunchPlanner(applicationSupportDirectory: root)
+    #expect(throws: ProfileCoreError.applicationNotFound) {
+      try defaultPlanner.discoverApplication(explicitAppURL: unsigned)
+    }
+
+    let planner = try LaunchPlanner(
+      applicationSupportDirectory: root,
+      applicationSignatureValidator: { $0 == accepted.standardizedFileURL }
+    )
+    #expect(throws: ProfileCoreError.applicationNotFound) {
+      try planner.discoverApplication(explicitAppURL: wrongBundleID)
+    }
+    #expect(
+      try planner.discoverApplication(
+        explicitAppURL: nil,
+        candidateURLs: [wrongBundleID, unsigned, accepted]
+      ) == accepted.standardizedFileURL
     )
   }
 
@@ -239,7 +279,10 @@ struct LaunchPlannerTests {
     return url
   }
 
-  private func createApplication(at url: URL) throws {
+  private func createApplication(
+    at url: URL,
+    bundleIdentifier: String = "com.openai.codex"
+  ) throws {
     let macOS = url.appendingPathComponent("Contents/MacOS", isDirectory: true)
     try FileManager.default.createDirectory(at: macOS, withIntermediateDirectories: true)
     let executable = macOS.appendingPathComponent("TestApplication", isDirectory: false)
@@ -247,7 +290,7 @@ struct LaunchPlannerTests {
     #expect(chmod(executable.path, 0o700) == 0)
     let plist: [String: Any] = [
       "CFBundleExecutable": "TestApplication",
-      "CFBundleIdentifier": "dev.openprofilemanager.test",
+      "CFBundleIdentifier": bundleIdentifier,
       "CFBundlePackageType": "APPL",
     ]
     let data = try PropertyListSerialization.data(
@@ -258,5 +301,13 @@ struct LaunchPlannerTests {
     try data.write(
       to: url.appendingPathComponent("Contents/Info.plist", isDirectory: false)
     )
+  }
+}
+
+extension LaunchPlanner {
+  fileprivate static func acceptingTestApplications(
+    applicationSupportDirectory: URL
+  ) throws -> Self {
+    try Self(applicationSupportDirectory: applicationSupportDirectory) { _ in true }
   }
 }

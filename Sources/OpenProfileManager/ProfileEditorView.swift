@@ -46,12 +46,14 @@ struct ProfileEditorView: View {
           .disabled(configuration.mode == .edit)
           .textContentType(.username)
           .focused($focusedField, equals: .profileID)
+          .onSubmit { focusedField = .displayName }
           TextField(
             L10n.string("Display name"),
             text: $displayName,
             prompt: Text(verbatim: L10n.string("Work"))
           )
           .focused($focusedField, equals: .displayName)
+          .onSubmit { focusedField = .codexHome }
         }
 
         Section {
@@ -60,7 +62,8 @@ struct ProfileEditorView: View {
             text: $codexHome,
             prompt: "~/.codex",
             focus: $focusedField,
-            field: .codexHome
+            field: .codexHome,
+            onSubmit: { focusedField = .guiDataDirectory }
           )
           DirectoryField(
             title: L10n.string("Desktop data directory (optional)"),
@@ -95,30 +98,26 @@ struct ProfileEditorView: View {
       .scrollContentBackground(.hidden)
 
       Divider()
-      HStack(spacing: 10) {
-        Spacer()
-        Button(L10n.string("Cancel"), role: .cancel) { dismiss() }
-          .keyboardShortcut(.cancelAction)
-          .accessibilityLabel(L10n.string("Cancel"))
-        Button(
-          configuration.mode == .edit
-            ? L10n.string("Save Changes") : L10n.string("Add Profile")
-        ) {
+      EditorFooter(
+        isEditing: configuration.mode == .edit,
+        canSave: canSave,
+        onCancel: { dismiss() },
+        onSave: {
           onSave(profileID, displayName, codexHome, guiDataDirectory)
         }
-        .keyboardShortcut(.defaultAction)
-        .buttonStyle(.borderedProminent)
-        .disabled(!canSave)
-        .accessibilityLabel(
-          configuration.mode == .edit
-            ? L10n.string("Save Changes") : L10n.string("Add Profile")
-        )
-      }
-      .padding(18)
-      .background(AppVisualStyle.sidebar)
+      )
     }
-    .frame(width: 620, height: 650)
+    .frame(
+      minWidth: 520,
+      idealWidth: 620,
+      maxWidth: 760,
+      minHeight: 520,
+      idealHeight: 650
+    )
     .background(AppVisualStyle.canvas)
+    .onAppear {
+      focusedField = configuration.mode == .edit ? .displayName : .profileID
+    }
   }
 
   private var canSave: Bool {
@@ -159,7 +158,46 @@ private struct EditorHeader: View {
         Text(verbatim: L10n.string("Use a separate Codex home for each account or workspace."))
           .foregroundStyle(.secondary)
       }
+      .fixedSize(horizontal: false, vertical: true)
     }
+  }
+}
+
+private struct EditorFooter: View {
+  let isEditing: Bool
+  let canSave: Bool
+  let onCancel: () -> Void
+  let onSave: () -> Void
+
+  var body: some View {
+    ViewThatFits(in: .horizontal) {
+      HStack(spacing: 10) {
+        Spacer()
+        buttons
+      }
+      VStack(alignment: .trailing, spacing: 10) {
+        buttons
+      }
+    }
+    .frame(maxWidth: .infinity, alignment: .trailing)
+    .padding(18)
+    .background(AppVisualStyle.sidebar)
+  }
+
+  @ViewBuilder
+  private var buttons: some View {
+    Button(L10n.string("Cancel"), role: .cancel, action: onCancel)
+      .keyboardShortcut(.cancelAction)
+      .accessibilityLabel(L10n.string("Cancel"))
+    Button(saveTitle, action: onSave)
+      .keyboardShortcut(.defaultAction)
+      .buttonStyle(.borderedProminent)
+      .disabled(!canSave)
+      .accessibilityLabel(saveTitle)
+  }
+
+  private var saveTitle: String {
+    isEditing ? L10n.string("Save Changes") : L10n.string("Add Profile")
   }
 }
 
@@ -169,19 +207,40 @@ private struct DirectoryField: View {
   let prompt: String
   let focus: FocusState<EditorField?>.Binding
   let field: EditorField
+  let onSubmit: () -> Void
+
+  init(
+    title: String,
+    text: Binding<String>,
+    prompt: String,
+    focus: FocusState<EditorField?>.Binding,
+    field: EditorField,
+    onSubmit: @escaping () -> Void = {}
+  ) {
+    self.title = title
+    _text = text
+    self.prompt = prompt
+    self.focus = focus
+    self.field = field
+    self.onSubmit = onSubmit
+  }
 
   var body: some View {
     VStack(alignment: .leading, spacing: 7) {
       Text(verbatim: title)
         .font(.caption.weight(.semibold))
         .foregroundStyle(.secondary)
+        .fixedSize(horizontal: false, vertical: true)
       HStack(spacing: 10) {
         TextField(title, text: $text, prompt: Text(verbatim: prompt))
           .font(.body.monospaced())
           .textFieldStyle(.roundedBorder)
           .focused(focus, equals: field)
+          .onSubmit(onSubmit)
+          .layoutPriority(1)
         Button(L10n.string("Choose…")) { chooseDirectory() }
           .accessibilityLabel(L10n.string("Choose directory for %@", title))
+          .fixedSize()
       }
     }
   }
