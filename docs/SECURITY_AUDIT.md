@@ -5,7 +5,7 @@ Scope: the complete source tree, local persistence, child-process protocol, CLI 
 
 ## Result
 
-No confirmed critical-, high-, medium-, or low-severity findings remain open for the 0.1.3 release candidate. The review revalidated the native launch boundary, site/video supply chain, and local persistence model. Version 0.1.3 adds an official desktop-app signature requirement, repeatable product-site performance evidence, stronger web/video validation, and updated Remotion dependencies.
+No confirmed critical-, high-, medium-, or low-severity findings remain open for the published 0.1.3 release. The review revalidated the native launch boundary, site/video supply chain, and local persistence model. Version 0.1.3 adds an official desktop-app signature requirement, repeatable product-site performance evidence, stronger web/video validation, and updated Remotion dependencies.
 
 ## Fixed findings
 
@@ -59,17 +59,15 @@ The live compatibility tests also found and fixed reliability defects in termina
 ## Verification performed
 
 - `Scripts/check.sh`: strict Swift format, four ast-grep rule fixtures and scan, ShellCheck, release-artifact checks, 131-key localization completeness and placeholder checks, debug build, version-drift check, PTY integration, CLI contract check, web/video validation, and all 56 Swift tests passed under stable Xcode 26.6.
-- `Scripts/security-check.sh`: Gitleaks scanned the working tree and all 32 commits with no leaks; TruffleHog scanned 159 source chunks with zero verified or unverified secrets and no scan errors; dependency resolution, diff checks, and privacy-manifest validation passed.
+- `Scripts/security-check.sh`: Gitleaks scanned the working tree and all 42 commits with no leaks; TruffleHog scanned 161 source chunks with zero verified or unverified secrets and no scan errors; dependency resolution, diff checks, and privacy-manifest validation passed.
 - `npm ci --prefix video`, `npm audit --audit-level=low`, `node --check docs/app.js`, and `npm --prefix video run lint`: clean install, zero vulnerabilities, valid JavaScript, ESLint, and TypeScript.
 - Security-audit heuristics: full-history secret scan, route enumeration, and risky-pattern scan. Route/auth and error-leak hits were reviewed as false positives caused by generic pattern matching against local Swift methods and `Label(..., systemImage:)`; the product has no HTTP service or listening socket.
 - Release benchmark: two-profile `status --all` improved from a 1,642 ms median to 788 ms at load averages 5.63/6.20/7.09; cheap CLI commands did not regress materially.
 - GitHub security state: zero open Dependabot, CodeQL, or secret-scanning alerts on 2026-08-11.
-- Released package: the 0.1.2/build 4 app passed `codesign --verify --deep --strict` with a Developer ID Application identity, hardened runtime, no added entitlements, both localizations, and a privacy manifest. The public universal ZIP launched under an isolated home.
+- Released package: the 0.1.3/build 5 app passed `codesign --verify --deep --strict` with a Developer ID Application identity, hardened runtime, both localizations, and a privacy manifest. The redownloaded public universal ZIP passed Gatekeeper, stapling, checksums, and GitHub asset attestation verification.
 - Media and browser QA: the affected tutorial was rerendered at 1920×1080 with H.264/AAC for 85.056 seconds, and its 0.1.2 frame was inspected. Desktop and 390×844 browser renders, the accessibility tree, zero console/page errors, and real tutorial playback all passed.
 - Live integration: two sanitized test profiles returned status, passed expanded `doctor` checks under a restricted Finder-like `PATH`, and launched the official app with distinct data directories. No account identifiers or status payloads are retained in the repository.
-- Distribution: `v0.1.2` resolves to `e4470b4`; Apple accepted notarization submission `6887baa0-e68b-4ffd-8923-a85212a5e43b`. Developer ID verification, universal architecture checks, stapling, Gatekeeper, matching dSYMs, SPDX SBOM, checksums, GitHub asset attestations, immutable publication, redownload, isolated-home launch, and public asset/source HTTP checks passed.
-
-The 0.1.3 public release remains subject to the release wrapper's Developer ID signing, Apple notarization, stapling, Gatekeeper, redownload, checksum, SBOM, and GitHub immutable-release checks.
+- Distribution: `v0.1.3` resolves to `86f0199`; Apple accepted notarization submission `e042f594-beda-4191-8a5b-75f912daf649`. Developer ID verification, universal architecture checks, stapling, Gatekeeper, matching dSYMs, SPDX SBOM, checksums, GitHub asset attestations, immutable publication, and redownload verification passed.
 
 ## Residual limitations
 
