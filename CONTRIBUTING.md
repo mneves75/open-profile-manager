@@ -27,6 +27,7 @@ Before opening a pull request:
 ```bash
 Scripts/check.sh
 Scripts/security-check.sh
+Scripts/benchmark_site.sh --validate-only
 ```
 
-Describe the user-visible behavior, why the change belongs in the project, the commands you ran, and any compatibility risk with the official Codex CLI or desktop app.
+For product-site timing changes, follow the repeatable conditions in [docs/PERFORMANCE.md](docs/PERFORMANCE.md). Describe the user-visible behavior, why the change belongs in the project, the commands you ran, and any compatibility risk with the official Codex CLI or desktop app.

@@ -1,0 +1,26 @@
+WEBVTT
+
+00:00.000 --> 00:04.000
+[Soft interface ambience]
+Two Codex accounts. One shared Codex home. Chaos.
+
+00:04.000 --> 00:08.000
+Introducing Open Profile Manager: every Codex account, cleanly separated.
+
+00:08.000 --> 00:14.000
+Three named profiles are added with separate local state.
+
+00:14.000 --> 00:19.500
+Read-only quota status is shown for every profile. Selection stays explicit.
+
+00:19.500 --> 00:23.500
+The Work profile launches the real Codex process in the terminal.
+
+00:23.500 --> 00:28.500
+The same profiles are available in the native macOS app, in English and Portuguese.
+
+00:28.500 --> 00:32.500
+Local-first. Notarized. No telemetry. Open source under the MIT license.
+
+00:32.500 --> 00:38.000
+Open Profile Manager is available at github.com/mneves75/open-profile-manager.

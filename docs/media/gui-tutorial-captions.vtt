@@ -1,0 +1,25 @@
+WEBVTT
+
+00:00.000 --> 00:05.000
+Open Profile Manager manages every Codex profile in one native macOS app.
+
+00:05.000 --> 00:13.000
+Profiles are on the left. Status and explicit launch actions are on the right.
+
+00:13.000 --> 00:24.000
+A Client profile is added with its own Codex home. Tokens remain with official Codex login.
+
+00:24.000 --> 00:33.000
+The Research profile is selected and its read-only quota status is refreshed.
+
+00:33.000 --> 00:42.000
+The Work profile command is copied for launching the real Codex process in Terminal.
+
+00:42.000 --> 00:51.000
+The independently installed official macOS app opens with the selected profile.
+
+00:51.000 --> 00:60.000
+A profile-specific launcher is installed in the user's Applications directory.
+
+00:60.000 --> 00:72.000
+Three profiles, cleanly separated. Local-first, notarized, no telemetry, and open source.

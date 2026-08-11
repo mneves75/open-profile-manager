@@ -1,0 +1,43 @@
+WEBVTT
+
+00:00.000 --> 00:05.000
+Open Profile Manager: an 85-second tutorial.
+
+00:05.000 --> 00:09.467
+Install by building from source.
+
+00:09.467 --> 00:16.467
+Clone the repository, run the local installer, and confirm the installed version.
+
+00:16.467 --> 00:21.233
+Add profiles and keep their state separate.
+
+00:21.233 --> 00:29.233
+Work, Research, and Client profiles are added with distinct Codex homes, then listed.
+
+00:29.233 --> 00:33.800
+Log in through the official Codex flow.
+
+00:33.800 --> 00:39.800
+The Work profile delegates login to Codex. OPM never touches authentication tokens.
+
+00:39.800 --> 00:44.633
+Check quota as status information, never as an automatic rotation signal.
+
+00:44.633 --> 00:51.633
+Read-only usage is shown for all three profiles.
+
+00:51.633 --> 00:56.500
+Pick a profile and launch it explicitly.
+
+00:56.500 --> 00:65.500
+Launch the CLI, official app, or a profile-specific Finder launcher.
+
+00:65.500 --> 00:70.500
+Run the health check to see what is ready.
+
+00:70.500 --> 00:78.000
+The registry, Codex CLI, official app, and private profile directories all pass.
+
+00:78.000 --> 00:85.000
+Open Profile Manager: explicit profiles, read-only status, native app, and Finder launchers.

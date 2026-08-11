@@ -281,6 +281,10 @@ h1 {
   position: relative;
 }
 
+.hero-visual picture {
+  display: block;
+}
+
 .hero-art {
   width: 100%;
   aspect-ratio: 1672 / 941;
@@ -952,6 +956,35 @@ footer a {
 .video-grid figcaption a {
   text-decoration: underline;
   text-underline-offset: 0.2em;
+}
+
+.video-transcript {
+  margin-top: 0.75rem;
+  color: var(--muted);
+  font-size: 0.85rem;
+}
+
+.video-transcript summary {
+  width: fit-content;
+  color: var(--text);
+  cursor: pointer;
+  font-weight: 700;
+  text-decoration: underline;
+  text-decoration-color: var(--line-strong);
+  text-underline-offset: 0.25em;
+}
+
+.video-transcript summary:hover {
+  text-decoration-color: var(--accent);
+}
+
+.video-transcript ol {
+  margin: 0.75rem 0 0;
+  padding-left: 1.25rem;
+}
+
+.video-transcript li + li {
+  margin-top: 0.4rem;
 }
 
 @media (hover: hover) {
