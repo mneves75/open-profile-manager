@@ -33,6 +33,15 @@ The 2026-08-11 release-candidate run could not connect escalated Chromium to the
 - **First window:** measure process launch to the first visible key window in a signed Release build. Record warm and cold launches separately. No 50 ms budget is adopted until the macOS process/window baseline demonstrates that it is meaningful.
 - **State change:** measure from the user-input signpost to the first completed frame that reflects the change. Status freshness is a separate subprocess result and must not be included as rendering time.
 
+For a repeatable warm proxy, `Scripts/benchmark_native_launch.swift` measures `Process.run()` to the first on-screen layer-zero CoreGraphics window, terminates that instance, waits 100 ms, and repeats. It does not prove key-window or first-frame presentation, so retain the exact metric name when reporting it.
+
+```bash
+swift Scripts/benchmark_native_launch.swift \
+  "$HOME/Applications/Open Profile Manager.app/Contents/MacOS/OpenProfileManager" 10
+```
+
+On 2026-08-11, the signed 0.1.3 Release build measured p50 `225.625 ms` and p95 `357.221 ms` at load averages `4.88/5.98/8.24`. This proves that a below-50 ms process-to-window budget is not meaningful for the current macOS launch surface; the source-level 500 ms delay was still removed because it added avoidable latency above that platform/process floor.
+
 ## CLI and status
 
 CLI/status latency is operational latency, measured with the fixture/profile count, command, cache state, and percentile stated. It is not page load or native rendering.
