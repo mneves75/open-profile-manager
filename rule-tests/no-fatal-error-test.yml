@@ -1,0 +1,5 @@
+id: no-fatal-error
+valid:
+  - 'throw ProfileCoreError.filesystem(operation: "load")'
+invalid:
+  - 'fatalError("unreachable")'

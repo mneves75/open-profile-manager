@@ -1,0 +1,5 @@
+id: no-force-try
+valid:
+  - 'let value = try load()'
+invalid:
+  - 'let value = try! load()'

@@ -1,0 +1,7 @@
+id: no-system-shell
+valid:
+  - 'let executable = URL(fileURLWithPath: "/usr/bin/open")'
+invalid:
+  - 'let executable = URL(fileURLWithPath: "/bin/sh")'
+  - 'let executable = URL(fileURLWithPath: "/bin/bash")'
+  - 'let executable = URL(fileURLWithPath: "/bin/zsh")'
