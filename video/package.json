@@ -5,15 +5,32 @@
   "repository": "https://github.com/mneves75/open-profile-manager",
   "license": "MIT",
   "private": true,
+  "packageManager": "npm@11.17.0",
+  "engines": {
+    "node": "^24.0.0",
+    "npm": "^11.0.0"
+  },
+  "devEngines": {
+    "runtime": {
+      "name": "node",
+      "version": "^24.0.0",
+      "onFail": "error"
+    },
+    "packageManager": {
+      "name": "npm",
+      "version": "^11.0.0",
+      "onFail": "error"
+    }
+  },
   "dependencies": {
-    "@remotion/cli": "4.0.500",
-    "@remotion/google-fonts": "4.0.500",
+    "@remotion/cli": "4.0.505",
+    "@remotion/google-fonts": "4.0.505",
     "react": "19.2.3",
     "react-dom": "19.2.3",
-    "remotion": "4.0.500"
+    "remotion": "4.0.505"
   },
   "devDependencies": {
-    "@remotion/eslint-config-flat": "4.0.500",
+    "@remotion/eslint-config-flat": "4.0.505",
     "@types/react": "19.2.7",
     "@types/web": "0.0.166",
     "eslint": "9.39.5",
@@ -36,6 +53,8 @@
   "overrides": {
     "fast-uri": "3.1.5",
     "brace-expansion@1": "1.1.18",
-    "brace-expansion@2": "2.1.4"
+    "brace-expansion@2": "2.1.4",
+    "js-yaml": "4.3.1",
+    "nanoid": "3.3.17"
   }
 }

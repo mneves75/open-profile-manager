@@ -24,6 +24,25 @@ jobs:
         with:
           persist-credentials: false
 
+      - name: Set up Node.js
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: video/package-lock.json
+
+      - name: Identify Swift toolchain
+        id: swift-toolchain
+        run: echo "version=$(swift --version | shasum -a 256 | cut -d ' ' -f1)" >> "$GITHUB_OUTPUT"
+
+      - name: Cache SwiftPM
+        uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
+        with:
+          path: |
+            .build
+            ~/Library/Caches/org.swift.swiftpm
+          key: swiftpm-${{ runner.os }}-${{ runner.arch }}-${{ steps.swift-toolchain.outputs.version }}-${{ hashFiles('Package.swift', 'Package.resolved') }}
+
       - name: Install lint tools
         run: brew install ast-grep shellcheck
 
@@ -70,31 +89,6 @@ jobs:
 
       - name: Review dependency changes
         uses: actions/dependency-review-action@a1d282b36b6f3519aa1f3fc636f609c47dddb294 # v5.0.0
-
-  web-video:
-    name: Web and video lint
-    runs-on: ubuntu-latest
-    timeout-minutes: 10
-    steps:
-      - name: Check out source
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          persist-credentials: false
-
-      - name: Set up Node.js
-        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
-        with:
-          node-version: 24
-          cache: npm
-          cache-dependency-path: video/package-lock.json
-
-      - name: Install video dependencies
-        run: npm ci --prefix video
-
-      - name: Validate web and video sources
-        run: |
-          node --check docs/app.js
-          npm --prefix video run lint
 
   sbom:
     name: Generate SBOM
