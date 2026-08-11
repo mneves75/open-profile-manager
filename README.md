@@ -37,6 +37,8 @@ Local installation requires a `Developer ID Application` or `Apple Development` 
 
 Public releases use a notarized universal app ZIP, matching dSYMs, an SPDX SBOM, and SHA-256 checksums. GitHub also provides source ZIP and `tar.gz` archives. See [the release procedure](docs/RELEASING.md).
 
+The static product site's repeatable performance and asset-validation contract is documented in [docs/PERFORMANCE.md](docs/PERFORMANCE.md); run it with `Scripts/benchmark_site.sh`.
+
 ## Quick start
 
 ```bash
@@ -88,7 +90,7 @@ See [SECURITY.md](SECURITY.md) for vulnerability reporting, [the threat model](d
 
 ## Project status
 
-Version 0.1.2 is the current source line and [published GitHub Release](https://github.com/mneves75/open-profile-manager/releases/tag/v0.1.2). See [PROJECT_STATUS.md](PROJECT_STATUS.md) and [CHANGELOG.md](CHANGELOG.md).
+Version 0.1.3 is the current source line and [published GitHub Release](https://github.com/mneves75/open-profile-manager/releases/tag/v0.1.3). See [PROJECT_STATUS.md](PROJECT_STATUS.md) and [CHANGELOG.md](CHANGELOG.md).
 
 ## Contributing
 

@@ -8,6 +8,7 @@
   <meta name="referrer" content="strict-origin-when-cross-origin">
   <meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self' data:; media-src 'self'; script-src 'self'; style-src 'self'; object-src 'none'; base-uri 'none'; form-action 'none'; upgrade-insecure-requests">
   <link rel="canonical" href="https://mneves75.github.io/open-profile-manager/">
+  <link rel="icon" type="image/png" sizes="64x64" href="favicon.png">
   <link rel="manifest" href="site.webmanifest">
   <link rel="stylesheet" href="styles.css">
   <meta property="og:type" content="website">
@@ -45,13 +46,16 @@
         <h1 id="hero-title">Profiles, without the ritual.</h1>
         <p class="lede">Choose a profile. Launch Codex CLI or the macOS app. Switching is always explicit—and authentication stays with the official Codex tools.</p>
         <div class="hero-actions">
-          <a class="button button-primary" href="#install">Install OPM</a>
+          <a class="button button-primary" href="https://github.com/mneves75/open-profile-manager/releases/latest">Download notarized app</a>
           <a class="text-link" href="#demo">See it work <span aria-hidden="true">↓</span></a>
         </div>
         <p class="compatibility">Free and open source · MIT · macOS 15+</p>
       </div>
       <div class="hero-visual">
-        <img class="hero-art" src="assets/opm-orbit.png" width="1672" height="941" alt="Three isolated profile windows orbiting an Open Profile Manager control plane">
+        <picture>
+          <source srcset="assets/opm-orbit.webp" type="image/webp">
+          <img class="hero-art" src="assets/opm-orbit.png" width="1672" height="941" alt="Three isolated profile windows orbiting an Open Profile Manager control plane" fetchpriority="high">
+        </picture>
       </div>
     </section>
 
@@ -92,28 +96,67 @@
       </div>
       <div class="video-grid">
         <figure class="video-card">
-          <video controls preload="none" playsinline poster="media/launch-poster.jpg" aria-label="Launch a Codex session with a selected profile">
+          <video id="launch-demo" controls preload="none" playsinline poster="media/launch-poster.jpg" aria-label="Launch a Codex session with a selected profile" data-duration="38">
             <source src="media/launch.mp4" type="video/mp4">
-            <track kind="captions" srclang="en" label="English" src="media/sfx-captions.vtt" default>
+            <track kind="captions" srclang="en" label="English captions" src="media/launch-captions.vtt" default>
             Your browser does not support embedded video. <a href="media/launch.mp4">Download the launch demo</a>.
           </video>
-          <figcaption><strong>Launch</strong><span>Pick a profile and open a new session.</span></figcaption>
+          <figcaption>
+            <strong>Launch</strong><span>Pick a profile and open a new session.</span>
+            <details class="video-transcript" data-transcript-for="launch-demo">
+              <summary>Visual transcript</summary>
+              <ol>
+                <li>Two terminal windows show why sharing one Codex home between accounts is fragile.</li>
+                <li>Open Profile Manager is introduced as a way to keep every account cleanly separated.</li>
+                <li>Three named profiles are added with distinct local directories.</li>
+                <li>Read-only quota status is shown for each profile; switching remains manual.</li>
+                <li><code>opm run work</code> launches the real Codex process in the terminal.</li>
+                <li>The native macOS app, privacy boundaries, and GitHub project are shown.</li>
+              </ol>
+            </details>
+          </figcaption>
         </figure>
         <figure class="video-card">
-          <video controls preload="none" playsinline poster="media/tutorial-poster.jpg" aria-label="Manage profiles with the OPM command-line interface">
+          <video id="cli-tutorial" controls preload="none" playsinline poster="media/tutorial-poster.jpg" aria-label="Manage profiles with the OPM command-line interface" data-duration="85">
             <source src="media/tutorial.mp4" type="video/mp4">
-            <track kind="captions" srclang="en" label="English" src="media/sfx-captions.vtt" default>
+            <track kind="captions" srclang="en" label="English captions" src="media/tutorial-captions.vtt" default>
             Your browser does not support embedded video. <a href="media/tutorial.mp4">Download the CLI tutorial</a>.
           </video>
-          <figcaption><strong>CLI tutorial</strong><span>Use the focused <code>opm</code> command-line workflow.</span></figcaption>
+          <figcaption>
+            <strong>CLI tutorial</strong><span>Use the focused <code>opm</code> command-line workflow.</span>
+            <details class="video-transcript" data-transcript-for="cli-tutorial">
+              <summary>Visual transcript</summary>
+              <ol>
+                <li>Clone the repository, run the local installer, and confirm the installed version.</li>
+                <li>Add Work, Research, and Client profiles with separate <code>CODEX_HOME</code> directories, then list them.</li>
+                <li>Delegate authentication to the official Codex login flow; OPM does not handle tokens.</li>
+                <li>Check read-only quota status for all profiles.</li>
+                <li>Launch the CLI, official macOS app, or a profile-specific Finder launcher explicitly.</li>
+                <li>Run <code>opm doctor</code> to verify the registry, Codex CLI, official app, and private directories.</li>
+              </ol>
+            </details>
+          </figcaption>
         </figure>
         <figure class="video-card">
-          <video controls preload="none" playsinline poster="media/gui-tutorial-poster.jpg" aria-label="Manage and launch profiles in the OPM macOS app">
+          <video id="app-tutorial" controls preload="none" playsinline poster="media/gui-tutorial-poster.jpg" aria-label="Manage and launch profiles in the OPM macOS app" data-duration="72">
             <source src="media/gui-tutorial.mp4" type="video/mp4">
-            <track kind="captions" srclang="en" label="English" src="media/sfx-captions.vtt" default>
+            <track kind="captions" srclang="en" label="English captions" src="media/gui-tutorial-captions.vtt" default>
             Your browser does not support embedded video. <a href="media/gui-tutorial.mp4">Download the app tutorial</a>.
           </video>
-          <figcaption><strong>App tutorial</strong><span>Use the same profile model in a native macOS interface.</span></figcaption>
+          <figcaption>
+            <strong>App tutorial</strong><span>Use the same profile model in a native macOS interface.</span>
+            <details class="video-transcript" data-transcript-for="app-tutorial">
+              <summary>Visual transcript</summary>
+              <ol>
+                <li>The profile list and explicit actions are introduced in the native macOS app.</li>
+                <li>A Client profile is added with its own Codex home.</li>
+                <li>The Research profile is selected and its read-only quota status is refreshed.</li>
+                <li>The Work profile's CLI command is copied for use in Terminal.</li>
+                <li>The independently installed official macOS app is launched with the Work profile.</li>
+                <li>A profile-specific Finder launcher is installed in <code>~/Applications</code>.</li>
+              </ol>
+            </details>
+          </figcaption>
         </figure>
       </div>
     </section>
@@ -160,9 +203,11 @@
     <section id="install" aria-labelledby="install-title">
       <div class="section-heading">
         <p class="eyebrow">Install</p>
-        <h2 id="install-title">Install from source locally.</h2>
-        <p>Requires macOS 15 or later. Install the official Codex CLI separately.</p>
+        <h2 id="install-title">Download the notarized app.</h2>
+        <p>Get the latest signed, notarized release for macOS 15 or later. Install the official Codex CLI separately.</p>
       </div>
+      <p><a class="button button-primary" href="https://github.com/mneves75/open-profile-manager/releases/latest">Download latest release</a></p>
+      <h3>Build from source</h3>
       <div class="command-block">
         <pre tabindex="0"><code id="install-command">git clone https://github.com/mneves75/open-profile-manager.git &amp;&amp; cd open-profile-manager &amp;&amp; Scripts/bootstrap.sh &amp;&amp; Scripts/check.sh &amp;&amp; Scripts/install-local.sh</code></pre>
         <button class="copy-button" type="button" data-copy-target="install-command" aria-label="Copy install command" aria-live="polite">Copy</button>
@@ -174,7 +219,7 @@
       <p class="eyebrow">Keep the choice yours</p>
       <h2 id="cta-title">Launch the profile you meant to use.</h2>
       <div class="cta-actions">
-        <a class="button button-primary" href="#install">Install OPM</a>
+        <a class="button button-primary" href="https://github.com/mneves75/open-profile-manager/releases/latest">Download notarized app</a>
         <a class="button button-secondary" href="https://github.com/mneves75/open-profile-manager">Explore the source</a>
       </div>
     </section>
