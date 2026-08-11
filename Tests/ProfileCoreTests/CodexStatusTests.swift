@@ -148,6 +148,48 @@ struct CodexStatusTests {
     )
   }
 
+  @Test("Cooperative app-server termination does not consume the grace period")
+  func cooperativeTermination() throws {
+    let root = FileManager.default.temporaryDirectory
+      .appendingPathComponent("CodexStatusTerminationTests-\(UUID().uuidString)", isDirectory: true)
+    defer { try? FileManager.default.removeItem(at: root) }
+    try FileManager.default.createDirectory(at: root, withIntermediateDirectories: false)
+    #expect(chmod(root.path, 0o700) == 0)
+    let marker = root.appendingPathComponent("response-ready")
+    let executable = root.appendingPathComponent("fake-codex")
+    let script = """
+      #!/bin/sh
+      trap 'exit 0' TERM
+      IFS= read -r _
+      printf '%s\\n' '{"id":1,"result":{}}'
+      IFS= read -r _
+      IFS= read -r _
+      IFS= read -r _
+      /usr/bin/touch "$CODEX_HOME/response-ready"
+      printf '%s\\n' '{"id":2,"result":{"account":{"type":"chatgpt"},"requiresOpenaiAuth":true}}'
+      printf '%s\\n' '{"id":3,"result":{"rateLimits":{"primary":{"usedPercent":1}}}}'
+      while :; do :; done
+      """
+    try Data(script.utf8).write(to: executable)
+    #expect(chmod(executable.path, 0o700) == 0)
+    let profile = try Profile(
+      id: ProfileID("termination"),
+      displayName: "Termination",
+      codexHome: root
+    )
+
+    let status = CodexStatusService(timeout: 2).readStatus(
+      for: profile,
+      codexExecutable: executable,
+      environment: ["PATH": "/usr/bin:/bin"]
+    )
+    let responseDate = try #require(
+      marker.resourceValues(forKeys: [.contentModificationDateKey]).contentModificationDate
+    )
+    #expect(status.state == .available)
+    #expect(Date().timeIntervalSince(responseDate) < 0.09)
+  }
+
   @Test("Record counts are bounded independently of output bytes")
   func boundsTinyRecords() throws {
     let root = FileManager.default.temporaryDirectory
@@ -188,7 +230,7 @@ struct CodexStatusTests {
     #expect(status.message == "Codex app-server exceeded the status output limit.")
   }
 
-  @Test("Batch status reads run concurrently and preserve requested order")
+  @Test("Batch status reads use supplied profiles concurrently and preserve requested order")
   func readsStatusesConcurrently() async throws {
     let root = FileManager.default.temporaryDirectory
       .appendingPathComponent("CodexStatusBatchTests-\(UUID().uuidString)", isDirectory: true)
@@ -197,8 +239,9 @@ struct CodexStatusTests {
     #expect(chmod(root.path, 0o700) == 0)
 
     let registryDirectory = root.appendingPathComponent("registry", isDirectory: true)
+    let registryURL = registryDirectory.appendingPathComponent("profiles.json")
     let manager = try ProfileManager(
-      registryURL: registryDirectory.appendingPathComponent("profiles.json"),
+      registryURL: registryURL,
       applicationSupportDirectory: registryDirectory
     )
     for id in ["alpha", "beta"] {
@@ -232,8 +275,14 @@ struct CodexStatusTests {
     try Data(script.utf8).write(to: executable)
     #expect(chmod(executable.path, 0o700) == 0)
 
-    let statuses = try await manager.statuses(
-      profileIDs: ["beta", "alpha"],
+    let listedProfiles = try manager.listProfiles()
+    let alpha = try #require(listedProfiles.first { $0.id.rawValue == "alpha" })
+    let beta = try #require(listedProfiles.first { $0.id.rawValue == "beta" })
+    try Data("{malformed".utf8).write(to: registryURL)
+    #expect(chmod(registryURL.path, 0o600) == 0)
+
+    let statuses = await manager.statuses(
+      profiles: [beta, alpha],
       service: CodexStatusService(timeout: 3),
       codexExecutable: executable
     )

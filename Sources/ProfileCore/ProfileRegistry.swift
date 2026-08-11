@@ -198,12 +198,7 @@ public struct ProfileRegistry: Sendable {
     guard registry.profiles.count <= Self.maximumProfileCount else {
       throw ProfileCoreError.tooManyProfiles
     }
-    for (index, profile) in registry.profiles.enumerated() {
-      try validateDirectoryIsolation(
-        profile,
-        against: Array(registry.profiles[..<index])
-      )
-    }
+    try validateDirectoryIsolation(registry.profiles)
     return registry
   }
 
@@ -361,57 +356,82 @@ public struct ProfileRegistry: Sendable {
 
   private func validateDirectoryIsolation(_ candidate: Profile, against profiles: [Profile]) throws
   {
-    let candidateGUI = try candidate.effectiveGUIDataDirectory(
-      applicationSupportDirectory: applicationSupportDirectory
+    let candidateDirectories = try comparableDirectories(for: candidate)
+    let existingDirectories = try profiles.map(comparableDirectories)
+    try validateDirectoryIsolation(
+      candidateDirectories,
+      against: existingDirectories,
+      reserved: comparableReservedDirectories()
     )
-    let candidateDirectories = [candidate.codexHome, candidateGUI]
-    let managedGUIRoot = applicationSupportDirectory.appendingPathComponent(
-      "gui",
-      isDirectory: true
-    )
+  }
+
+  private func validateDirectoryIsolation(_ profiles: [Profile]) throws {
+    guard !profiles.isEmpty else { return }
+    let reservedDirectories = try comparableReservedDirectories()
+    var validatedDirectories: [ComparableProfileDirectories] = []
+    validatedDirectories.reserveCapacity(profiles.count)
+    for profile in profiles {
+      let candidate = try comparableDirectories(for: profile)
+      try validateDirectoryIsolation(
+        candidate,
+        against: validatedDirectories,
+        reserved: reservedDirectories
+      )
+      validatedDirectories.append(candidate)
+    }
+  }
+
+  private func validateDirectoryIsolation(
+    _ candidate: ComparableProfileDirectories,
+    against profiles: [ComparableProfileDirectories],
+    reserved: ComparableReservedDirectories
+  ) throws {
     let codexHomeUsesReservedStorage =
-      try Self.directoriesOverlap(candidate.codexHome, managedGUIRoot)
-      || Self.directoriesOverlap(candidate.codexHome, registryURL)
+      Self.directoriesOverlap(candidate.codexHome.comparablePath, reserved.managedGUIRoot)
+      || Self.directoriesOverlap(candidate.codexHome.comparablePath, reserved.registry)
     guard !codexHomeUsesReservedStorage else {
       throw ProfileCoreError.profileDirectoryAlreadyUsed(
-        path: candidate.codexHome.path,
-        profileID: candidate.id.rawValue
+        path: candidate.codexHome.url.path,
+        profileID: candidate.profileID.rawValue
       )
     }
     let guiUsesReservedStorage =
-      try Self.directoriesOverlap(candidateGUI, registryURL)
-      || (candidate.guiDataDirectory != nil
-        && Self.directoriesOverlap(candidateGUI, managedGUIRoot))
+      Self.directoriesOverlap(candidate.guiDataDirectory.comparablePath, reserved.registry)
+      || (candidate.hasExplicitGUIDataDirectory
+        && Self.directoriesOverlap(
+          candidate.guiDataDirectory.comparablePath,
+          reserved.managedGUIRoot
+        ))
     guard !guiUsesReservedStorage else {
       throw ProfileCoreError.profileDirectoryAlreadyUsed(
-        path: candidateGUI.path,
-        profileID: candidate.id.rawValue
+        path: candidate.guiDataDirectory.url.path,
+        profileID: candidate.profileID.rawValue
       )
     }
-    for (index, directory) in candidateDirectories.enumerated() {
-      for otherDirectory in candidateDirectories.dropFirst(index + 1) {
-        guard try !Self.directoriesOverlap(directory, otherDirectory) else {
-          throw ProfileCoreError.profileDirectoryAlreadyUsed(
-            path: directory.path,
-            profileID: candidate.id.rawValue
-          )
-        }
-      }
+    guard
+      !Self.directoriesOverlap(
+        candidate.codexHome.comparablePath,
+        candidate.guiDataDirectory.comparablePath
+      )
+    else {
+      throw ProfileCoreError.profileDirectoryAlreadyUsed(
+        path: candidate.codexHome.url.path,
+        profileID: candidate.profileID.rawValue
+      )
     }
 
     for profile in profiles {
-      let existingDirectories = [
-        profile.codexHome,
-        try profile.effectiveGUIDataDirectory(
-          applicationSupportDirectory: applicationSupportDirectory
-        ),
-      ]
-      for directory in candidateDirectories {
-        for existingDirectory in existingDirectories {
-          guard try !Self.directoriesOverlap(directory, existingDirectory) else {
+      for directory in [candidate.codexHome, candidate.guiDataDirectory] {
+        for existingDirectory in [profile.codexHome, profile.guiDataDirectory] {
+          guard
+            !Self.directoriesOverlap(
+              directory.comparablePath,
+              existingDirectory.comparablePath
+            )
+          else {
             throw ProfileCoreError.profileDirectoryAlreadyUsed(
-              path: directory.path,
-              profileID: profile.id.rawValue
+              path: directory.url.path,
+              profileID: profile.profileID.rawValue
             )
           }
         }
@@ -419,9 +439,42 @@ public struct ProfileRegistry: Sendable {
     }
   }
 
+  private func comparableDirectories(for profile: Profile) throws -> ComparableProfileDirectories {
+    let guiDataDirectory = try profile.effectiveGUIDataDirectory(
+      applicationSupportDirectory: applicationSupportDirectory
+    )
+    let codexHomePath = try Self.comparablePhysicalPath(profile.codexHome)
+    let guiDataDirectoryPath = try Self.comparablePhysicalPath(guiDataDirectory)
+    return ComparableProfileDirectories(
+      profileID: profile.id,
+      codexHome: ComparableDirectory(
+        url: profile.codexHome,
+        comparablePath: codexHomePath
+      ),
+      guiDataDirectory: ComparableDirectory(
+        url: guiDataDirectory,
+        comparablePath: guiDataDirectoryPath
+      ),
+      hasExplicitGUIDataDirectory: profile.guiDataDirectory != nil
+    )
+  }
+
+  private func comparableReservedDirectories() throws -> ComparableReservedDirectories {
+    ComparableReservedDirectories(
+      managedGUIRoot: try Self.comparablePhysicalPath(
+        applicationSupportDirectory.appendingPathComponent("gui", isDirectory: true)
+      ),
+      registry: try Self.comparablePhysicalPath(registryURL)
+    )
+  }
+
   static func directoriesOverlap(_ first: URL, _ second: URL) throws -> Bool {
     let firstPath = try comparablePhysicalPath(first)
     let secondPath = try comparablePhysicalPath(second)
+    return directoriesOverlap(firstPath, secondPath)
+  }
+
+  private static func directoriesOverlap(_ firstPath: String, _ secondPath: String) -> Bool {
     return firstPath == secondPath
       || firstPath.hasPrefix("\(secondPath)/")
       || secondPath.hasPrefix("\(firstPath)/")
@@ -454,6 +507,23 @@ public struct ProfileRegistry: Sendable {
       throw ProfileCoreError.registryTooLarge
     }
   }
+}
+
+private struct ComparableProfileDirectories {
+  let profileID: ProfileID
+  let codexHome: ComparableDirectory
+  let guiDataDirectory: ComparableDirectory
+  let hasExplicitGUIDataDirectory: Bool
+}
+
+private struct ComparableDirectory {
+  let url: URL
+  let comparablePath: String
+}
+
+private struct ComparableReservedDirectories {
+  let managedGUIRoot: String
+  let registry: String
 }
 
 private struct RegistryFile: Codable, Sendable {

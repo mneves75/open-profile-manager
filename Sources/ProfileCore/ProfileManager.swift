@@ -1,8 +1,8 @@
 import Foundation
 
 public struct ProfileManager: Sendable {
-  public let registry: ProfileRegistry
-  public let launchPlanner: LaunchPlanner
+  private let registry: ProfileRegistry
+  private let launchPlanner: LaunchPlanner
 
   public init(
     registryURL: URL = ProfileRegistry.defaultRegistryURL(),
@@ -97,33 +97,25 @@ public struct ProfileManager: Sendable {
   }
 
   public func statuses(
-    profileIDs: [String],
+    profiles: [Profile],
     service: CodexStatusService = CodexStatusService(),
     codexExecutable: URL? = nil
-  ) async throws -> [ProfileStatus] {
-    let profilesByID = Dictionary(uniqueKeysWithValues: try listProfiles().map { ($0.id, $0) })
-    let selectedProfiles = try profileIDs.map { rawID in
-      let id = try ProfileID(rawID)
-      guard let profile = profilesByID[id] else {
-        throw ProfileCoreError.profileNotFound(rawID)
-      }
-      return profile
-    }
-    guard !selectedProfiles.isEmpty else { return [] }
+  ) async -> [ProfileStatus] {
+    guard !profiles.isEmpty else { return [] }
 
     return await withTaskGroup(
       of: (Int, ProfileStatus).self,
       returning: [ProfileStatus].self
     ) { group in
-      var remaining = selectedProfiles.enumerated().makeIterator()
-      for _ in 0..<min(4, selectedProfiles.count) {
+      var remaining = profiles.enumerated().makeIterator()
+      for _ in 0..<min(4, profiles.count) {
         guard let (index, profile) = remaining.next() else { break }
         group.addTask {
           (index, service.readStatus(for: profile, codexExecutable: codexExecutable))
         }
       }
 
-      var results = [ProfileStatus?](repeating: nil, count: selectedProfiles.count)
+      var results = [ProfileStatus?](repeating: nil, count: profiles.count)
       while let (index, status) = await group.next() {
         results[index] = status
         if let (nextIndex, nextProfile) = remaining.next() {

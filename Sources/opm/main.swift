@@ -193,13 +193,13 @@ struct StatusCommand: AsyncParsableCommand {
 
   func run() async throws {
     let profileManager = try manager()
-    let ids: [String]
+    let profiles: [Profile]
     if let profile {
-      ids = [profile]
+      profiles = [try profileManager.profile(id: profile)]
     } else {
-      ids = try profileManager.listProfiles().map(\.id.rawValue)
+      profiles = try profileManager.listProfiles()
     }
-    let statuses = try await profileManager.statuses(profileIDs: ids)
+    let statuses = await profileManager.statuses(profiles: profiles)
     if json {
       try printJSON(statuses)
     } else if statuses.isEmpty {

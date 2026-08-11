@@ -1,4 +1,5 @@
 import Darwin
+import Dispatch
 import Foundation
 
 public enum ProfileStatusState: String, Codable, Sendable {
@@ -121,6 +122,7 @@ public struct CodexStatusService: Sendable {
     let standardOutput = Pipe()
     let standardError = Pipe()
     let collector = BoundedJSONLCollector(limit: outputLimit)
+    let termination = DispatchSemaphore(value: 0)
     process.executableURL = executable
     process.arguments = ["app-server"]
     process.environment = ProfileEnvironment.isolated(
@@ -130,6 +132,7 @@ public struct CodexStatusService: Sendable {
     process.standardInput = standardInput
     process.standardOutput = standardOutput
     process.standardError = standardError
+    process.terminationHandler = { _ in termination.signal() }
 
     standardOutput.fileHandleForReading.readabilityHandler = { handle in
       let data = handle.availableData
@@ -156,7 +159,7 @@ public struct CodexStatusService: Sendable {
 
     defer {
       try? standardInput.fileHandleForWriting.close()
-      stop(process)
+      stop(process, termination: termination)
       standardOutput.fileHandleForReading.readabilityHandler = nil
       standardError.fileHandleForReading.readabilityHandler = nil
       try? standardOutput.fileHandleForReading.close()
@@ -268,11 +271,12 @@ public struct CodexStatusService: Sendable {
     }
   }
 
-  private func stop(_ process: Process) {
+  private func stop(_ process: Process, termination: DispatchSemaphore) {
     guard process.isRunning else { return }
     process.terminate()
-    usleep(100_000)
-    if process.isRunning {
+    if termination.wait(timeout: .now() + .milliseconds(100)) == .timedOut,
+      process.isRunning
+    {
       _ = kill(process.processIdentifier, SIGKILL)
     }
     process.waitUntilExit()

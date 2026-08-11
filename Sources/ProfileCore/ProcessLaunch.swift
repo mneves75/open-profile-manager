@@ -1,5 +1,6 @@
 import Darwin
 import Foundation
+import Security
 
 public struct ProcessPlan: Sendable, Equatable {
   public let executableURL: URL
@@ -136,17 +137,32 @@ public enum ProcessExecutor {
 
 public struct LaunchPlanner: Sendable {
   private static let maximumApplicationPlistBytes = 262_144
+  private static let allowedApplicationBundleIdentifiers: Set<String> = ["com.openai.codex"]
+  private static let officialApplicationRequirement =
+    "anchor apple generic and certificate leaf[subject.OU] = \"2DC432GLL2\" and identifier \"com.openai.codex\""
 
   public let applicationSupportDirectory: URL
+  private let applicationSignatureValidator: @Sendable (URL) -> Bool
 
   public init(
     applicationSupportDirectory: URL = FileManager.default.homeDirectoryForCurrentUser
       .appendingPathComponent("Library/Application Support/OpenProfileManager", isDirectory: true)
   ) throws {
+    try self.init(
+      applicationSupportDirectory: applicationSupportDirectory,
+      applicationSignatureValidator: Self.hasOfficialApplicationSignature
+    )
+  }
+
+  init(
+    applicationSupportDirectory: URL,
+    applicationSignatureValidator: @escaping @Sendable (URL) -> Bool
+  ) throws {
     self.applicationSupportDirectory = try Profile.normalizedAbsoluteURL(
       applicationSupportDirectory,
       field: "Application Support directory"
     )
+    self.applicationSignatureValidator = applicationSignatureValidator
   }
 
   public func codexPlan(
@@ -304,8 +320,10 @@ public struct LaunchPlanner: Sendable {
         format: nil
       ) as? [String: Any],
       let executableName = plist["CFBundleExecutable"] as? String,
+      let bundleIdentifier = plist["CFBundleIdentifier"] as? String,
       !executableName.isEmpty,
-      !executableName.contains("/")
+      !executableName.contains("/"),
+      Self.allowedApplicationBundleIdentifiers.contains(bundleIdentifier)
     else { return nil }
     let executable =
       normalized
@@ -314,8 +332,33 @@ public struct LaunchPlanner: Sendable {
     var executableInformation = stat()
     guard lstat(executable.path, &executableInformation) == 0,
       executableInformation.st_mode & S_IFMT == S_IFREG,
-      FileManager.default.isExecutableFile(atPath: executable.path)
+      FileManager.default.isExecutableFile(atPath: executable.path),
+      applicationSignatureValidator(normalized)
     else { return nil }
     return normalized
+  }
+
+  private static func hasOfficialApplicationSignature(_ url: URL) -> Bool {
+    var staticCode: SecStaticCode?
+    guard SecStaticCodeCreateWithPath(url as CFURL, SecCSFlags(), &staticCode) == errSecSuccess,
+      let staticCode
+    else { return false }
+
+    var requirement: SecRequirement?
+    guard
+      SecRequirementCreateWithString(
+        officialApplicationRequirement as CFString,
+        SecCSFlags(),
+        &requirement
+      ) == errSecSuccess,
+      let requirement
+    else { return false }
+
+    return SecStaticCodeCheckValidity(
+      staticCode,
+      SecCSFlags(
+        rawValue: kSecCSStrictValidate | kSecCSCheckAllArchitectures | kSecCSCheckNestedCode),
+      requirement
+    ) == errSecSuccess
   }
 }

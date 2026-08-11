@@ -9,7 +9,6 @@ let package = Package(
     .macOS(.v15)
   ],
   products: [
-    .library(name: "ProfileCore", targets: ["ProfileCore"]),
     .executable(name: "opm", targets: ["opm"]),
     .executable(name: "OpenProfileManager", targets: ["OpenProfileManager"]),
   ],

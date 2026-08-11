@@ -18,10 +18,7 @@ final class OpenProfileManagerApp: NSObject, NSApplicationDelegate {
 
   func applicationDidFinishLaunching(_ notification: Notification) {
     configureMainMenu(for: NSApplication.shared)
-    Task { @MainActor in
-      try? await Task.sleep(for: .milliseconds(500))
-      showMainWindow()
-    }
+    showMainWindow()
   }
 
   func applicationDidBecomeActive(_ notification: Notification) {
