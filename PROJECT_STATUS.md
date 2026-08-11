@@ -2,7 +2,7 @@
 
 ## Current release line
 
-Version 0.1.3 is the current source line pending publication as an immutable, signed, notarized, and stapled [GitHub Release](https://github.com/mneves75/open-profile-manager/releases/tag/v0.1.3).
+Version 0.1.3 is the current immutable, signed, notarized, and stapled [GitHub Release](https://github.com/mneves75/open-profile-manager/releases/tag/v0.1.3). Version 0.1.4 is the next unreleased patch line.
 
 ## Scope
 
@@ -25,6 +25,8 @@ Version 0.1.3 is the current source line pending publication as an immutable, si
 ## Release evidence
 
 Version 0.1.3 removes the native first-window delay, hardens official desktop-app discovery with a Developer ID requirement, defines repeatable site performance evidence, shrinks the hero LCP asset, updates video dependencies, and keeps status batch refreshes to one registry load per user action.
+
+Tag `v0.1.3` resolves to release commit `86f0199`. Stable Xcode 26.6 checks, 56 tests, CI/CodeQL, secret scans, Apple notarization submission `e042f594-beda-4191-8a5b-75f912daf649`, Gatekeeper, stapling, redownloaded checksums, and GitHub attestations for the universal ZIP, dSYMs, SPDX SBOM, and checksum manifest all passed.
 
 At the maximum 128 profiles, registry validation improved from 7,145 ms to 28 ms p95. The preferred hero asset fell from 1,511,821 bytes to 9,156 bytes. Chromium file-URL fallback measurements at load averages 5.13/5.98/12.73 produced desktop p95 FCP/LCP of 56/60 ms and mobile 48/56 ms. That does not satisfy the strict below-50 ms p95 gate; the primary loopback harness was blocked by the execution environment's browser/server network isolation, so the repository records the failed target instead of relabeling the metric.
 
