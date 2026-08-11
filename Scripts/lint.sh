@@ -6,5 +6,5 @@ cd "$ROOT"
 
 ast-grep test --config sgconfig.yml --skip-snapshot-tests
 ast-grep scan --config sgconfig.yml --error Sources Tests Scripts/atomic_replace.swift Scripts/check_localizations.swift
-swift format lint --recursive --parallel --strict Sources Tests Scripts/atomic_replace.swift Scripts/check_localizations.swift Package.swift
+swift format lint --recursive --parallel --strict Sources Tests Scripts/atomic_replace.swift Scripts/benchmark_native_launch.swift Scripts/check_localizations.swift Package.swift
 shellcheck .githooks/pre-commit Scripts/*.sh

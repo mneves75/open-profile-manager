@@ -8,7 +8,7 @@ All notable changes to this project are documented in this file. The format is b
 
 ### Added
 
-- Added a repeatable local product-site performance contract and validation harness covering sitemap pages, assets, captions, transcripts, favicon, and browser vitals.
+- Added repeatable product-site and signed native-launch performance harnesses covering browser vitals, sitemap assets, captions, transcripts, favicon, and process-to-window timing.
 
 ### Changed
 
