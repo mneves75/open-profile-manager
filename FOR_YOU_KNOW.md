@@ -6,6 +6,8 @@ Think of each Codex profile as a separate apartment. `CODEX_HOME` is the key tha
 
 The Finder launchers are signposts, not copied apartments. Each one calls the installed `opm` with a validated profile ID, which then opens the canonical ChatGPT/Codex app with isolated local state. Because the official app is referenced in place, its frequent self-updates keep working normally.
 
+An address is not proof of identity. A lookalike app can sit at a familiar path, so launch planning now asks macOS Security.framework to verify the entire signed bundle and requires OpenAI's Team ID plus the expected bundle identifier. The check deliberately pins the publisher identity, not one leaf certificate, because legitimate certificates rotate.
+
 Interactive terminal ownership is different from ordinary child-process launching. Foundation's `Process` left `opm` in the terminal's foreground group while Codex started behind it; as soon as Codex tried to read, macOS stopped it with `SIGTTIN`. `run`, `login`, and `logout` now use `execve`, replacing the launcher in place so Codex inherits the same PID, process group, terminal, signals, and exit status. GUI launch still uses `Process` because `opm` must wait for and report `/usr/bin/open` rather than become it.
 
 There is one macOS-specific wrinkle: LaunchServices does not reliably forward arbitrary environment variables just because they exist on the process that calls `open`. The launcher therefore passes `CODEX_HOME` explicitly with `open --env` and separately provides the Chromium data-directory argument. Those two controls isolate different layers and both are necessary.
@@ -23,6 +25,8 @@ One subtle protocol lesson came from the real integration test. Writing all JSON
 Status also exposed a smaller ownership smell: the SwiftUI adapter had its own concurrency pool while the CLI queried profiles serially. The pool now belongs to `ProfileCore`, where both front desks share it. The core reads the registry once, keeps result order stable, and permits at most four app-servers at a time; a two-process barrier test proves actual overlap without depending on a timing threshold.
 
 The registry has a similar real-world concern: atomic rename prevents readers from seeing half a JSON file, but it does not prevent two writers from both reading the same old value and overwriting each other. The owner-only lock file serializes that full read-modify-write transaction. It lives in a reserved namespace, so a custom registry filename cannot collide with another registry's lock. Atomic storage and concurrency control solve different problems; both are needed.
+
+Directory isolation once spent most of its time repeatedly asking the filesystem the same physical-path question. The registry now resolves each profile path once per validation pass and reuses those strings for every overlap comparison. At the maximum 128 profiles, the measured p95 fell from about 7.1 seconds to 28 milliseconds without caching across user actions.
 
 The public website is the showroom, not another application layer. It is plain HTML, CSS, and a few lines of progressive JavaScript under `docs/`, so there is no package manager, framework runtime, analytics SDK, or hosted backend to maintain. GitHub Actions uploads only that directory to Pages. The three videos are deterministic Remotion renders: their editable sources live under `video/`, while the finished MP4s and lightweight poster frames are copied into `docs/media/` because the Pages artifact deliberately cannot reach outside its own directory.
 

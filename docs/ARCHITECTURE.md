@@ -29,14 +29,14 @@ The GUI resolves every user-facing string through its native bundle. `en-US` is 
 
 A profile contains a stable lowercase identifier, a display name, an absolute `CODEX_HOME`, and an optional absolute GUI data directory. Authentication material is deliberately absent. The official Codex runtime owns credentials inside the selected home. The registry rejects equal or nested effective storage paths so two profiles cannot accidentally share authentication or desktop state.
 
-The registry lives in the user's Application Support directory. Private-path traversal and registry I/O are descriptor-relative, so a concurrent symlink replacement cannot redirect an already validated operation. Storage identity uses macOS's no-firmlink physical path, preserving nonexistent suffixes, so Data-volume aliases cannot bypass isolation. Writes use a unique temporary sibling, durability syncs, and `renameat`. Managed directories and registry files require current-user ownership, exact owner-only modes, and no unsafe macOS extended ACLs; traversed ancestors must also be trusted and non-writable by other users.
+The registry lives in the user's Application Support directory. Private-path traversal and registry I/O are descriptor-relative, so a concurrent symlink replacement cannot redirect an already validated operation. Storage identity uses macOS's no-firmlink physical path, preserving nonexistent suffixes, so Data-volume aliases cannot bypass isolation. Each effective path is resolved once per validation pass, then compared in memory. Writes use a unique temporary sibling, durability syncs, and `renameat`. Managed directories and registry files require current-user ownership, exact owner-only modes, and no unsafe macOS extended ACLs; traversed ancestors must also be trusted and non-writable by other users.
 
 ## Launch behavior
 
 - CLI `run`, `login`, and `logout` replace the `opm` process image with the discovered `codex` binary and its isolated environment. Keeping the same PID and foreground process group preserves terminal job control, signals, and the Codex exit status.
 - GUI launch executes `/usr/bin/open` directly with a new-instance request, explicit `CODEX_HOME` forwarding, the independently installed app path, and a per-profile `--user-data-dir`.
 - Generated Finder launchers call `opm app launch <profile-id>`. They contain no credentials.
-- The canonical installed ChatGPT/Codex app remains the update owner. Launchers reference it rather than copying it, so official in-app updates continue normally.
+- The canonical installed ChatGPT/Codex app remains the update owner. Before launch, Security.framework requires a valid nested signature matching OpenAI Team ID `2DC432GLL2` and bundle identifier `com.openai.codex`. Launchers reference that app rather than copying it, so official in-app updates continue normally.
 
 Status reads remain child processes because `opm` must exchange bounded JSONL with each app-server and aggregate the result. `ProfileCore` loads the registry once per batch, preserves requested order, and runs at most four app-server reads concurrently; both adapters use that same implementation.
 

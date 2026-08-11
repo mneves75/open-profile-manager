@@ -16,8 +16,8 @@ Ship an unofficial MIT-licensed, local-first profile manager for Codex CLI and t
 
 ## Active work
 
-- Version 0.1.2 is the current source line and published release.
-- Version 0.1.2 adds a graphite native-app redesign, three Remotion product videos, a static GitHub Pages product site, and privacy/supply-chain hardening.
+- Version 0.1.3 is the current source line for performance, release, and security hardening.
+- Version 0.1.3 removes a fixed native launch delay, validates official desktop-app identity before launch, adds repeatable site performance evidence, reduces the hero LCP asset, and updates web/video gates.
 
 ## Project environment
 
@@ -27,9 +27,10 @@ Ship an unofficial MIT-licensed, local-first profile manager for Codex CLI and t
 
 ## Verified state
 
-- Fifty-four tests pass under Xcode 26.6, including PTY process replacement, exec failure/NUL handling, concurrent ordered status reads, GUI error-interpolation coverage, descriptor-relative and ACL-aware registry privacy, firmlink-aware profile-directory isolation, persisted-invariant validation, private launcher publication, bounded plist inspection, descriptor-safe app-server writes, system/per-user app discovery, symlink-safe diagnostics, and hostile protocol output. Xcode 27 beta also builds and passes all 54 tests.
+- Fifty-six tests pass under stable Xcode 26.6, including official desktop-app signature rejection, PTY process replacement, exec failure/NUL handling, concurrent ordered status reads, cooperative app-server cleanup, GUI error-interpolation coverage, descriptor-relative and ACL-aware registry privacy, firmlink-aware profile-directory isolation, persisted-invariant validation, private launcher publication, bounded plist inspection, descriptor-safe app-server writes, system/per-user app discovery, symlink-safe diagnostics, and hostile protocol output.
 - The native app contains 131 complete keys in both `en-US` and `pt-BR`; macOS preference selection and unsupported-language fallback were proven against a signed package, and isolated native renders covered the main profile and editor layouts in both languages.
-- The 0.1.2 security review has no open confirmed findings. The native UI omits account email, npm dependencies are monitored, web/video validation gates Pages deployment, local secret scans are source-scoped and clean, npm audit is clean, and GitHub reports zero open Dependabot, CodeQL, or secret-scanning alerts.
+- The 0.1.3 release-candidate security review has no open confirmed findings. The native UI omits account email, official desktop-app discovery fails closed on wrong identity, npm audit reports zero vulnerabilities, local secret scans are clean, and GitHub reports zero open Dependabot, CodeQL, or secret-scanning alerts.
+- At 128 profiles, registry validation improved from 7,145 ms to 28 ms p95. The strict static-site below-50 ms p95 goal remains failed on this host; the file-URL fallback recorded desktop FCP/LCP 56/60 ms and mobile 48/56 ms while the primary loopback benchmark was blocked by execution-environment isolation.
 - Version 0.1.2 is published from commit `e4470b4` as a Developer ID-signed, notarized, stapled, immutable GitHub Release with verified universal ZIP, dSYMs, SPDX SBOM, checksums, and attestations.
 - Local CLI, GUI, Finder-launcher, signing, and two-profile isolation flows passed without retaining account identifiers in the repository.
 - Release-mode `status --all` with two configured profiles improved from a 1,642 ms median to 788 ms at load averages 5.63/6.20/7.09; `--version`, profile list, doctor, and `run ... --version` did not regress materially.
