@@ -2,7 +2,7 @@
 
 ## Current release line
 
-Version 0.1.2 is the current source line and immutable, signed, notarized, and stapled [GitHub Release](https://github.com/mneves75/open-profile-manager/releases/tag/v0.1.2).
+Version 0.1.3 is the current source line pending publication as an immutable, signed, notarized, and stapled [GitHub Release](https://github.com/mneves75/open-profile-manager/releases/tag/v0.1.3).
 
 ## Scope
 
@@ -23,6 +23,10 @@ Version 0.1.2 is the current source line and immutable, signed, notarized, and s
 - Windows or Linux GUI support in 0.1.x
 
 ## Release evidence
+
+Version 0.1.3 removes the native first-window delay, hardens official desktop-app discovery with a Developer ID requirement, defines repeatable site performance evidence, shrinks the hero LCP asset, updates video dependencies, and keeps status batch refreshes to one registry load per user action.
+
+At the maximum 128 profiles, registry validation improved from 7,145 ms to 28 ms p95. The preferred hero asset fell from 1,511,821 bytes to 9,156 bytes. Chromium file-URL fallback measurements at load averages 5.13/5.98/12.73 produced desktop p95 FCP/LCP of 56/60 ms and mobile 48/56 ms. That does not satisfy the strict below-50 ms p95 gate; the primary loopback harness was blocked by the execution environment's browser/server network isolation, so the repository records the failed target instead of relabeling the metric.
 
 Version 0.1.2 adds the graphite native-app redesign, three privacy-safe product videos, and the responsive public site. Its review removes account email from the native human-readable UI, adds npm dependency monitoring, gates web/video sources before Pages deployment, and keeps secret scanning focused on repository source.
 

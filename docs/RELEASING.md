@@ -20,7 +20,8 @@ The ZIP is the canonical app artifact because `ditto` preserves the macOS bundle
 - `asc` 3.4.0 or newer, with an authenticated default profile stored in the System Keychain and authorized for Apple notarization.
 - GitHub immutable releases enabled for the repository.
 - `APP_IDENTITY` set to the exact Developer ID identity.
-- Clean `main`, identical to `origin/main`, with successful CI for `HEAD`.
+- Node 24 and npm 11, matching `.nvmrc` and `video/package.json`.
+- Clean `main`, identical to `origin/main`, with successful CI and CodeQL for `HEAD`.
 
 Apple Development, Apple Distribution, Mac App Distribution, and ad-hoc identities are not acceptable for a public artifact.
 
@@ -34,7 +35,7 @@ DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer \
 The foreground release performs the full gate:
 
 1. validates repository state, version, changelog, immutable releases, and CI;
-2. runs project checks and security scans;
+2. runs project checks, static-site/media validation, npm dependency auditing, and security scans;
 3. builds both `arm64` and `x86_64`, signs with hardened runtime and timestamp, and submits the app through the keychain-backed `asc` notarization client;
 4. staples and validates the ticket, checks system distribution policy, and generates matching dSYMs;
 5. downloads the CI SBOM and writes SHA-256 checksums;

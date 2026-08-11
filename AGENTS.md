@@ -29,6 +29,7 @@ Open Profile Manager is an unofficial, local-first profile launcher for Codex CL
 - Swift 6 language mode and complete concurrency checking are mandatory.
 - Do not invoke a shell for user-controlled input. Use `Process.executableURL`, explicit argument arrays, and explicit environment dictionaries.
 - Treat profile identifiers, paths, app locations, app-server output, and child-process errors as untrusted input.
+- Launch only desktop apps whose valid Apple signature matches the official OpenAI Team ID and bundle identifier.
 - Writes must be atomic. Profile directories are mode `0700`; profile/config files are mode `0600`.
 - Keep the registry and child-protocol inputs explicitly bounded. Preserve the cross-process writer lock.
 - Keep dependencies minimal and pinned. No telemetry or network service owned by this project.

@@ -4,6 +4,23 @@ All notable changes to this project are documented in this file. The format is b
 
 ## [Unreleased]
 
+## [0.1.3] - 2026-08-11
+
+### Added
+
+- Added a repeatable local product-site performance contract and validation harness covering sitemap pages, assets, captions, transcripts, favicon, and browser vitals.
+
+### Changed
+
+- Removed the native app's fixed first-window launch delay, made the profile editor adapt to smaller windows, and cut duplicate registry validation from batch status refreshes.
+- Reworked the product site install path around the latest notarized release and reduced the hero LCP asset from a 1.51 MB PNG to a 9 KB WebP source with PNG fallback.
+- Pinned the video authoring runtime to Node 24/npm 11 and updated Remotion dependencies to clear high-severity authoring-tool advisories.
+
+### Security
+
+- Require discovered ChatGPT/Codex desktop apps to match the official OpenAI bundle identifier and Developer ID team requirement before launch.
+- Expanded local and CI gates for web/video validation, ast-grep fixtures, version drift, and dependency auditing.
+
 ## [0.1.2] - 2026-08-04
 
 ### Added
@@ -67,7 +84,8 @@ All notable changes to this project are documented in this file. The format is b
 - Human-readable status output no longer prints account email addresses; callers that explicitly request JSON retain the documented structured field.
 - Native menus, views, accessibility labels, interpolated values, and GUI error messages now resolve through one localization boundary without translating profile data, paths, commands, or protocol values.
 
-[Unreleased]: https://github.com/mneves75/open-profile-manager/compare/v0.1.2...HEAD
+[Unreleased]: https://github.com/mneves75/open-profile-manager/compare/v0.1.3...HEAD
+[0.1.3]: https://github.com/mneves75/open-profile-manager/compare/v0.1.2...v0.1.3
 [0.1.2]: https://github.com/mneves75/open-profile-manager/compare/v0.1.1...v0.1.2
 [0.1.1]: https://github.com/mneves75/open-profile-manager/releases/tag/v0.1.1
 [0.1.0]: https://github.com/mneves75/open-profile-manager/releases/tag/v0.1.0
