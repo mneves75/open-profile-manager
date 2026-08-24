@@ -6,6 +6,15 @@ All notable changes to this project are documented in this file. The format is b
 
 Target: 0.1.4.
 
+### Fixed
+
+- Reject non-Boolean authentication, credit, and managed-launcher markers; reject fractional, Boolean, and overflowing app-server integer fields.
+- Enforce the JSONL record-count limit when the final app-server record is not newline-terminated.
+
+### Security
+
+- Updated the transitive Nano ID authoring dependency to 3.3.18, closing CVE-2026-67213 without crossing the dependency's expected major version.
+
 ## [0.1.3] - 2026-08-11
 
 ### Added
@@ -20,7 +29,7 @@ Target: 0.1.4.
 
 ### Security
 
-- Require discovered ChatGPT/Codex desktop apps to match the official OpenAI bundle identifier and Developer ID team requirement before launch.
+- Require discovered ChatGPT/Codex desktop apps to have a valid Apple signature matching the official OpenAI bundle identifier and Team ID before launch.
 - Expanded local and CI gates for web/video validation, ast-grep fixtures, version drift, and dependency auditing.
 
 ## [0.1.2] - 2026-08-04

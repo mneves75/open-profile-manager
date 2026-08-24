@@ -1,3 +1,4 @@
+import CoreFoundation
 import Darwin
 import Foundation
 
@@ -162,13 +163,14 @@ public struct LauncherInstaller: Sendable {
         format: nil
       ) as? [String: Any],
       let identifier = plist["CFBundleIdentifier"] as? String,
-      let marker = plist["OPMManagedLauncher"] as? Bool,
+      let marker = plist["OPMManagedLauncher"] as? NSNumber,
+      CFGetTypeID(marker) == CFBooleanGetTypeID(),
       let storedProfileID = plist["OPMProfileID"] as? String
     else {
       return false
     }
     let currentIdentifier = "dev.openprofilemanager.launcher.\(bundleIdentifierPart(profileID))"
-    return marker && storedProfileID == profileID.rawValue
+    return marker.boolValue && storedProfileID == profileID.rawValue
       && identifier == currentIdentifier
   }
 

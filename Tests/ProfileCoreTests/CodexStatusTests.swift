@@ -56,6 +56,17 @@ struct CodexStatusTests {
     #expect(status.account == nil)
   }
 
+  @Test("Numeric authentication flags fail closed")
+  func rejectsNumericAuthenticationFlag() throws {
+    let profile = try testProfile()
+    let status = CodexStatusService.parseStatus(
+      profile: profile,
+      messages: [Data("{\"id\":2,\"result\":{\"account\":null,\"requiresOpenaiAuth\":0}}".utf8)]
+    )
+    #expect(status.state == .notAuthenticated)
+    #expect(status.account == nil)
+  }
+
   @Test("Untrusted status fields are bounded and validated")
   func boundsParsedFields() throws {
     let profile = try testProfile()
@@ -65,7 +76,7 @@ struct CodexStatusTests {
         "{\"id\":2,\"result\":{\"account\":{\"type\":\"chatgpt\",\"email\":\"\(oversizedEmail)\",\"planType\":\"plus\\nspoof\"},\"requiresOpenaiAuth\":true}}"
           .utf8),
       Data(
-        "{\"id\":3,\"result\":{\"rateLimits\":{\"primary\":{\"usedPercent\":1001}}}}"
+        "{\"id\":3,\"result\":{\"rateLimits\":{\"primary\":{\"usedPercent\":1.5},\"secondary\":{\"usedPercent\":12,\"resetsAt\":true,\"windowDurationMins\":9223372036854775808},\"credits\":{\"hasCredits\":1,\"unlimited\":0}}}}"
           .utf8),
     ]
 
@@ -73,6 +84,11 @@ struct CodexStatusTests {
     #expect(status.account?.email == nil)
     #expect(status.account?.planType == nil)
     #expect(status.rateLimits?.primary == nil)
+    #expect(status.rateLimits?.secondary?.usedPercent == 12)
+    #expect(status.rateLimits?.secondary?.resetsAt == nil)
+    #expect(status.rateLimits?.secondary?.windowDurationMinutes == nil)
+    #expect(status.rateLimits?.hasCredits == nil)
+    #expect(status.rateLimits?.unlimitedCredits == nil)
   }
 
   @Test("Child output is bounded and the child is terminated promptly")
@@ -218,6 +234,46 @@ struct CodexStatusTests {
     let profile = try Profile(
       id: ProfileID("records"),
       displayName: "Records",
+      codexHome: root
+    )
+
+    let status = CodexStatusService(timeout: 2, outputLimit: 4_096).readStatus(
+      for: profile,
+      codexExecutable: executable,
+      environment: ["PATH": "/usr/bin:/bin"]
+    )
+    #expect(status.state == .unavailable)
+    #expect(status.message == "Codex app-server exceeded the status output limit.")
+  }
+
+  @Test("An unterminated final record cannot bypass the record-count limit")
+  func boundsUnterminatedFinalRecord() throws {
+    let root = FileManager.default.temporaryDirectory
+      .appendingPathComponent("CodexStatusFinalRecordTests-\(UUID().uuidString)", isDirectory: true)
+    defer { try? FileManager.default.removeItem(at: root) }
+    try FileManager.default.createDirectory(at: root, withIntermediateDirectories: false)
+    #expect(chmod(root.path, 0o700) == 0)
+    let executable = root.appendingPathComponent("fake-codex")
+    let script = """
+      #!/bin/sh
+      IFS= read -r _
+      printf '%s\\n' '{\"id\":1,\"result\":{}}'
+      IFS= read -r _
+      IFS= read -r _
+      IFS= read -r _
+      printf '%s\\n' '{\"id\":2,\"result\":{\"account\":{\"type\":\"chatgpt\"},\"requiresOpenaiAuth\":true}}'
+      index=0
+      while [ "$index" -lt 254 ]; do
+        printf '{}\\n'
+        index=$((index + 1))
+      done
+      printf '%s' '{\"id\":3,\"result\":{\"rateLimits\":{\"primary\":{\"usedPercent\":1}}}}'
+      """
+    try Data(script.utf8).write(to: executable)
+    #expect(chmod(executable.path, 0o700) == 0)
+    let profile = try Profile(
+      id: ProfileID("final-record"),
+      displayName: "Final record",
       codexHome: root
     )
 

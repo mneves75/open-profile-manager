@@ -38,7 +38,7 @@ The registry lives in the user's Application Support directory. Private-path tra
 - Generated Finder launchers call `opm app launch <profile-id>`. They contain no credentials.
 - The canonical installed ChatGPT/Codex app remains the update owner. Before launch, Security.framework requires a valid nested signature matching OpenAI Team ID `2DC432GLL2` and bundle identifier `com.openai.codex`. Launchers reference that app rather than copying it, so official in-app updates continue normally.
 
-Status reads remain child processes because `opm` must exchange bounded JSONL with each app-server and aggregate the result. `ProfileCore` loads the registry once per batch, preserves requested order, and runs at most four app-server reads concurrently; both adapters use that same implementation.
+Status reads remain child processes because `opm` must exchange bounded JSONL with each app-server and aggregate the result. The core bounds bytes and records and accepts Boolean and integer fields only when their decoded scalar types are exact, so Foundation coercions cannot change status semantics. `ProfileCore` loads the registry once per batch, preserves requested order, and runs at most four app-server reads concurrently; both adapters use that same implementation.
 
 ## Compatibility
 

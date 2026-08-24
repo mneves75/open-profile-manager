@@ -1,16 +1,19 @@
-# Security audit — 0.1.3 release
+# Security audit — 0.1.4 pre-production review
 
-Date: 2026-08-11
+Date: 2026-08-24
 Scope: the complete source tree, local persistence, child-process protocol, CLI and GUI launch paths, Finder launchers, packaging scripts, the static GitHub Pages site, Remotion authoring sources, dependencies, and CI configuration.
 
 ## Result
 
-No confirmed critical-, high-, medium-, or low-severity findings remain open for the published 0.1.3 release. The review revalidated the native launch boundary, site/video supply chain, and local persistence model. Version 0.1.3 adds an official desktop-app signature requirement, repeatable product-site performance evidence, stronger web/video validation, and updated Remotion dependencies.
+No confirmed critical-, high-, medium-, or low-severity findings remain open in the reviewed 0.1.4 source line. This pre-production review covered every application, test, script, workflow, static-site, and video-authoring source. It fixed one high-severity transitive authoring dependency advisory and two low-severity input-confusion or limit-edge finding classes. Version 0.1.4 remains unreleased; the published 0.1.3 distribution evidence below is historical and does not waive a fresh release gate.
 
 ## Fixed findings
 
 | Finding | Severity | Resolution | Evidence |
 | --- | --- | --- | --- |
+| The Remotion authoring tree resolved Nano ID 3.3.17, which is affected by CVE-2026-67213 | High | Replaced the exact override with the compatible patched range `^3.3.18` and regenerated the npm lockfile at 3.3.18 | `npm audit --audit-level=low` reports zero vulnerabilities; the complete web/video gate passes under the pinned Node 24/npm 11 runtime |
+| Foundation could bridge numeric JSON or property-list values to Boolean or integer types | Low | App-server authentication, credit, percentage, and timestamp fields now require their exact Core Foundation scalar type and reject integer overflow; managed-launcher markers require an actual property-list Boolean | Malformed scalar and numeric-launcher-marker regressions plus the complete 59-test suite |
+| An unterminated 257th app-server record could bypass the 256-record limit | Low | The JSONL collector now applies the same count check before accepting its final buffered record | Unterminated-final-record regression and the complete 59-test suite |
 | Concurrent CLI processes could lose registry updates or collide with user-selected registry names | Medium | Added an owner-only cross-process `flock`, an isolated reserved lock namespace, and exclusive lock creation around every read-modify-write operation | Concurrent 20-writer and lock-namespace regression tests |
 | Registry and app-server fields had no explicit size bounds | Medium | Limited the registry to 1 MiB/128 profiles; bounded JSONL bytes and records, account fields, and percentage ranges | Oversized-registry and hostile-status tests at every response stage |
 | Existing or persisted profile directories could be unsafe, silently re-permissioned, reached through a symlink, or traversed through an unsafe ancestor | Medium | Directory creation and validation are descriptor-relative and reject symlinks, unexpected ownership/modes, writable ancestors, and unsafe ACLs without mutating existing paths | Directory, ancestor, symlink, and persisted-profile regression tests plus live `doctor` checks |
@@ -41,12 +44,12 @@ The live compatibility tests also found and fixed reliability defects in termina
 
 1. **Authentication:** delegated exclusively to the official Codex CLI under the selected `CODEX_HOME`. Conflicting global Codex credential/state overrides are removed; the project does not parse, migrate, print, or persist authentication tokens.
 2. **Authorization:** no server or multi-user boundary exists. Local profile changes run with the current macOS user's authority.
-3. **Input validation:** profile identifiers, names, paths, registry size/count, app-server output, and launcher metadata are bounded and validated. Localization keys are static, and the gate rejects divergent format placeholders before packaging.
+3. **Input validation:** profile identifiers, names, paths, registry size/count, app-server bytes/record count/scalar types, and launcher metadata are bounded and validated. Localization keys are static, and the gate rejects divergent format placeholders before packaging.
 4. **Injection:** child processes and process replacement use fixed executable URLs and explicit argument/environment arrays. Embedded NUL bytes are rejected and no user-controlled value is evaluated by a shell.
 5. **Cryptography:** the application performs no custom encryption or hashing. Distribution trust uses Apple code signing and notarization gates.
 6. **Secrets:** Gitleaks and TruffleHog found no verified or unverified secrets. The repository contains no credential fixtures or environment files. Both release entrypoints clear legacy, `asc` credential, and authentication-routing variables before invoking project code, then require strict authentication through the default System Keychain profile without temporary key files. Release-time `asc` telemetry is disabled.
 7. **Data protection:** registry and lock files are `0600`; managed and launcher directories are `0700`; symlinks, unsafe ancestors, and extended ACLs are rejected; writes use descriptor-relative operations, a unique temporary file, atomic rename, and durability syncs.
-8. **Dependencies:** the native package uses Apple `swift-argument-parser` pinned to 1.8.2. Remotion and its React toolchain are pinned by `video/package-lock.json`, require Node 24/npm 11, report zero high-severity npm audit findings, and are covered by a scoped Dependabot entry.
+8. **Dependencies:** the native package uses Apple `swift-argument-parser` pinned to 1.8.2. Remotion and its React toolchain are pinned by `video/package-lock.json`, require Node 24/npm 11, resolve Nano ID to patched version 3.3.18, report zero npm audit findings, and are covered by a scoped Dependabot entry.
 9. **Logging and errors:** the project does not dump environments, account email addresses, raw authentication files, child stderr, or raw app-server payloads in human-readable output. The GUI localizes known typed errors and replaces unknown errors with a generic message; explicit JSON output retains its documented account field.
 10. **API security:** not applicable; the project exposes no HTTP service or listening socket. The Codex app-server child uses local stdio only.
 11. **Frontend security:** the native app has no HTML rendering, script evaluation, web view, or remote content. User-controlled profile values are rendered verbatim rather than reinterpreted as localization keys. The public site is static, has no forms, authenticated state, analytics, external scripts, or user-controlled content, and restricts content loading to its own origin with a meta content security policy.
@@ -58,12 +61,13 @@ The live compatibility tests also found and fixed reliability defects in termina
 
 ## Verification performed
 
-- `Scripts/check.sh`: strict Swift format, four ast-grep rule fixtures and scan, ShellCheck, release-artifact checks, 131-key localization completeness and placeholder checks, debug build, version-drift check, PTY integration, CLI contract check, web/video validation, and all 56 Swift tests passed under stable Xcode 26.6.
-- `Scripts/security-check.sh`: Gitleaks scanned the working tree and all 42 commits with no leaks; TruffleHog scanned 161 source chunks with zero verified or unverified secrets and no scan errors; dependency resolution, diff checks, and privacy-manifest validation passed.
+- `Scripts/check.sh`: strict Swift format, four ast-grep rule fixtures and scan, ShellCheck, release-artifact checks, 131-key localization completeness and placeholder checks, debug build, version-drift check, PTY integration, CLI contract check, web/video validation, and all 59 Swift tests passed under stable Xcode 26.6.
+- `Scripts/security-check.sh`: Gitleaks scanned the 231.57 MB working tree and 20-commit history with no leaks; TruffleHog scanned 165 source chunks with zero verified or unverified secrets and no scan errors; dependency resolution, diff checks, and privacy-manifest validation passed.
 - `npm ci --prefix video`, `npm audit --audit-level=low`, `node --check docs/app.js`, and `npm --prefix video run lint`: clean install, zero vulnerabilities, valid JavaScript, ESLint, and TypeScript.
 - Security-audit heuristics: full-history secret scan, route enumeration, and risky-pattern scan. Route/auth and error-leak hits were reviewed as false positives caused by generic pattern matching against local Swift methods and `Label(..., systemImage:)`; the product has no HTTP service or listening socket.
 - Release benchmark: two-profile `status --all` improved from a 1,642 ms median to 788 ms at load averages 5.63/6.20/7.09; cheap CLI commands did not regress materially.
-- GitHub security state: zero open Dependabot, CodeQL, or secret-scanning alerts on 2026-08-11.
+- GitHub security state before this commit reached the default branch: CodeQL and secret scanning reported zero open alerts; Dependabot reported the Nano ID alert fixed by this source change.
+- Pre-production package: the local ad-hoc-signed 0.1.4/build 6 app passed `codesign --verify --deep --strict` and satisfied its designated requirement. This proves package integrity only, not Developer ID signing, notarization, stapling, Gatekeeper acceptance, or publication.
 - Released package: the 0.1.3/build 5 app passed `codesign --verify --deep --strict` with a Developer ID Application identity, hardened runtime, both localizations, and a privacy manifest. The redownloaded public universal ZIP passed Gatekeeper, stapling, checksums, and GitHub asset attestation verification.
 - Media and browser QA: the affected tutorial was rerendered at 1920×1080 with H.264/AAC for 85.056 seconds, and its 0.1.2 frame was inspected. Desktop and 390×844 browser renders, the accessibility tree, zero console/page errors, and real tutorial playback all passed.
 - Live integration: two sanitized test profiles returned status, passed expanded `doctor` checks under a restricted Finder-like `PATH`, and launched the official app with distinct data directories. No account identifiers or status payloads are retained in the repository.
