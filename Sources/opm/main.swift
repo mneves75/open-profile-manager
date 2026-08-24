@@ -1,4 +1,5 @@
 import ArgumentParser
+import CoreFoundation
 import Darwin
 import Foundation
 import ProfileCore
@@ -351,7 +352,11 @@ private func printStatus(_ status: ProfileStatus) {
 
 private enum LauncherBundleMode {
   static func runIfNeeded(bundle: Bundle = .main) -> Bool {
-    guard bundle.object(forInfoDictionaryKey: "OPMManagedLauncher") as? Bool == true else {
+    guard
+      let marker = bundle.object(forInfoDictionaryKey: "OPMManagedLauncher") as? NSNumber,
+      CFGetTypeID(marker) == CFBooleanGetTypeID(),
+      marker.boolValue
+    else {
       return false
     }
     guard let rawProfileID = bundle.object(forInfoDictionaryKey: "OPMProfileID") as? String else {

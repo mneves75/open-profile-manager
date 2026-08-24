@@ -1,3 +1,4 @@
+import CoreFoundation
 import Darwin
 import Foundation
 import Testing
@@ -210,6 +211,55 @@ struct LauncherInstallerTests {
         )
       }
     }
+  }
+
+  @Test("Numeric managed markers are rejected without replacing the launcher")
+  func rejectsNumericManagedMarker() throws {
+    let root = try privateTemporaryDirectory()
+    defer { try? FileManager.default.removeItem(at: root) }
+    let installer = LauncherInstaller(shouldSign: false)
+    let profile = try Profile(
+      id: ProfileID("numeric-marker"),
+      displayName: "Numeric marker",
+      codexHome: root.appendingPathComponent("home")
+    )
+    let launcher = try installer.install(
+      profile: profile,
+      opmExecutable: URL(fileURLWithPath: "/usr/bin/true"),
+      destinationDirectory: root
+    )
+    let plistURL = launcher.appendingPathComponent("Contents/Info.plist")
+    let data = try Data(contentsOf: plistURL)
+    var plist = try #require(
+      PropertyListSerialization.propertyList(from: data, format: nil) as? [String: Any]
+    )
+    plist["OPMManagedLauncher"] = 1
+    let numericMarkerData = try PropertyListSerialization.data(
+      fromPropertyList: plist,
+      format: .xml,
+      options: 0
+    )
+    try numericMarkerData.write(to: plistURL)
+    #expect(chmod(plistURL.path, 0o600) == 0)
+
+    #expect(throws: ProfileCoreError.self) {
+      try installer.remove(profileID: profile.id, destinationDirectory: root)
+    }
+    #expect(throws: ProfileCoreError.self) {
+      try installer.install(
+        profile: profile,
+        opmExecutable: URL(fileURLWithPath: "/usr/bin/true"),
+        destinationDirectory: root
+      )
+    }
+
+    let preservedData = try Data(contentsOf: plistURL)
+    let preservedPlist = try #require(
+      PropertyListSerialization.propertyList(from: preservedData, format: nil) as? [String: Any]
+    )
+    let marker = try #require(preservedPlist["OPMManagedLauncher"] as? NSNumber)
+    #expect(CFGetTypeID(marker) != CFBooleanGetTypeID())
+    #expect(marker.intValue == 1)
   }
 
   private func privateTemporaryDirectory() throws -> URL {

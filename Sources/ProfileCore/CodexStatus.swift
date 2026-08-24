@@ -1,3 +1,4 @@
+import CoreFoundation
 import Darwin
 import Dispatch
 import Foundation
@@ -209,7 +210,7 @@ public struct CodexStatusService: Sendable {
       )
     }
 
-    let requiresAuthentication = accountObject["requiresOpenaiAuth"] as? Bool ?? true
+    let requiresAuthentication = boolean(accountObject["requiresOpenaiAuth"]) ?? true
     let rateLimitSummary = responseResult(id: 3, messages: messages)
       .flatMap { $0["rateLimits"] as? [String: Any] }
       .map(parseRateLimits)
@@ -302,14 +303,15 @@ public struct CodexStatusService: Sendable {
       planType: boundedString(object["planType"], maximumBytes: 64),
       primary: parseWindow(object["primary"] as? [String: Any]),
       secondary: parseWindow(object["secondary"] as? [String: Any]),
-      hasCredits: credits?["hasCredits"] as? Bool,
-      unlimitedCredits: credits?["unlimited"] as? Bool
+      hasCredits: boolean(credits?["hasCredits"]),
+      unlimitedCredits: boolean(credits?["unlimited"])
     )
   }
 
   private static func parseWindow(_ object: [String: Any]?) -> RateLimitWindow? {
     guard let object,
-      let usedPercent = object["usedPercent"] as? Int,
+      let usedPercentValue = integer(object["usedPercent"]),
+      let usedPercent = Int(exactly: usedPercentValue),
       (0...100).contains(usedPercent)
     else { return nil }
     return RateLimitWindow(
@@ -320,7 +322,22 @@ public struct CodexStatusService: Sendable {
   }
 
   private static func integer(_ value: Any?) -> Int64? {
-    (value as? NSNumber)?.int64Value
+    guard let number = value as? NSNumber,
+      CFGetTypeID(number) != CFBooleanGetTypeID(),
+      !CFNumberIsFloatType(number)
+    else {
+      return nil
+    }
+    return Int64(number.stringValue)
+  }
+
+  private static func boolean(_ value: Any?) -> Bool? {
+    guard let number = value as? NSNumber,
+      CFGetTypeID(number) == CFBooleanGetTypeID()
+    else {
+      return nil
+    }
+    return number.boolValue
   }
 
   private static func boundedString(_ value: Any?, maximumBytes: Int) -> String? {
@@ -393,7 +410,11 @@ private final class BoundedJSONLCollector: @unchecked Sendable {
   func finish() {
     condition.withLock {
       if !buffer.isEmpty {
-        lines.append(buffer)
+        if lines.count < Self.maximumRecordCount {
+          lines.append(buffer)
+        } else {
+          didExceedLimit = true
+        }
         buffer.removeAll(keepingCapacity: false)
       }
       isFinished = true

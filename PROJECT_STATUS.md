@@ -2,7 +2,7 @@
 
 ## Current release line
 
-Version 0.1.3 is the current immutable, signed, notarized, and stapled [GitHub Release](https://github.com/mneves75/open-profile-manager/releases/tag/v0.1.3). Version 0.1.4 is the next unreleased patch line.
+Version 0.1.4 is the current unreleased source line. Version 0.1.3 remains the latest immutable, signed, notarized, and stapled [GitHub Release](https://github.com/mneves75/open-profile-manager/releases/tag/v0.1.3).
 
 ## Scope
 
@@ -24,7 +24,9 @@ Version 0.1.3 is the current immutable, signed, notarized, and stapled [GitHub R
 
 ## Release evidence
 
-Version 0.1.3 removes the native first-window delay, hardens official desktop-app discovery with a Developer ID requirement, defines repeatable site performance evidence, shrinks the hero LCP asset, updates video dependencies, and keeps status batch refreshes to one registry load per user action.
+The 0.1.4 source review hardens untrusted JSON and property-list scalar parsing, closes the unterminated-final-record JSONL limit bypass, and updates Nano ID to 3.3.18 for CVE-2026-67213. Stable Xcode 26.6 passed the complete gate with 59 tests. Gitleaks, TruffleHog, npm audit, the privacy-manifest check, and release-mode ad-hoc package verification passed; the package reports version 0.1.4/build 6. Version 0.1.4 has not been published, notarized, or released.
+
+Version 0.1.3 removes the native first-window delay, hardens official desktop-app discovery with a valid Apple-signature requirement pinned to the official Team ID and bundle identifier, defines repeatable site performance evidence, shrinks the hero LCP asset, updates video dependencies, and keeps status batch refreshes to one registry load per user action.
 
 Tag `v0.1.3` resolves to release commit `86f0199`. Stable Xcode 26.6 checks, 56 tests, CI/CodeQL, secret scans, Apple notarization submission `e042f594-beda-4191-8a5b-75f912daf649`, Gatekeeper, stapling, redownloaded checksums, and GitHub attestations for the universal ZIP, dSYMs, SPDX SBOM, and checksum manifest all passed.
 
