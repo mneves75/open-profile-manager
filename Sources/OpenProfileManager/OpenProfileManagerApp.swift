@@ -70,6 +70,7 @@ final class OpenProfileManagerApp: NSObject, NSApplicationDelegate {
     window.identifier = NSUserInterfaceItemIdentifier("main")
     window.isReleasedWhenClosed = false
     window.isRestorable = false
+    window.toolbarStyle = .unifiedCompact
     window.title = L10n.string("Open Profile Manager")
     window.center()
     mainWindow = window

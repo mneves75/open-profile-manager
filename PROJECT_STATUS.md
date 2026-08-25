@@ -2,7 +2,7 @@
 
 ## Current release line
 
-Version 0.1.5 is the current source line and latest immutable, signed, notarized, and stapled [GitHub Release](https://github.com/mneves75/open-profile-manager/releases/tag/v0.1.5). The next unreleased target is 0.1.6.
+Version 0.1.6 is the current source line and release target. Version 0.1.5 remains the latest immutable, signed, notarized, and stapled [GitHub Release](https://github.com/mneves75/open-profile-manager/releases/tag/v0.1.5) until 0.1.6 distribution completes.
 
 ## Scope
 
@@ -23,6 +23,8 @@ Version 0.1.5 is the current source line and latest immutable, signed, notarized
 - Windows or Linux GUI support in 0.1.x
 
 ## Release evidence
+
+Version 0.1.6 uses AppKit’s compact unified toolbar so the title-bar controls no longer reserve an oversized header above the profile content. Stable Xcode 26.6 passed the complete local gate with 59 tests; Xcode 27 beta independently built the app and passed the same 59 tests. The strict release security scan found no secret candidates, and a real-window launch confirmed the compact title bar and normal content spacing. Remote CI, signing, notarization, public-artifact verification, and installation remain release-time gates.
 
 Version 0.1.5 makes TruffleHog mandatory in release mode, blocks verified, unknown, and unverified secret candidates, and executes the bundled CLI and native app after the canonical ZIP is downloaded and cryptographically verified. Tag `v0.1.5` resolves to release commit `e36c886`. Stable Xcode 26.6 passed the complete gate with 59 tests; main CI, CodeQL, Gitleaks, TruffleHog, npm audit, SBOM generation, and the privacy-manifest check passed. Apple accepted notarization submission `6ad8295c-ecbe-40f6-a527-57587d02a19b`; Developer ID verification, universal architecture checks, stapling, Gatekeeper, matching dSYMs, checksums, GitHub asset attestations, immutable publication, redownloaded execution, and installation of the public release all passed.
 
