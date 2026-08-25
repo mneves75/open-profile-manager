@@ -4,6 +4,8 @@ All notable changes to this project are documented in this file. The format is b
 
 ## [Unreleased]
 
+Target: 0.1.5.
+
 ## [0.1.4] - 2026-08-25
 
 ### Fixed
