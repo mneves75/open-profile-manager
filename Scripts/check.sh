@@ -6,6 +6,7 @@ cd "$ROOT"
 
 Scripts/lint.sh
 Scripts/test_release_artifacts.sh
+Scripts/test_security_check.sh
 swift Scripts/check_localizations.swift
 swift build
 
