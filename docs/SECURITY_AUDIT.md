@@ -1,16 +1,18 @@
-# Security audit — 0.1.4 release
+# Security audit — 0.1.5 release candidate
 
 Date: 2026-08-25
 Scope: the complete source tree, local persistence, child-process protocol, CLI and GUI launch paths, Finder launchers, packaging scripts, the static GitHub Pages site, Remotion authoring sources, dependencies, and CI configuration.
 
 ## Result
 
-No confirmed critical-, high-, medium-, or low-severity findings remain open in the reviewed 0.1.4 release. The review covered every application, test, script, workflow, static-site, and video-authoring source. It fixed one high-severity transitive authoring dependency advisory and two low-severity input-confusion or limit-edge finding classes. The released artifacts passed the complete distribution gate described below.
+No confirmed critical-, high-, medium-, or low-severity findings remain open in the reviewed 0.1.5 release candidate. The review covered every application, test, script, workflow, static-site, and video-authoring source. This pass closes two release-evidence gaps while retaining the application hardening and dependency fixes from 0.1.4. Publication remains gated on signing, notarization, redownload, and artifact verification.
 
 ## Fixed findings
 
 | Finding | Severity | Resolution | Evidence |
 | --- | --- | --- | --- |
+| A release could pass when TruffleHog was unavailable and ignored non-verified candidates | Low | Added a release mode that requires TruffleHog and fails on verified, unknown, or unverified results | Contract tests cover normal/release arguments, missing scanner, and invalid options; the real strict scan reports zero candidates |
+| The redownload gate validated the canonical app cryptographically without executing it | Low | Added an isolated-home smoke that checks the bundled CLI version and PTY behavior and waits for an on-screen native window | The 0.1.5 candidate passed the bundled-version check, all three PTY flows, and visible-window proof |
 | The Remotion authoring tree resolved Nano ID 3.3.17, which is affected by CVE-2026-67213 | High | Replaced the exact override with the compatible patched range `^3.3.18` and regenerated the npm lockfile at 3.3.18 | `npm audit --audit-level=low` reports zero vulnerabilities; the complete web/video gate passes under the pinned Node 24/npm 11 runtime |
 | Foundation could bridge numeric JSON or property-list values to Boolean or integer types | Low | App-server authentication, credit, percentage, and timestamp fields now require their exact Core Foundation scalar type and reject integer overflow; managed-launcher markers require an actual property-list Boolean | Malformed scalar and numeric-launcher-marker regressions plus the complete 59-test suite |
 | An unterminated 257th app-server record could bypass the 256-record limit | Low | The JSONL collector now applies the same count check before accepting its final buffered record | Unterminated-final-record regression and the complete 59-test suite |
@@ -47,7 +49,7 @@ The live compatibility tests also found and fixed reliability defects in termina
 3. **Input validation:** profile identifiers, names, paths, registry size/count, app-server bytes/record count/scalar types, and launcher metadata are bounded and validated. Localization keys are static, and the gate rejects divergent format placeholders before packaging.
 4. **Injection:** child processes and process replacement use fixed executable URLs and explicit argument/environment arrays. Embedded NUL bytes are rejected and no user-controlled value is evaluated by a shell.
 5. **Cryptography:** the application performs no custom encryption or hashing. Distribution trust uses Apple code signing and notarization gates.
-6. **Secrets:** Gitleaks and TruffleHog found no verified or unverified secrets. The repository contains no credential fixtures or environment files. Both release entrypoints clear legacy, `asc` credential, and authentication-routing variables before invoking project code, then require strict authentication through the default System Keychain profile without temporary key files. Release-time `asc` telemetry is disabled.
+6. **Secrets:** Gitleaks and TruffleHog found no verified, unknown, or unverified secret candidates. The repository contains no credential fixtures or environment files. Both release entrypoints clear legacy, `asc` credential, and authentication-routing variables before invoking project code, then require strict authentication through the default System Keychain profile without temporary key files. Release-time `asc` telemetry is disabled.
 7. **Data protection:** registry and lock files are `0600`; managed and launcher directories are `0700`; symlinks, unsafe ancestors, and extended ACLs are rejected; writes use descriptor-relative operations, a unique temporary file, atomic rename, and durability syncs.
 8. **Dependencies:** the native package uses Apple `swift-argument-parser` pinned to 1.8.2. Remotion and its React toolchain are pinned by `video/package-lock.json`, require Node 24/npm 11, resolve Nano ID to patched version 3.3.18, report zero npm audit findings, and are covered by a scoped Dependabot entry.
 9. **Logging and errors:** the project does not dump environments, account email addresses, raw authentication files, child stderr, or raw app-server payloads in human-readable output. The GUI localizes known typed errors and replaces unknown errors with a generic message; explicit JSON output retains its documented account field.
@@ -62,7 +64,8 @@ The live compatibility tests also found and fixed reliability defects in termina
 ## Verification performed
 
 - `Scripts/check.sh`: strict Swift format, four ast-grep rule fixtures and scan, ShellCheck, release-artifact checks, 131-key localization completeness and placeholder checks, debug build, version-drift check, PTY integration, CLI contract check, web/video validation, and all 59 Swift tests passed under stable Xcode 26.6.
-- `Scripts/security-check.sh`: Gitleaks scanned the 231.57 MB working tree and 20-commit history with no leaks; TruffleHog scanned 165 source chunks with zero verified or unverified secrets and no scan errors; dependency resolution, diff checks, and privacy-manifest validation passed.
+- `Scripts/security-check.sh --release`: Gitleaks scanned the 252.47 MB working tree and 24-commit history with no leaks; TruffleHog 3.97.1 scanned 168 source chunks with zero verified, unknown, or unverified secret candidates and no scan errors; dependency resolution, diff checks, and privacy-manifest validation passed.
+- Candidate package smoke: the 0.1.5/build 7 arm64 app matched its bundled CLI version, preserved terminal ownership across run/login/logout, and produced an on-screen layer-zero window in 318.587 ms at load averages 4.67/4.54/5.87.
 - `npm ci --prefix video`, `npm audit --audit-level=low`, `node --check docs/app.js`, and `npm --prefix video run lint`: clean install, zero vulnerabilities, valid JavaScript, ESLint, and TypeScript.
 - Security-audit heuristics: full-history secret scan, route enumeration, and risky-pattern scan. Route/auth and error-leak hits were reviewed as false positives caused by generic pattern matching against local Swift methods and `Label(..., systemImage:)`; the product has no HTTP service or listening socket.
 - Release benchmark: two-profile `status --all` improved from a 1,642 ms median to 788 ms at load averages 5.63/6.20/7.09; cheap CLI commands did not regress materially.
