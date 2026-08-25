@@ -21,6 +21,7 @@ The ZIP is the canonical app artifact because `ditto` preserves the macOS bundle
 - GitHub immutable releases enabled for the repository.
 - `APP_IDENTITY` set to the exact Developer ID identity.
 - Node 24 and npm 11, matching `.nvmrc` and `video/package.json`.
+- Gitleaks and TruffleHog installed; release mode treats verified, unknown, and unverified secret candidates as blockers for maintainer review.
 - Clean `main`, identical to `origin/main`, with successful CI and CodeQL for `HEAD`.
 
 Apple Development, Apple Distribution, Mac App Distribution, and ad-hoc identities are not acceptable for a public artifact.
@@ -40,7 +41,7 @@ The foreground release performs the full gate:
 4. staples and validates the ticket, checks system distribution policy, and generates matching dSYMs;
 5. downloads the CI SBOM and writes SHA-256 checksums;
 6. atomically reserves an annotated tag at the verified commit, then creates a draft GitHub Release from the matching changelog section;
-7. downloads every asset, verifies checksums, code signing, Gatekeeper policy, and stapling;
+7. downloads every asset, verifies checksums, code signing, Gatekeeper policy, and stapling, then exercises the bundled CLI and launches the app from the downloaded bundle under an isolated home;
 8. publishes the immutable release and verifies GitHub's asset digests.
 
 The release wrapper disables `asc` telemetry, rejects mixed keychain/config/environment authentication, and verifies the required notarization command and flags before building.

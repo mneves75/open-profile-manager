@@ -117,7 +117,7 @@ for workflow_name in CI CodeQL; do
 done
 
 Scripts/check.sh
-Scripts/security-check.sh
+Scripts/security-check.sh --release
 ARCHES="$ARCHES_VALUE" Scripts/sign-and-notarize.sh
 
 rm -f "$SBOM"
@@ -191,6 +191,7 @@ else
   /usr/sbin/spctl --assess --type execute --verbose=2 "$DOWNLOADED_APP"
 fi
 /usr/bin/xcrun stapler validate "$DOWNLOADED_APP"
+Scripts/test_packaged_app.sh "$DOWNLOADED_APP"
 
 gh release edit "$TAG" --repo "$REPOSITORY" --draft=false --latest
 for asset in "$APP_ZIP" "$DSYM_ZIP" "$SBOM" "$CHECKSUMS"; do
