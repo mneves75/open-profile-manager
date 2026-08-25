@@ -1,11 +1,11 @@
-# Security audit — 0.1.5 release
+# Security audit — 0.1.6 release candidate
 
 Date: 2026-08-25
 Scope: the complete source tree, local persistence, child-process protocol, CLI and GUI launch paths, Finder launchers, packaging scripts, the static GitHub Pages site, Remotion authoring sources, dependencies, and CI configuration.
 
 ## Result
 
-No confirmed critical-, high-, medium-, or low-severity findings remain open in the reviewed 0.1.5 release. The review covered every application, test, script, workflow, static-site, and video-authoring source. This pass closes two release-evidence gaps while retaining the application hardening and dependency fixes from 0.1.4. The released artifacts passed the complete distribution gate described below.
+No confirmed critical-, high-, medium-, or low-severity findings remain open in the reviewed 0.1.6 release-candidate source. The review covered every application, test, script, workflow, static-site, and video-authoring source. The 0.1.6 change selects AppKit’s compact unified toolbar style and does not expand the input, persistence, process-launch, network, or distribution boundaries. Release artifacts have not yet been produced; the published-artifact evidence below therefore remains 0.1.5 evidence until 0.1.6 distribution completes.
 
 ## Fixed findings
 
@@ -63,8 +63,10 @@ The live compatibility tests also found and fixed reliability defects in termina
 
 ## Verification performed
 
-- `Scripts/check.sh`: strict Swift format, four ast-grep rule fixtures and scan, ShellCheck, release-artifact checks, 131-key localization completeness and placeholder checks, debug build, version-drift check, PTY integration, CLI contract check, web/video validation, and all 59 Swift tests passed under stable Xcode 26.6.
-- `Scripts/security-check.sh --release`: Gitleaks scanned the 252.47 MB working tree and 28-commit history with no leaks; TruffleHog 3.97.1 scanned 168 source chunks with zero verified, unknown, or unverified secret candidates and no scan errors; dependency resolution, diff checks, and privacy-manifest validation passed.
+- `Scripts/check.sh`: strict Swift format, four ast-grep rule fixtures and scan, ShellCheck, release-artifact checks, 131-key localization completeness and placeholder checks, debug build, version-drift check, PTY integration, CLI contract check, web/video validation, and all 59 Swift tests passed under stable Xcode 26.6 for the 0.1.6 release candidate.
+- `Scripts/security-check.sh --release`: Gitleaks scanned the working tree and full history with no leaks; TruffleHog 3.97.1 scanned 168 source chunks with zero verified, unknown, or unverified secret candidates and no scan errors; dependency resolution, diff checks, and privacy-manifest validation passed for the 0.1.6 release candidate.
+- Xcode 27 beta independently built the 0.1.6 source and passed all 59 tests under Swift 6.4 complete concurrency checking.
+- Native real-window QA confirmed that the compact unified toolbar removes the oversized title-bar area without clipping the profile content or window controls.
 - Release package smoke: the redownloaded universal 0.1.5/build 7 app matched its bundled CLI version, preserved terminal ownership across run/login/logout, and produced an on-screen layer-zero window in 442.630 ms at load averages 27.69/13.14/9.27. The installed public artifact repeated the full smoke and produced the window in 327.014 ms at load averages 7.21/9.25/8.44.
 - `npm ci --prefix video`, `npm audit --audit-level=low`, `node --check docs/app.js`, and `npm --prefix video run lint`: clean install, zero vulnerabilities, valid JavaScript, ESLint, and TypeScript.
 - Security-audit heuristics: full-history secret scan, route enumeration, and risky-pattern scan. Route/auth and error-leak hits were reviewed as false positives caused by generic pattern matching against local Swift methods and `Label(..., systemImage:)`; the product has no HTTP service or listening socket.
