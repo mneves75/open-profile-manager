@@ -17,8 +17,8 @@ Ship an unofficial MIT-licensed, local-first profile manager for Codex CLI and t
 
 ## Active work
 
-- Version 0.1.4 is the current source line and latest published release; 0.1.5 is the next unreleased target.
-- Version 0.1.4 hardens untrusted app-server and launcher scalar parsing, closes the unterminated-final-record JSONL limit bypass, and resolves Nano ID to patched version 3.3.18.
+- Version 0.1.5 is the current source line and latest published release; 0.1.6 is the next unreleased target.
+- Version 0.1.5 makes release secret scanning fail closed and executes the redownloaded bundle through CLI PTY and native-window smoke checks before publication.
 
 ## Project environment
 
@@ -30,7 +30,7 @@ Ship an unofficial MIT-licensed, local-first profile manager for Codex CLI and t
 
 - Fifty-nine tests pass under stable Xcode 26.6, including strict app-server scalar parsing, the final JSONL record bound, numeric managed-launcher marker rejection, official desktop-app signature rejection, PTY process replacement, concurrent ordered status reads, descriptor-relative and ACL-aware registry privacy, firmlink-aware profile-directory isolation, and hostile protocol output.
 - The native app contains 131 complete keys in both `en-US` and `pt-BR`; macOS preference selection and unsupported-language fallback were proven against a signed package, and isolated native renders covered the main profile and editor layouts in both languages.
-- Version 0.1.4 is published from commit `c348ab1` as a Developer ID-signed, notarized, stapled, immutable GitHub Release. Apple accepted notarization submission `eae747a3-52df-4181-b589-db1db88c3f86`; CI, CodeQL, npm audit, Gitleaks, TruffleHog, GitHub security alerts, release assets, checksums, SBOM, attestations, redownload verification, and local installation all passed.
+- Version 0.1.5 is published from commit `e36c886` as a Developer ID-signed, notarized, stapled, immutable GitHub Release. Apple accepted notarization submission `6ad8295c-ecbe-40f6-a527-57587d02a19b`; CI, CodeQL, npm audit, Gitleaks, TruffleHog, GitHub security alerts, release assets, checksums, SBOM, attestations, redownloaded execution, and installation of the public ZIP all passed.
 - At 128 profiles, registry validation improved from 7,145 ms to 28 ms p95. The strict static-site below-50 ms p95 goal remains failed on this host; the file-URL fallback recorded desktop FCP/LCP 56/60 ms and mobile 48/56 ms while the primary loopback benchmark was blocked by execution-environment isolation.
 - The signed 0.1.3 Release build's process-to-on-screen-window proxy measured 225.625 ms p50 and 357.221 ms p95, proving that a below-50 ms native process/window budget is invalid on the current macOS surface.
 - Version 0.1.3 is published from commit `86f0199` as a Developer ID-signed, notarized, stapled, immutable GitHub Release with verified universal ZIP, dSYMs, SPDX SBOM, checksums, and attestations. Apple accepted notarization submission `e042f594-beda-4191-8a5b-75f912daf649`.

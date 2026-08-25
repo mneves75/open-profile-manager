@@ -2,7 +2,7 @@
 
 ## Current release line
 
-Version 0.1.5 is the current source line and release target. Version 0.1.4 remains the latest immutable, signed, notarized, and stapled [GitHub Release](https://github.com/mneves75/open-profile-manager/releases/tag/v0.1.4) until 0.1.5 distribution completes.
+Version 0.1.5 is the current source line and latest immutable, signed, notarized, and stapled [GitHub Release](https://github.com/mneves75/open-profile-manager/releases/tag/v0.1.5). The next unreleased target is 0.1.6.
 
 ## Scope
 
@@ -24,7 +24,7 @@ Version 0.1.5 is the current source line and release target. Version 0.1.4 remai
 
 ## Release evidence
 
-Version 0.1.5 makes TruffleHog mandatory in release mode, blocks verified, unknown, and unverified secret candidates, and adds an execution smoke test for the bundled CLI and native app after the canonical ZIP is downloaded and cryptographically verified.
+Version 0.1.5 makes TruffleHog mandatory in release mode, blocks verified, unknown, and unverified secret candidates, and executes the bundled CLI and native app after the canonical ZIP is downloaded and cryptographically verified. Tag `v0.1.5` resolves to release commit `e36c886`. Stable Xcode 26.6 passed the complete gate with 59 tests; main CI, CodeQL, Gitleaks, TruffleHog, npm audit, SBOM generation, and the privacy-manifest check passed. Apple accepted notarization submission `6ad8295c-ecbe-40f6-a527-57587d02a19b`; Developer ID verification, universal architecture checks, stapling, Gatekeeper, matching dSYMs, checksums, GitHub asset attestations, immutable publication, redownloaded execution, and installation of the public release all passed.
 
 Version 0.1.4 hardens untrusted JSON and property-list scalar parsing, closes the unterminated-final-record JSONL limit bypass, and updates Nano ID to 3.3.18 for CVE-2026-67213. Tag `v0.1.4` resolves to release commit `c348ab1`. Stable Xcode 26.6 passed the complete gate with 59 tests; CI, CodeQL, Gitleaks, TruffleHog, npm audit, and the privacy-manifest check passed. Apple accepted notarization submission `eae747a3-52df-4181-b589-db1db88c3f86`; Developer ID verification, universal architecture checks, stapling, Gatekeeper, matching dSYMs, SPDX SBOM, checksums, GitHub asset attestations, immutable publication, and verification of the redownloaded and locally installed release all passed.
 
