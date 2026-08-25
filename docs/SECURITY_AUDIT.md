@@ -1,11 +1,11 @@
-# Security audit — 0.1.4 pre-production review
+# Security audit — 0.1.4 release
 
-Date: 2026-08-24
+Date: 2026-08-25
 Scope: the complete source tree, local persistence, child-process protocol, CLI and GUI launch paths, Finder launchers, packaging scripts, the static GitHub Pages site, Remotion authoring sources, dependencies, and CI configuration.
 
 ## Result
 
-No confirmed critical-, high-, medium-, or low-severity findings remain open in the reviewed 0.1.4 source line. This pre-production review covered every application, test, script, workflow, static-site, and video-authoring source. It fixed one high-severity transitive authoring dependency advisory and two low-severity input-confusion or limit-edge finding classes. Version 0.1.4 remains unreleased; the published 0.1.3 distribution evidence below is historical and does not waive a fresh release gate.
+No confirmed critical-, high-, medium-, or low-severity findings remain open in the reviewed 0.1.4 release. The review covered every application, test, script, workflow, static-site, and video-authoring source. It fixed one high-severity transitive authoring dependency advisory and two low-severity input-confusion or limit-edge finding classes. The released artifacts passed the complete distribution gate described below.
 
 ## Fixed findings
 
@@ -66,12 +66,11 @@ The live compatibility tests also found and fixed reliability defects in termina
 - `npm ci --prefix video`, `npm audit --audit-level=low`, `node --check docs/app.js`, and `npm --prefix video run lint`: clean install, zero vulnerabilities, valid JavaScript, ESLint, and TypeScript.
 - Security-audit heuristics: full-history secret scan, route enumeration, and risky-pattern scan. Route/auth and error-leak hits were reviewed as false positives caused by generic pattern matching against local Swift methods and `Label(..., systemImage:)`; the product has no HTTP service or listening socket.
 - Release benchmark: two-profile `status --all` improved from a 1,642 ms median to 788 ms at load averages 5.63/6.20/7.09; cheap CLI commands did not regress materially.
-- GitHub security state before this commit reached the default branch: CodeQL and secret scanning reported zero open alerts; Dependabot reported the Nano ID alert fixed by this source change.
-- Pre-production package: the local ad-hoc-signed 0.1.4/build 6 app passed `codesign --verify --deep --strict` and satisfied its designated requirement. This proves package integrity only, not Developer ID signing, notarization, stapling, Gatekeeper acceptance, or publication.
-- Released package: the 0.1.3/build 5 app passed `codesign --verify --deep --strict` with a Developer ID Application identity, hardened runtime, both localizations, and a privacy manifest. The redownloaded public universal ZIP passed Gatekeeper, stapling, checksums, and GitHub asset attestation verification.
+- GitHub security state after publication: Dependabot, CodeQL code scanning, and secret scanning reported zero open alerts on 2026-08-25.
+- Released package: the redownloaded 0.1.4/build 6 universal app passed `codesign --verify --deep --strict` with a Developer ID Application identity, its designated requirement, stapling, Gatekeeper distribution assessment, checksums, and GitHub asset attestation verification. The canonical release app and CLI were then installed locally and passed the same signature, staple, Gatekeeper, and version checks; the installed app launched from the expected path.
 - Media and browser QA: the affected tutorial was rerendered at 1920×1080 with H.264/AAC for 85.056 seconds, and its 0.1.2 frame was inspected. Desktop and 390×844 browser renders, the accessibility tree, zero console/page errors, and real tutorial playback all passed.
 - Live integration: two sanitized test profiles returned status, passed expanded `doctor` checks under a restricted Finder-like `PATH`, and launched the official app with distinct data directories. No account identifiers or status payloads are retained in the repository.
-- Distribution: `v0.1.3` resolves to `86f0199`; Apple accepted notarization submission `e042f594-beda-4191-8a5b-75f912daf649`. Developer ID verification, universal architecture checks, stapling, Gatekeeper, matching dSYMs, SPDX SBOM, checksums, GitHub asset attestations, immutable publication, and redownload verification passed.
+- Distribution: `v0.1.4` resolves to `c348ab1`; Apple accepted notarization submission `eae747a3-52df-4181-b589-db1db88c3f86`. Developer ID verification, universal architecture checks, stapling, Gatekeeper, matching dSYMs, SPDX SBOM, checksums, GitHub asset attestations, immutable publication, redownload verification, and local installation passed.
 
 ## Residual limitations
 

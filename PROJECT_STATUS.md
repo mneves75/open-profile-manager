@@ -2,7 +2,7 @@
 
 ## Current release line
 
-Version 0.1.4 is the current unreleased source line. Version 0.1.3 remains the latest immutable, signed, notarized, and stapled [GitHub Release](https://github.com/mneves75/open-profile-manager/releases/tag/v0.1.3).
+Version 0.1.4 is the current source line and latest immutable, signed, notarized, and stapled [GitHub Release](https://github.com/mneves75/open-profile-manager/releases/tag/v0.1.4). The next unreleased target is 0.1.5.
 
 ## Scope
 
@@ -24,7 +24,7 @@ Version 0.1.4 is the current unreleased source line. Version 0.1.3 remains the l
 
 ## Release evidence
 
-The 0.1.4 source review hardens untrusted JSON and property-list scalar parsing, closes the unterminated-final-record JSONL limit bypass, and updates Nano ID to 3.3.18 for CVE-2026-67213. Stable Xcode 26.6 passed the complete gate with 59 tests. Gitleaks, TruffleHog, npm audit, the privacy-manifest check, and release-mode ad-hoc package verification passed; the package reports version 0.1.4/build 6. Version 0.1.4 has not been published, notarized, or released.
+Version 0.1.4 hardens untrusted JSON and property-list scalar parsing, closes the unterminated-final-record JSONL limit bypass, and updates Nano ID to 3.3.18 for CVE-2026-67213. Tag `v0.1.4` resolves to release commit `c348ab1`. Stable Xcode 26.6 passed the complete gate with 59 tests; CI, CodeQL, Gitleaks, TruffleHog, npm audit, and the privacy-manifest check passed. Apple accepted notarization submission `eae747a3-52df-4181-b589-db1db88c3f86`; Developer ID verification, universal architecture checks, stapling, Gatekeeper, matching dSYMs, SPDX SBOM, checksums, GitHub asset attestations, immutable publication, and verification of the redownloaded and locally installed release all passed.
 
 Version 0.1.3 removes the native first-window delay, hardens official desktop-app discovery with a valid Apple-signature requirement pinned to the official Team ID and bundle identifier, defines repeatable site performance evidence, shrinks the hero LCP asset, updates video dependencies, and keeps status batch refreshes to one registry load per user action.
 
