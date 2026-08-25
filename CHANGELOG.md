@@ -4,7 +4,7 @@ All notable changes to this project are documented in this file. The format is b
 
 ## [Unreleased]
 
-Target: 0.1.4.
+## [0.1.4] - 2026-08-25
 
 ### Fixed
 
@@ -95,7 +95,8 @@ Target: 0.1.4.
 - Human-readable status output no longer prints account email addresses; callers that explicitly request JSON retain the documented structured field.
 - Native menus, views, accessibility labels, interpolated values, and GUI error messages now resolve through one localization boundary without translating profile data, paths, commands, or protocol values.
 
-[Unreleased]: https://github.com/mneves75/open-profile-manager/compare/v0.1.3...HEAD
+[Unreleased]: https://github.com/mneves75/open-profile-manager/compare/v0.1.4...HEAD
+[0.1.4]: https://github.com/mneves75/open-profile-manager/compare/v0.1.3...v0.1.4
 [0.1.3]: https://github.com/mneves75/open-profile-manager/compare/v0.1.2...v0.1.3
 [0.1.2]: https://github.com/mneves75/open-profile-manager/compare/v0.1.1...v0.1.2
 [0.1.1]: https://github.com/mneves75/open-profile-manager/releases/tag/v0.1.1
