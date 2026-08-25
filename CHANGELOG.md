@@ -6,6 +6,10 @@ All notable changes to this project are documented in this file. The format is b
 
 Target: 0.1.6.
 
+### Fixed
+
+- Use the compact unified toolbar in the native app so window controls no longer reserve an oversized header above profile content.
+
 ## [0.1.5] - 2026-08-25
 
 ### Changed
