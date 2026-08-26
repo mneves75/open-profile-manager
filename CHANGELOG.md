@@ -2,6 +2,10 @@
 
 All notable changes to this project are documented in this file. The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and the project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+Target: 0.1.7.
+
 ## [0.1.6] - 2026-08-26
 
 ### Fixed
@@ -109,6 +113,7 @@ All notable changes to this project are documented in this file. The format is b
 - Human-readable status output no longer prints account email addresses; callers that explicitly request JSON retain the documented structured field.
 - Native menus, views, accessibility labels, interpolated values, and GUI error messages now resolve through one localization boundary without translating profile data, paths, commands, or protocol values.
 
+[Unreleased]: https://github.com/mneves75/open-profile-manager/compare/v0.1.6...HEAD
 [0.1.6]: https://github.com/mneves75/open-profile-manager/compare/v0.1.5...v0.1.6
 [0.1.5]: https://github.com/mneves75/open-profile-manager/compare/v0.1.4...v0.1.5
 [0.1.4]: https://github.com/mneves75/open-profile-manager/compare/v0.1.3...v0.1.4
