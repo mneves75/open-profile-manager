@@ -90,7 +90,7 @@ See [SECURITY.md](SECURITY.md) for vulnerability reporting, [the threat model](d
 
 ## Project status
 
-Version 0.1.6 is the current source line and release target. Version 0.1.5 remains the latest [published GitHub Release](https://github.com/mneves75/open-profile-manager/releases/tag/v0.1.5) until 0.1.6 distribution completes. See [PROJECT_STATUS.md](PROJECT_STATUS.md) and [CHANGELOG.md](CHANGELOG.md).
+Version 0.1.6 is the current source line and latest [published GitHub Release](https://github.com/mneves75/open-profile-manager/releases/tag/v0.1.6). The next unreleased target is 0.1.7. See [PROJECT_STATUS.md](PROJECT_STATUS.md) and [CHANGELOG.md](CHANGELOG.md).
 
 ## Contributing
 

@@ -1,18 +1,18 @@
-# Security audit — 0.1.6 release candidate
+# Security audit — 0.1.6 release
 
-Date: 2026-08-25
+Date: 2026-08-26
 Scope: the complete source tree, local persistence, child-process protocol, CLI and GUI launch paths, Finder launchers, packaging scripts, the static GitHub Pages site, Remotion authoring sources, dependencies, and CI configuration.
 
 ## Result
 
-No confirmed critical-, high-, medium-, or low-severity findings remain open in the reviewed 0.1.6 release-candidate source. The review covered every application, test, script, workflow, static-site, and video-authoring source. The 0.1.6 change selects AppKit’s compact unified toolbar style and does not expand the input, persistence, process-launch, network, or distribution boundaries. Release artifacts have not yet been produced; the published-artifact evidence below therefore remains 0.1.5 evidence until 0.1.6 distribution completes.
+No confirmed critical-, high-, medium-, or low-severity findings remain open in the reviewed 0.1.6 release. The review covered every application, test, script, workflow, static-site, and video-authoring source. The 0.1.6 change selects AppKit’s compact unified toolbar style and does not expand the input, persistence, process-launch, network, or distribution boundaries. The released artifacts passed the complete distribution gate described below.
 
 ## Fixed findings
 
 | Finding | Severity | Resolution | Evidence |
 | --- | --- | --- | --- |
 | A release could pass when TruffleHog was unavailable and ignored non-verified candidates | Low | Added a release mode that requires TruffleHog and fails on verified, unknown, or unverified results | Contract tests cover normal/release arguments, missing scanner, and invalid options; the real strict scan reports zero candidates |
-| The redownload gate validated the canonical app cryptographically without executing it | Low | Added an isolated-home smoke that checks the bundled CLI version and PTY behavior and waits for an on-screen native window | The public 0.1.5/build 7 release passed the bundled-version check, all three PTY flows, and visible-window proof before publication and after installation |
+| The redownload gate validated the canonical app cryptographically without executing it | Low | Added an isolated-home smoke that checks the bundled CLI version and PTY behavior and waits for an on-screen native window | The public 0.1.6/build 8 release passed the bundled-version check, all three PTY flows, and visible-window proof before publication and after installation |
 | The Remotion authoring tree resolved Nano ID 3.3.17, which is affected by CVE-2026-67213 | High | Replaced the exact override with the compatible patched range `^3.3.18` and regenerated the npm lockfile at 3.3.18 | `npm audit --audit-level=low` reports zero vulnerabilities; the complete web/video gate passes under the pinned Node 24/npm 11 runtime |
 | Foundation could bridge numeric JSON or property-list values to Boolean or integer types | Low | App-server authentication, credit, percentage, and timestamp fields now require their exact Core Foundation scalar type and reject integer overflow; managed-launcher markers require an actual property-list Boolean | Malformed scalar and numeric-launcher-marker regressions plus the complete 59-test suite |
 | An unterminated 257th app-server record could bypass the 256-record limit | Low | The JSONL collector now applies the same count check before accepting its final buffered record | Unterminated-final-record regression and the complete 59-test suite |
@@ -63,19 +63,19 @@ The live compatibility tests also found and fixed reliability defects in termina
 
 ## Verification performed
 
-- `Scripts/check.sh`: strict Swift format, four ast-grep rule fixtures and scan, ShellCheck, release-artifact checks, 131-key localization completeness and placeholder checks, debug build, version-drift check, PTY integration, CLI contract check, web/video validation, and all 59 Swift tests passed under stable Xcode 26.6 for the 0.1.6 release candidate.
-- `Scripts/security-check.sh --release`: Gitleaks scanned the working tree and full history with no leaks; TruffleHog 3.97.1 scanned 168 source chunks with zero verified, unknown, or unverified secret candidates and no scan errors; dependency resolution, diff checks, and privacy-manifest validation passed for the 0.1.6 release candidate.
+- `Scripts/check.sh`: strict Swift format, four ast-grep rule fixtures and scan, ShellCheck, release-artifact checks, 131-key localization completeness and placeholder checks, debug build, version-drift check, PTY integration, CLI contract check, web/video validation, and all 59 Swift tests passed under stable Xcode 26.6 for the 0.1.6 release.
+- `Scripts/security-check.sh --release`: Gitleaks scanned the working tree and 29-commit history with no leaks; TruffleHog 3.97.1 scanned 168 source chunks with zero verified, unknown, or unverified secret candidates and no scan errors; dependency resolution, diff checks, and privacy-manifest validation passed for the 0.1.6 release.
 - Xcode 27 beta independently built the 0.1.6 source and passed all 59 tests under Swift 6.4 complete concurrency checking.
 - Native real-window QA confirmed that the compact unified toolbar removes the oversized title-bar area without clipping the profile content or window controls.
-- Release package smoke: the redownloaded universal 0.1.5/build 7 app matched its bundled CLI version, preserved terminal ownership across run/login/logout, and produced an on-screen layer-zero window in 442.630 ms at load averages 27.69/13.14/9.27. The installed public artifact repeated the full smoke and produced the window in 327.014 ms at load averages 7.21/9.25/8.44.
+- Release package smoke: the redownloaded universal 0.1.6/build 8 app matched its bundled CLI version, preserved terminal ownership across run/login/logout, and produced an on-screen layer-zero window in 459.857 ms at load averages 35.04/13.75/8.59. The installed public artifact repeated the full smoke and produced the window in 330.953 ms at load averages 8.40/9.52/8.32.
 - `npm ci --prefix video`, `npm audit --audit-level=low`, `node --check docs/app.js`, and `npm --prefix video run lint`: clean install, zero vulnerabilities, valid JavaScript, ESLint, and TypeScript.
 - Security-audit heuristics: full-history secret scan, route enumeration, and risky-pattern scan. Route/auth and error-leak hits were reviewed as false positives caused by generic pattern matching against local Swift methods and `Label(..., systemImage:)`; the product has no HTTP service or listening socket.
 - Release benchmark: two-profile `status --all` improved from a 1,642 ms median to 788 ms at load averages 5.63/6.20/7.09; cheap CLI commands did not regress materially.
-- GitHub security state after publication: Dependabot, CodeQL code scanning, and secret scanning reported zero open alerts on 2026-08-25.
-- Released package: the redownloaded 0.1.5/build 7 universal app passed `codesign --verify --deep --strict` with the expected Developer ID Application identity and Team ID, its designated requirement, stapling, Gatekeeper distribution assessment, checksums, and GitHub asset attestation verification. The canonical release app and CLI were then installed locally and passed the same signature, architecture, staple, Gatekeeper, version, PTY, and visible-window checks.
+- GitHub security state after publication: Dependabot, CodeQL code scanning, and secret scanning reported zero open alerts on 2026-08-26.
+- Released package: the redownloaded 0.1.6/build 8 universal app passed `codesign --verify --deep --strict` with the expected Developer ID Application identity and Team ID, its designated requirement, stapling, Gatekeeper distribution assessment, checksums, and GitHub asset attestation verification. The canonical release app and CLI were then installed locally and passed the same signature, architecture, staple, Gatekeeper, version, PTY, and visible-window checks.
 - Media and browser QA: the affected tutorial was rerendered at 1920×1080 with H.264/AAC for 85.056 seconds, and its 0.1.2 frame was inspected. Desktop and 390×844 browser renders, the accessibility tree, zero console/page errors, and real tutorial playback all passed.
 - Live integration: two sanitized test profiles returned status, passed expanded `doctor` checks under a restricted Finder-like `PATH`, and launched the official app with distinct data directories. No account identifiers or status payloads are retained in the repository.
-- Distribution: `v0.1.5` resolves to `e36c886`; Apple accepted notarization submission `6ad8295c-ecbe-40f6-a527-57587d02a19b`. Developer ID verification, universal architecture checks, stapling, Gatekeeper, matching dSYMs, SPDX SBOM, checksums, GitHub asset attestations, immutable publication, redownloaded execution, and local installation passed.
+- Distribution: `v0.1.6` resolves to `2d66f4b`; Apple accepted notarization submission `13b4ce0a-8314-479c-8dd7-70f1d63b32b3f`. Developer ID verification, universal architecture checks, stapling, Gatekeeper, matching dSYMs, SPDX SBOM, checksums, GitHub asset attestations, immutable publication, redownloaded execution, and local installation passed.
 
 ## Residual limitations
 
