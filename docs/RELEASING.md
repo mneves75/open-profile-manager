@@ -61,3 +61,16 @@ After publication:
 - install and launch the downloaded ZIP on a clean macOS account;
 - confirm the release assets and source ZIP/`tar.gz` return HTTP 200;
 - update `CHANGELOG.md` for the next patch's `Unreleased` work in a separate commit.
+
+## Beta channel
+
+The staging channel is a GitHub prerelease, not TestFlight. After the same main-branch CI and review gates, run:
+
+```bash
+DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer \
+  APP_IDENTITY='Developer ID Application: Name (TEAMID)' Scripts/release.sh --beta 1
+```
+
+This reserves `v<MARKETING_VERSION>-beta1`, signs/notarizes the universal bundle, and applies the full draft-redownload gate before publication. Increment the positive beta count for another attempt. Beta releases are marked prerelease and explicitly excluded from GitHub's latest stable release. The numeric app version and artifact filenames remain `MARKETING_VERSION`; the tag identifies the channel and attempt, while `BUILD_NUMBER` identifies the build. Do not reuse a build number after changing app source.
+
+After verifying the beta, run `Scripts/release.sh` without arguments to publish the clean production tag. Both commands require clean main matching origin/main and successful CI/CodeQL for that commit; neither bypasses signing or secret scans. GitHub Pages currently deploys main automatically and has no separate staging URL. Keep the stable tag reserved until production publication; the release wrapper owns tag creation for both channels.

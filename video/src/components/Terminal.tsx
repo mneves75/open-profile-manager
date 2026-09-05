@@ -13,7 +13,7 @@ const OUT_STEP = 5; // frames between output lines appearing
 
 type Slot = { start: number; typeFrames: number };
 
-const schedule = (lines: TermLine[]): { slots: Slot[]; total: number } => {
+const schedule = (lines: TermLine[]): Slot[] => {
   const slots: Slot[] = [];
   let at = 0;
   for (const line of lines) {
@@ -29,11 +29,8 @@ const schedule = (lines: TermLine[]): { slots: Slot[]; total: number } => {
       at += line.pause;
     }
   }
-  return { slots, total: at };
+  return slots;
 };
-
-export const terminalDuration = (lines: TermLine[], tail = 25): number =>
-  schedule(lines).total + tail;
 
 const Bar: React.FC<{ pct: number; sinceFrames: number }> = ({ pct, sinceFrames }) => {
   const w = interpolate(sinceFrames, [0, 15], [0, pct], {
@@ -71,10 +68,9 @@ export const Terminal: React.FC<{
   lines: TermLine[];
   fontSize?: number;
   seed?: number;
-  muted?: boolean;
-}> = ({ lines, fontSize = 22, seed = 7, muted = false }) => {
+}> = ({ lines, fontSize = 22, seed = 7 }) => {
   const frame = useCurrentFrame();
-  const { slots } = schedule(lines);
+  const slots = schedule(lines);
   const rand = mulberry32(seed);
 
   // Keystroke sounds: one every 2 chars of every typed command, pitch jittered.
@@ -139,11 +135,9 @@ export const Terminal: React.FC<{
           </div>
         );
       })}
-      {muted
-        ? null
-        : keys.map((k, i) => (
-            <Sfx key={i} src={SFX.key} at={k.at} volume={VOLUME.key} playbackRate={k.rate} />
-          ))}
+      {keys.map((k, i) => (
+        <Sfx key={i} src={SFX.key} at={k.at} volume={VOLUME.key} playbackRate={k.rate} />
+      ))}
     </div>
   );
 };

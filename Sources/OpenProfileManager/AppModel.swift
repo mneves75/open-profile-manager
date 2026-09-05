@@ -63,7 +63,7 @@ final class AppModel {
     switch await Task.detached(
       priority: .userInitiated,
       operation: {
-        Self.loadProfiles(using: manager)
+        Self.perform { try manager.listProfiles() }
       }
     ).value {
     case .success(let loadedProfiles):
@@ -113,11 +113,11 @@ final class AppModel {
     let codexURL: URL
     let guiURL: URL?
     do {
-      codexURL = try Self.fileURL(codexHome, field: "CODEX_HOME")
+      codexURL = try Profile.fileURL(fromUserPath: codexHome, field: "CODEX_HOME")
       guiURL =
         try trimmedGUIPath.isEmpty
         ? nil
-        : Self.fileURL(trimmedGUIPath, field: "GUI data directory")
+        : Profile.fileURL(fromUserPath: trimmedGUIPath, field: "GUI data directory")
     } catch {
       editorErrorMessage = L10n.error(error)
       return
@@ -247,14 +247,6 @@ final class AppModel {
     isShowingAlert = true
   }
 
-  nonisolated private static func loadProfiles(using manager: ProfileManager) -> ProfilesOutcome {
-    do {
-      return .success(try manager.listProfiles())
-    } catch {
-      return .failure(L10n.error(error))
-    }
-  }
-
   nonisolated private static func save(
     using manager: ProfileManager,
     configuration: EditorConfiguration,
@@ -262,31 +254,27 @@ final class AppModel {
     displayName: String,
     codexHome: URL,
     guiDataDirectory: URL?
-  ) -> ProfileOutcome {
-    do {
+  ) -> OperationOutcome<Profile> {
+    perform {
       switch configuration.mode {
       case .add:
-        return .success(
-          try manager.addProfile(
-            id: profileID,
+        return try manager.addProfile(
+          id: profileID,
+          displayName: displayName,
+          codexHome: codexHome,
+          guiDataDirectory: guiDataDirectory
+        )
+      case .edit:
+        return try manager.updateProfile(
+          id: configuration.profileID,
+          with: ProfileUpdate(
             displayName: displayName,
             codexHome: codexHome,
-            guiDataDirectory: guiDataDirectory
-          ))
-      case .edit:
-        return .success(
-          try manager.updateProfile(
-            id: configuration.profileID,
-            with: ProfileUpdate(
-              displayName: displayName,
-              codexHome: codexHome,
-              guiDataDirectory: guiDataDirectory,
-              clearGUIDataDirectory: guiDataDirectory == nil
-            )
-          ))
+            guiDataDirectory: guiDataDirectory,
+            clearGUIDataDirectory: guiDataDirectory == nil
+          )
+        )
       }
-    } catch {
-      return .failure(L10n.error(error))
     }
   }
 
@@ -298,10 +286,6 @@ final class AppModel {
     } catch {
       return .failure(L10n.error(error))
     }
-  }
-
-  nonisolated private static func fileURL(_ value: String, field: String) throws -> URL {
-    try Profile.fileURL(fromUserPath: value, field: field)
   }
 
   nonisolated private static func resolveOPMExecutable() throws -> URL {
@@ -325,16 +309,6 @@ final class AppModel {
     }
     return try ExecutableLocator.resolve("opm")
   }
-}
-
-private enum ProfilesOutcome: Sendable {
-  case success([Profile])
-  case failure(String)
-}
-
-private enum ProfileOutcome: Sendable {
-  case success(Profile)
-  case failure(String)
 }
 
 private enum OperationOutcome<Value: Sendable>: Sendable {

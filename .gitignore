@@ -1,6 +1,7 @@
 .DS_Store
 /.build/
 /.swiftpm/
+/.scratch/
 /artifacts/
 /build/
 /*.app/

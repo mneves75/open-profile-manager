@@ -2,9 +2,21 @@
 
 All notable changes to this project are documented in this file. The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and the project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [0.1.7] - 2026-09-04
 
-Target: 0.1.7.
+### Changed
+
+- Remove unused core/CLI helpers, duplicate native result types, obsolete website styles and dormant video options while preserving current behavior.
+- Move video dependency installation to bootstrap/CI, document isolated QA and debugging, and consolidate agent instructions for current Fable 5.1 and GPT-6 Astra workflows.
+- Support numbered beta GitHub prereleases with the same notarization and redownload verification as production, without replacing the latest stable release.
+
+### Fixed
+
+- Rebuild the debug bundle before local launch and verify child exit-code propagation in terminal integration checks.
+
+### Security
+
+- Update the video toolchain's fast-uri override to 3.1.6 to resolve the reported URI-normalization advisories within the existing major version.
 
 ## [0.1.6] - 2026-08-26
 

@@ -1,51 +1,41 @@
 # AGENTS.md
 
-Open Profile Manager is an unofficial, local-first profile launcher for Codex CLI and the ChatGPT/Codex macOS app.
+Open Profile Manager is an unofficial, local-first launcher for the official Codex CLI and independently installed ChatGPT/Codex macOS app.
 
 ## Product boundaries
 
-- Never implement automatic quota-driven account rotation, quota evasion, credential sharing, or hidden fallback between accounts.
-- Profile selection is always an explicit user action. Quota data is status information only.
-- Never read, copy, decode, migrate, print, or persist Codex authentication tokens. Authentication remains owned by the official `codex` executable under each `CODEX_HOME`.
-- Never bundle, modify, or redistribute OpenAI software or branding. Launch an independently installed official app.
-- Keep the project unofficial and do not imply affiliation with or endorsement by OpenAI.
-
-## Architecture
-
-- `Sources/ProfileCore`: the deep module. Owns profile validation/storage, launch planning, app-server status reads, and generated launcher installation.
-- `Sources/opm`: thin CLI adapter. Argument parsing and human/JSON output only.
-- `Sources/OpenProfileManager`: thin native AppKit/SwiftUI adapter. No duplicated domain logic.
-- `Scripts`: deterministic build, package, install, signing, and verification workflows.
-
-## Engineering rules
-
-- Do not preserve backward compatibility. Remove obsolete paths instead of adding compatibility layers, fallbacks, or migrations.
-- Choose the simplest implementation that fully meets current requirements. Avoid speculative abstractions, configuration, and indirection.
-- Grow the system in layers: start with the smallest end-to-end product that works, then add each capability without trading working behavior for unfinished complexity.
-- Keep components modular and concerns clearly separated.
-- Reuse capabilities in existing dependencies before writing custom implementations or adding packages; check their current documentation and types instead of assuming a capability is absent.
-- Prefer established, well-maintained libraries when they reduce total complexity or improve reliability. Reimplement common functionality only with a clear reason.
-- Make architectural decisions for the long term. Do not accept stopgaps intended to be replaced later.
-- Swift 6 language mode and complete concurrency checking are mandatory.
-- Do not invoke a shell for user-controlled input. Use `Process.executableURL`, explicit argument arrays, and explicit environment dictionaries.
-- Treat profile identifiers, paths, app locations, app-server output, and child-process errors as untrusted input.
+- Profile selection is explicit. Quota data is status only: no automatic rotation, quota evasion, credential sharing or hidden account fallback.
+- Never read, copy, decode, migrate, print or persist Codex authentication tokens. The official `codex` executable owns authentication under each `CODEX_HOME`.
+- Never bundle, modify or redistribute OpenAI software/branding, or imply affiliation or endorsement.
 - Launch only desktop apps whose valid Apple signature matches the official OpenAI Team ID and bundle identifier.
-- Writes must be atomic. Profile directories are mode `0700`; profile/config files are mode `0600`.
-- Keep the registry and child-protocol inputs explicitly bounded. Preserve the cross-process writer lock.
-- Keep dependencies minimal and pinned. No telemetry or network service owned by this project.
-- Add tests at the `ProfileCore` interface for every behavior change.
-- Use `ast-grep` through `Scripts/lint.sh`; do not add `try!`, `fatalError`, shell interpolation, or force-casts to production code.
-- Run `Scripts/check.sh` before commit. Run the security audit and autoreview before public release or push.
 
-## Commands
+## Architecture and invariants
 
-```bash
-swift build
-swift test --parallel
-Scripts/lint.sh
-Scripts/check.sh
-Scripts/package_app.sh
-Scripts/release.sh
-```
+- `Sources/ProfileCore`: validation/storage, launch plans, app-server status and Finder launchers. `Sources/opm` and `Sources/OpenProfileManager` are thin CLI/native adapters.
+- `Scripts`: build/package/install/release workflows. `docs`: architecture/security references and static site. `video`: offline Remotion sources.
+- Swift 6 language mode and complete concurrency checking are mandatory. Keep blocking work off the GUI's MainActor. Support macOS 15; consult bundled Apple documentation before adopting newer APIs.
+- Use `Process.executableURL`, explicit argument arrays and environments; never a shell for user-controlled input. Treat identifiers, paths, app metadata and child output as untrusted.
+- Preserve atomic writes, descriptor-relative I/O, cross-process writer locking, registry/protocol bounds and path isolation. Profile directories are `0700`, files `0600`, without extended ACLs.
+- Prefer deletion and simple modules over compatibility layers or speculative abstractions. Reuse existing capabilities; keep dependencies minimal and pinned. No project-owned network service or telemetry.
+- Preserve native `en-US`/`pt-BR` localization and English CLI/JSON contracts. Keep personal paths and account details out of public QA artifacts.
 
-The current security baseline and residual distribution limitation are recorded in `docs/SECURITY_AUDIT.md`.
+## Agent workflow
+
+Read `PROJECT_STATUS.md`, `MEMORY.md`, relevant recent `memory/` entries, then `README.md`. For domain changes read `docs/ARCHITECTURE.md`; for filesystem/process/distribution changes read `docs/SECURITY_AUDIT.md`.
+
+Plan substantial changes, then finish authorized implementation and verification. User instructions outrank skill procedure; name the exact conflicting instruction if blocked. No push, release, installation over user apps or branch/worktree change without authorization. Delegate independent substantial work with disjoint ownership; review returned diffs and proof. Keep one writer and one build/package operation per checkout.
+
+Batch independent reads, give brief progress updates, preserve decisions and unfinished proof across compaction, and stop once acceptance checks pass. Keep model/effort settings in the harness. This follows current [Fable 5.1](https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/prompting-claude-fable-5-1) and [GPT-6 Astra](https://developers.openai.com/api/docs/guides/latest-model?model=gpt-6-astra) guidance (checked 2026-09-04): clear scope and completion criteria, targeted edits, proportionate tests, no repeated prompting rules.
+
+## Verification
+
+- Setup: Node 24 (`.nvmrc`), npm 11, then `Scripts/bootstrap.sh`. Run `npm ci --prefix video` after lockfile changes; checks reuse installed dependencies.
+- Focused proof: `swift test --filter <SuiteOrTest>`; terminal changes also need `swift build` and `Scripts/test_interactive_launch.sh`. Site: `Scripts/check_web_video.sh --site-only`. Video: `npm --prefix video run lint`.
+- Before commit: `Scripts/check.sh`. It includes structural-rule positive controls, script contracts, localization, build/version, PTY/exit status, Swift tests and web/video checks. Rerun focused proof after fixes; do not repeat passing gates without cause.
+- Domain behavior changes need `ProfileCore` regression tests; native/tooling changes need their own boundary checks. Avoid tests that merely match source text.
+- `Scripts/lint.sh` enforces ast-grep, Swift formatting and shellcheck. No production `try!`, `fatalError`, force-casts or shell interpolation.
+- Native QA: `Scripts/package_app.sh debug`, then `Scripts/test_packaged_app.sh "build/Open Profile Manager.app"`. Isolated-home interactive flows, LLDB and worktree isolation are in `CONTRIBUTING.md`. Window smoke alone does not prove editor or real-account behavior.
+- Website changes need desktop/mobile rendered checks. Performance claims follow `docs/PERFORMANCE.md`; preserve raw evidence and report platform noise honestly.
+- Run security audit and autoreview before public release/push; non-trivial edits also require autoreview at P3. Verify findings before applying fixes.
+
+Release channels: `Scripts/release.sh --beta <positive count>` publishes a verified GitHub prerelease tagged `v<version>-beta<count>`; `Scripts/release.sh` publishes production `v<version>`. Use `version.env` and synchronize `OPMVersion.current` (the full gate checks parity). See `docs/RELEASING.md`; never tag separately from the wrapper.

@@ -1,5 +1,18 @@
 #!/usr/bin/env bash
 
+opm_release_tag() {
+  local version=${1:-}
+  [[ "$version" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]] || return 2
+  shift
+  if [[ $# -eq 0 ]]; then
+    printf 'v%s' "$version"
+  elif [[ $# -eq 2 && "$1" == --beta && "$2" =~ ^[1-9][0-9]*$ ]]; then
+    printf 'v%s-beta%s' "$version" "$2"
+  else
+    return 2
+  fi
+}
+
 opm_release_arch_label() {
   local raw=${1:-"arm64 x86_64"}
   local normalized

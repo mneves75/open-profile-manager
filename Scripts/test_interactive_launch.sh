@@ -19,6 +19,7 @@ done
 printf '\nREADY\n'
 IFS= read -r marker
 printf 'READ:%s\n' "$marker"
+exit "${TEST_CODEX_EXIT:-0}"
 SH
 chmod 0700 "$FAKE_CODEX"
 
@@ -31,7 +32,8 @@ expect <<'TCL'
 set timeout 5
 set opm $env(TEST_OPM)
 
-proc run_case {opm arguments expected_arguments} {
+proc run_case {opm arguments expected_arguments {expected_exit 0}} {
+  set ::env(TEST_CODEX_EXIT) $expected_exit
   spawn -noecho $opm {*}$arguments
   set original_pid [exp_pid]
   expect {
@@ -64,11 +66,16 @@ proc run_case {opm arguments expected_arguments} {
     eof { error "process exited before completing terminal read" }
   }
   expect eof
+  set result [wait]
+  if {[lindex $result 2] != 0 || [lindex $result 3] != $expected_exit || [llength $result] != 4} {
+    error "unexpected child exit: $result (expected $expected_exit)"
+  }
 }
 
 run_case $opm [list run personal "literal value" {--flag=$dollar}] {<literal value><--flag=$dollar>}
 run_case $opm [list login personal] {<login>}
 run_case $opm [list logout personal] {<logout>}
+run_case $opm [list run personal] {} 7
 TCL
 
 echo "Interactive launch checks passed."

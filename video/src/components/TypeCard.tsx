@@ -6,11 +6,7 @@ import { Sfx } from "./Sfx";
 const GAP = 10; // beat between line 1 finishing and line 2 starting
 
 // Cursor-announcement-style title card: line 1 types at 1 char/frame, then
-// line 2, then holds. Size the parent Sequence with typeCardDuration().
-export const typeCardDuration = (lines: string[], hold = 90): number =>
-  lines.reduce((sum, line) => sum + line.length, 0) +
-  GAP * Math.max(lines.length - 1, 0) +
-  hold;
+// line 2, then holds.
 
 export const TypeCard: React.FC<{
   lines: string[];

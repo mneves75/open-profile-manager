@@ -4,8 +4,6 @@ set -euo pipefail
 ROOT=$(cd "$(dirname "$0")/.." && pwd)
 APP="$ROOT/build/Open Profile Manager.app"
 
-if [[ ! -d "$APP" ]]; then
-  "$ROOT/Scripts/package_app.sh" debug
-fi
+"$ROOT/Scripts/package_app.sh" debug
 
 exec /usr/bin/open -n "$APP"
