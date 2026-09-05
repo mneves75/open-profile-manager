@@ -2,7 +2,7 @@
 
 ## Current release line
 
-Version 0.1.7/build 9 is the current release candidate. Version 0.1.6 remains the latest immutable, signed, notarized, and stapled [stable release](https://github.com/mneves75/open-profile-manager/releases/latest) until promotion. Candidate tags use `v0.1.7-beta<N>`; production uses `v0.1.7`.
+Version 0.1.7/build 9 is the latest immutable, signed, notarized, and stapled [stable release](https://github.com/mneves75/open-profile-manager/releases/tag/v0.1.7). The preceding `v0.1.7-beta1` is a GitHub prerelease. Both tags resolve to `cd7ceb9`; version 0.1.8 is the next unreleased target.
 
 ## Scope
 
@@ -24,6 +24,8 @@ Version 0.1.7/build 9 is the current release candidate. Version 0.1.6 remains th
 
 ## Release evidence
 
+Version 0.1.7 removes unused code and presentation options, strengthens terminal exit-code proof, and patches the video toolchain's fast-uri dependency. Pull-request and main CI/CodeQL passed, along with all 59 Swift tests, P3 autoreview, independent audit verification, strict Gitleaks/TruffleHog scans, and npm audit. Apple accepted beta submission `7ad04bec-0b1c-49ca-a92d-db0256a43bc1` and production submission `976817a5-a2ad-4a6c-a961-70ae54e510d3`. Both publications passed universal architecture, Developer ID, stapling, Gatekeeper, matching dSYMs, SPDX SBOM, checksums, GitHub asset attestations, and downloaded CLI/native execution checks. The public production app and CLI were installed locally and passed the packaged smoke again. GitHub Pages deployed successfully; live HTML/CSS/JS matched the merged source exactly, and Dependabot reported zero open alerts.
+
 Version 0.1.6 uses AppKit’s compact unified toolbar so the title-bar controls no longer reserve an oversized header above the profile content. Tag `v0.1.6` resolves to release commit `2d66f4b`. Stable Xcode 26.6 passed the complete gate with 59 tests; Xcode 27 beta independently built the app and passed the same 59 tests under Swift 6.4. Pull-request and main CI, CodeQL, Gitleaks, TruffleHog, npm audit, SBOM generation, the privacy-manifest check, Pages deployment, and real-window QA passed. Apple accepted notarization submission `13b4ce0a-8314-479c-8dd7-70f1d63b32b3f`; Developer ID and Team ID verification, universal architecture checks, stapling, Gatekeeper, matching dSYMs, checksums, GitHub asset attestations, immutable publication, redownloaded execution, and installation of the public release all passed.
 
 Version 0.1.5 makes TruffleHog mandatory in release mode, blocks verified, unknown, and unverified secret candidates, and executes the bundled CLI and native app after the canonical ZIP is downloaded and cryptographically verified. Tag `v0.1.5` resolves to release commit `e36c886`. Stable Xcode 26.6 passed the complete gate with 59 tests; main CI, CodeQL, Gitleaks, TruffleHog, npm audit, SBOM generation, and the privacy-manifest check passed. Apple accepted notarization submission `6ad8295c-ecbe-40f6-a527-57587d02a19b`; Developer ID verification, universal architecture checks, stapling, Gatekeeper, matching dSYMs, checksums, GitHub asset attestations, immutable publication, redownloaded execution, and installation of the public release all passed.
@@ -44,6 +46,6 @@ Version 0.1.1 fixes interactive terminal ownership for `run`, `login`, and `logo
 
 Tag `v0.1.2` resolves to release commit `e4470b4`. Stable Xcode 26.6 checks, 54 tests, remote CI/CodeQL, secret scans, Apple notarization, Gatekeeper, stapling, redownloaded checksums, GitHub asset attestations, and a launch from the public ZIP under an isolated home all passed. See [the security audit](docs/SECURITY_AUDIT.md) for evidence.
 
-## 0.1.7 candidate verification
+## 0.1.7 audit measurements
 
-The deletion-first audit removed 371 net source lines and 4,991 CSS/JS bytes. All 190 DOM elements matched across eight desktop/mobile style states; three sampled video frames matched byte-for-byte. The local warm web-check median fell from 5.377 to 1.999 seconds after moving installation to setup. Native synthetic add/edit/error flows, 59 Swift tests, the full gate, independent verification and P3 autoreview passed before the version bump. The candidate adds numbered beta-release tagging with tests; final candidate CI, security scans, notarization and publication are pending.
+The deletion-first audit removed 371 net source lines and 4,991 CSS/JS bytes. All 190 DOM elements matched across eight desktop/mobile style states; three sampled video frames matched byte-for-byte. The local warm web-check median fell from 5.377 to 1.999 seconds after moving installation to setup. These are validation-time and source-size measurements, not application startup or LCP improvements. Native synthetic add/edit/error flows passed. Numbered beta-release tagging is covered by script contract tests.
