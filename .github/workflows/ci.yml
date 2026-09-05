@@ -47,7 +47,9 @@ jobs:
         run: brew install ast-grep shellcheck
 
       - name: Resolve dependencies
-        run: swift package resolve
+        run: |
+          swift package resolve
+          npm ci --prefix video
 
       - name: Run quality gates
         run: Scripts/check.sh

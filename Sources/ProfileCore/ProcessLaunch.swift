@@ -189,32 +189,6 @@ public struct LaunchPlanner: Sendable {
     )
   }
 
-  public func loginPlan(
-    for profile: Profile,
-    codexExecutable: URL? = nil,
-    environment: [String: String] = ProcessInfo.processInfo.environment
-  ) throws -> ProcessPlan {
-    try codexPlan(
-      for: profile,
-      arguments: ["login"],
-      codexExecutable: codexExecutable,
-      environment: environment
-    )
-  }
-
-  public func logoutPlan(
-    for profile: Profile,
-    codexExecutable: URL? = nil,
-    environment: [String: String] = ProcessInfo.processInfo.environment
-  ) throws -> ProcessPlan {
-    try codexPlan(
-      for: profile,
-      arguments: ["logout"],
-      codexExecutable: codexExecutable,
-      environment: environment
-    )
-  }
-
   public func appPlan(for profile: Profile, explicitAppURL: URL? = nil) throws -> ProcessPlan {
     try PrivateDirectory.validate(profile.codexHome, operation: "use CODEX_HOME")
     let appURL = try discoverApplication(explicitAppURL: explicitAppURL)

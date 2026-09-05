@@ -68,7 +68,7 @@ struct ProfileAddCommand: ParsableCommand {
   var json = false
 
   func run() throws {
-    let profile = try manager().addProfile(
+    let profile = try ProfileManager().addProfile(
       id: id,
       displayName: name,
       codexHome: try absoluteURL(codexHome, field: "CODEX_HOME"),
@@ -91,7 +91,7 @@ struct ProfileListCommand: ParsableCommand {
   var json = false
 
   func run() throws {
-    let profiles = try manager().listProfiles()
+    let profiles = try ProfileManager().listProfiles()
     if json {
       try printJSON(profiles)
     } else if profiles.isEmpty {
@@ -111,7 +111,7 @@ struct ProfileShowCommand: ParsableCommand {
   @Flag(name: .long, help: "Emit stable JSON.") var json = false
 
   func run() throws {
-    let profile = try manager().profile(id: id)
+    let profile = try ProfileManager().profile(id: id)
     if json {
       try printJSON(profile)
     } else {
@@ -130,7 +130,7 @@ struct ProfileRemoveCommand: ParsableCommand {
   @Flag(name: .long, help: "Emit stable JSON.") var json = false
 
   func run() throws {
-    let removed = try manager().removeProfile(id: id)
+    let removed = try ProfileManager().removeProfile(id: id)
     if json {
       try printJSON(removed)
     } else {
@@ -150,7 +150,7 @@ struct RunCommand: ParsableCommand {
   var codexArguments: [String] = []
 
   func run() throws {
-    try manager().replaceCurrentProcessWithCodex(
+    try ProfileManager().replaceCurrentProcessWithCodex(
       profileID: profile,
       arguments: codexArguments
     )
@@ -162,7 +162,7 @@ struct LoginCommand: ParsableCommand {
   @Argument var profile: String
 
   func run() throws {
-    try manager().replaceCurrentProcessWithCodex(profileID: profile, arguments: ["login"])
+    try ProfileManager().replaceCurrentProcessWithCodex(profileID: profile, arguments: ["login"])
   }
 }
 
@@ -171,7 +171,7 @@ struct LogoutCommand: ParsableCommand {
   @Argument var profile: String
 
   func run() throws {
-    try manager().replaceCurrentProcessWithCodex(profileID: profile, arguments: ["logout"])
+    try ProfileManager().replaceCurrentProcessWithCodex(profileID: profile, arguments: ["logout"])
   }
 }
 
@@ -193,7 +193,7 @@ struct StatusCommand: AsyncParsableCommand {
   }
 
   func run() async throws {
-    let profileManager = try manager()
+    let profileManager = try ProfileManager()
     let profiles: [Profile]
     if let profile {
       profiles = [try profileManager.profile(id: profile)]
@@ -227,7 +227,7 @@ struct AppLaunchCommand: ParsableCommand {
   var appPath: String?
 
   func run() throws {
-    let result = try manager().launchApp(
+    let result = try ProfileManager().launchApp(
       profileID: profile,
       explicitAppURL: try appPath.map { try absoluteURL($0, field: "App path") }
     )
@@ -252,7 +252,7 @@ struct LauncherInstallCommand: ParsableCommand {
     guard let executable = Bundle.main.executableURL else {
       throw ProfileCoreError.executableNotFound("opm")
     }
-    let installed = try manager().installLauncher(
+    let installed = try ProfileManager().installLauncher(
       profileID: profile,
       opmExecutable: executable,
       destinationDirectory: try destination.map {
@@ -271,7 +271,7 @@ struct LauncherRemoveCommand: ParsableCommand {
   var destination: String?
 
   func run() throws {
-    let removed = try manager().removeLauncher(
+    let removed = try ProfileManager().removeLauncher(
       profileID: profile,
       destinationDirectory: try destination.map {
         try absoluteURL($0, field: "Launcher destination")
@@ -288,7 +288,7 @@ struct DoctorCommand: ParsableCommand {
   @Flag(name: .long, help: "Emit stable JSON.") var json = false
 
   func run() throws {
-    let report = try manager().doctor(profileID: profile)
+    let report = try ProfileManager().doctor(profileID: profile)
     if json {
       try printJSON(report)
     } else {
@@ -310,10 +310,6 @@ struct VersionCommand: ParsableCommand {
   func run() {
     print(OPMVersion.current)
   }
-}
-
-private func manager() throws -> ProfileManager {
-  try ProfileManager()
 }
 
 private func absoluteURL(_ path: String, field: String) throws -> URL {

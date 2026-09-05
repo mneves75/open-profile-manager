@@ -1,28 +1,10 @@
-const revealElements = document.querySelectorAll("[data-reveal]");
-const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-
-if (prefersReducedMotion || !("IntersectionObserver" in window)) {
-  revealElements.forEach((element) => element.classList.add("is-visible"));
-} else {
-  const observer = new IntersectionObserver((entries) => {
-    entries.forEach((entry) => {
-      if (entry.isIntersecting) {
-        entry.target.classList.add("is-visible");
-        observer.unobserve(entry.target);
-      }
-    });
-  });
-
-  revealElements.forEach((element) => observer.observe(element));
-}
-
-document.querySelectorAll("[data-copy-command], [data-copy-target]").forEach((element) => {
+document.querySelectorAll("[data-copy-target]").forEach((element) => {
   const originalLabel = element.textContent ?? "Copy";
   let resetTimer;
 
   element.addEventListener("click", async () => {
     const target = document.getElementById(element.dataset.copyTarget ?? "");
-    const command = element.dataset.copyCommand ?? target?.textContent?.trim();
+    const command = target?.textContent?.trim();
 
     if (command && navigator.clipboard) {
       try {

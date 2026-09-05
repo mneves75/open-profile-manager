@@ -82,3 +82,9 @@ The live compatibility tests also found and fixed reliability defects in termina
 - The desktop `--user-data-dir` adapter is empirical and may change when the official app changes. The publisher allowlist is intentionally narrow; an upstream Team ID or bundle-ID change is a compatibility event, not a reason to accept arbitrary signed apps.
 - GitHub Pages does not provide repository-controlled response headers. The static site therefore uses a meta content security policy; header-only protections would require a different host. The current site has no authenticated state, form submission, or sensitive action that would justify that migration.
 - Every public downloadable version must be signed with `Developer ID Application`, notarized by Apple, stapled, and assessed by Gatekeeper. Passing an earlier release gate never waives those checks for a later version.
+
+## 0.1.7 candidate review
+
+The September cleanup preserves descriptor-relative storage, private modes and ACL checks, cross-process writer locking, official-app identity validation and bounded status parsing. It removes unused interfaces rather than weakening these boundaries. The video toolchain's installed fast-uri 3.1.5 reproduced malformed IPv6 normalization; updating the same-major override to 3.1.6 rejects that input while preserving a valid IPv6 positive control, and npm audit reports zero vulnerabilities.
+
+Numbered beta releases use the same clean-main, CI, strict scanner, notarization, draft-redownload and asset-verification gates as production. Beta classification must set prerelease and must not replace the latest stable release. Public distribution verification is recorded after each publication; local Apple Development signing is not evidence of notarization.

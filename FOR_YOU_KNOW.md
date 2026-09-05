@@ -37,3 +37,9 @@ SwiftPM's output layout is a toolchain detail, not a stable path contract. Packa
 A signed ZIP is still only inert evidence until its contents run. The release gate now downloads the canonical artifact, verifies its checksums, signature, Gatekeeper policy, and notarization ticket, then exercises the bundled CLI's terminal ownership and waits for a real native window under an isolated home. Release-mode secret scanning is similarly fail-closed: TruffleHog must be installed, and verified, unknown, or unverified candidates stop publication for review.
 
 On macOS, `0700` and `0600` are not the entire privacy story. An extended ACL can grant access to another local user without changing those familiar mode bits, and a path can be swapped after a string-based check. The core walks and opens private storage relative to directory descriptors, rejects unsafe ACLs and writable ancestors, and makes `doctor` check the same effective paths that launch will use. It also rejects overlapping homes and GUI directories—the digital equivalent of discovering that two apartment labels open the same front door.
+
+## Less code, clearer proof
+
+The September audit removed unused entry points and old presentation options, while keeping the filesystem and authentication protections. The native adapter now uses one result shape for background operations. The website lost obsolete CSS and reveal code, with matching rendered styles; sampled video frames remained identical after removing dormant options.
+
+Verification no longer reinstalls the video toolchain on every run: bootstrap and CI install the lockfile, checks reuse it. The debug launcher rebuilds before opening, so a stale bundle cannot masquerade as a successful fix. Terminal tests now inspect the child's exit status as well as its output and foreground process group. See CONTRIBUTING.md for isolated QA and debugging, and the archived audit plan for measurements and deferred candidates.

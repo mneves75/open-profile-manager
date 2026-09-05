@@ -10,7 +10,7 @@ const mono = loadMono("normal", {
   subsets: ["latin", "latin-ext"],
 });
 
-// Monochrome Apple-style system. A future accent is a one-line change here.
+// Monochrome Apple-style system.
 export const theme = {
   bg: "#0a0a0a",
   panel: "#131315",
@@ -18,13 +18,9 @@ export const theme = {
   text: "#f5f5f7",
   dim: "#a1a1aa",
   faint: "#6b7280",
-  accent: "#f5f5f7", // monochrome: accent == text
   fontUI: inter.fontFamily,
   fontMono: mono.fontFamily,
 } as const;
-
-// Drop a music file into public/ and point this at it to add BGM without re-editing.
-export const BGM_SRC: string | null = null;
 
 export const SFX = {
   key: "sfx/key.wav",

@@ -114,17 +114,6 @@ enum PrivateDirectory {
     }
   }
 
-  static func validateNoExtendedACL(at url: URL, operation: String) throws {
-    errno = 0
-    if let accessControlList = acl_get_link_np(url.path, ACL_TYPE_EXTENDED) {
-      acl_free(UnsafeMutableRawPointer(accessControlList))
-      throw ProfileCoreError.filesystem(operation: operation)
-    }
-    guard errno == ENOENT || errno == EOPNOTSUPP else {
-      throw ProfileCoreError.filesystem(operation: operation)
-    }
-  }
-
   private static func openExistingDirectory(_ url: URL, operation: String) throws -> Int32 {
     let components = try physicalPathComponents(url, operation: operation)
     var descriptor = open("/", O_RDONLY | O_DIRECTORY | O_CLOEXEC)

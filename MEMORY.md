@@ -37,3 +37,10 @@ Ship an unofficial MIT-licensed, local-first profile manager for Codex CLI and t
 - Local CLI, GUI, Finder-launcher, signing, and two-profile isolation flows passed without retaining account identifiers in the repository.
 - Release-mode `status --all` with two configured profiles improved from a 1,642 ms median to 788 ms at load averages 5.63/6.20/7.09; `--version`, profile list, doctor, and `run ... --version` did not regress materially.
 - The public 0.1.3 ZIP was redownloaded and passed signature, Gatekeeper, staple, checksum, SBOM, and GitHub attestation verification before release closeout.
+
+## September codebase audit
+
+- Removed unused core/CLI APIs, duplicate GUI outcome types, obsolete website presentation and dormant video options; preserved security invariants and all existing tests.
+- Video dependencies install in bootstrap/CI, not every check. Debug launch rebuilds current source; PTY tests now verify zero/nonzero exit propagation. AGENTS.md is canonical; CONTRIBUTING.md documents isolated-home QA, LLDB and checkout ownership.
+- Updated only the fast-uri override/lock entry to 3.1.6 after baseline audit failure and a reproduced malformed-IPv6 parser defect.
+- Evidence and follow-up candidates are in `agent_planning/archive/audit-plan.md`; daily validation details are in `memory/2026-09-04.md`.

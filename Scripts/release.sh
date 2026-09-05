@@ -22,11 +22,23 @@ source "$ROOT/version.env"
 # shellcheck disable=SC1091
 source "$ROOT/Scripts/release_artifacts.sh"
 
+if [[ $# -eq 1 && "$1" == --help ]]; then
+  echo "Usage: Scripts/release.sh [--beta COUNT]"
+  exit 0
+fi
+if ! TAG=$(opm_release_tag "$MARKETING_VERSION" "$@"); then
+  echo "Usage: Scripts/release.sh [--beta COUNT] (positive integer)" >&2
+  exit 2
+fi
+RELEASE_FLAGS=(--latest)
+if [[ "$TAG" != "v$MARKETING_VERSION" ]]; then
+  RELEASE_FLAGS=(--prerelease --latest=false)
+fi
+
 unset GITHUB_TOKEN GH_TOKEN HOMEBREW_GITHUB_API_TOKEN || true
 gh auth status >/dev/null
 
 REPOSITORY="mneves75/open-profile-manager"
-TAG="v$MARKETING_VERSION"
 HEAD_SHA=$(git rev-parse HEAD)
 ARCHES_VALUE="arm64 x86_64"
 APP_ZIP="$ROOT/build/$(opm_app_zip_name "$MARKETING_VERSION" "$ARCHES_VALUE")"
@@ -86,7 +98,7 @@ if [[ "$HEAD_SHA" != "$(git rev-parse origin/main)" ]]; then
 fi
 if git rev-parse --verify --quiet "refs/tags/$TAG" >/dev/null \
   || git ls-remote --exit-code --tags origin "refs/tags/$TAG" >/dev/null 2>&1 \
-  || gh release view "$TAG" --repo "$REPOSITORY" >/dev/null 2>&1; then
+  || gh release view "$TAG" --repo "$REPOSITORY" --json tagName >/dev/null 2>&1; then
   echo "$TAG already exists" >&2
   exit 1
 fi
@@ -153,7 +165,7 @@ if [[ ! -s "$NOTES" ]]; then
   exit 1
 fi
 
-git tag --annotate "$TAG" "$HEAD_SHA" --message "Open Profile Manager $MARKETING_VERSION"
+git tag --annotate "$TAG" "$HEAD_SHA" --message "Open Profile Manager ${TAG#v}"
 tag_object=$(git rev-parse "refs/tags/$TAG")
 if ! git push origin "refs/tags/$TAG:refs/tags/$TAG"; then
   git update-ref -d "refs/tags/$TAG" "$tag_object"
@@ -166,7 +178,8 @@ gh release create "$TAG" \
   --repo "$REPOSITORY" \
   --verify-tag \
   --draft \
-  --title "Open Profile Manager $MARKETING_VERSION" \
+  --title "Open Profile Manager ${TAG#v}" \
+  "${RELEASE_FLAGS[@]}" \
   --notes-file "$NOTES"
 release_created=1
 gh release upload "$TAG" \
@@ -193,7 +206,7 @@ fi
 /usr/bin/xcrun stapler validate "$DOWNLOADED_APP"
 Scripts/test_packaged_app.sh "$DOWNLOADED_APP"
 
-gh release edit "$TAG" --repo "$REPOSITORY" --draft=false --latest
+gh release edit "$TAG" --repo "$REPOSITORY" --draft=false "${RELEASE_FLAGS[@]}"
 for asset in "$APP_ZIP" "$DSYM_ZIP" "$SBOM" "$CHECKSUMS"; do
   gh release verify-asset "$TAG" "$asset" --repo "$REPOSITORY"
 done

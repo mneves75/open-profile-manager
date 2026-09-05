@@ -48,7 +48,7 @@ public struct ProfileManager: Sendable {
     try registry.remove(ProfileID(id))
   }
 
-  public func codexPlan(
+  private func codexPlan(
     profileID: String,
     arguments: [String],
     codexExecutable: URL? = nil,
@@ -76,24 +76,12 @@ public struct ProfileManager: Sendable {
     )
   }
 
-  public func appPlan(profileID: String, explicitAppURL: URL? = nil) throws -> ProcessPlan {
-    try launchPlanner.appPlan(for: profile(id: profileID), explicitAppURL: explicitAppURL)
-  }
-
   public func launchApp(profileID: String, explicitAppURL: URL? = nil) throws -> ProcessResult {
     let selectedProfile = try profile(id: profileID)
     try launchPlanner.prepareAppDataDirectory(for: selectedProfile)
     return try ProcessExecutor.execute(
       launchPlanner.appPlan(for: selectedProfile, explicitAppURL: explicitAppURL)
     )
-  }
-
-  public func status(
-    profileID: String,
-    service: CodexStatusService = CodexStatusService(),
-    codexExecutable: URL? = nil
-  ) throws -> ProfileStatus {
-    service.readStatus(for: try profile(id: profileID), codexExecutable: codexExecutable)
   }
 
   public func statuses(

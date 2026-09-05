@@ -2,13 +2,10 @@ import React from "react";
 import { AbsoluteFill, Audio, interpolate, spring, staticFile, useCurrentFrame, useVideoConfig } from "remotion";
 import { MacWindow } from "./components/MacWindow";
 import { Terminal, type TermLine } from "./components/Terminal";
-import { BGM_SRC, SFX, theme, VOLUME, mulberry32 } from "./theme";
+import { SFX, theme, VOLUME, mulberry32 } from "./theme";
 
 export const SoundBed: React.FC = () => (
-  <>
-    <Audio src={staticFile(SFX.roomtone)} volume={() => VOLUME.roomtone} loop />
-    {BGM_SRC ? <Audio src={staticFile(BGM_SRC)} volume={() => 0.2} loop /> : null}
-  </>
+  <Audio src={staticFile(SFX.roomtone)} volume={() => VOLUME.roomtone} loop />
 );
 
 export const Backdrop: React.FC<{ seed?: number; quiet?: boolean }> = ({ seed = 1, quiet = false }) => {

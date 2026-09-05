@@ -2,7 +2,7 @@
 
 ## Current release line
 
-Version 0.1.6 is the current source line and latest immutable, signed, notarized, and stapled [GitHub Release](https://github.com/mneves75/open-profile-manager/releases/tag/v0.1.6). The next unreleased target is 0.1.7.
+Version 0.1.7/build 9 is the current release candidate. Version 0.1.6 remains the latest immutable, signed, notarized, and stapled [stable release](https://github.com/mneves75/open-profile-manager/releases/latest) until promotion. Candidate tags use `v0.1.7-beta<N>`; production uses `v0.1.7`.
 
 ## Scope
 
@@ -43,3 +43,7 @@ Version 0.1.2 adds the graphite native-app redesign, three privacy-safe product 
 Version 0.1.1 fixes interactive terminal ownership for `run`, `login`, and `logout`, adds a PTY integration regression, and centralizes bounded concurrent status reads in `ProfileCore`. The two-profile release benchmark improved from a 1,642 ms median to 788 ms, while inexpensive commands did not regress materially.
 
 Tag `v0.1.2` resolves to release commit `e4470b4`. Stable Xcode 26.6 checks, 54 tests, remote CI/CodeQL, secret scans, Apple notarization, Gatekeeper, stapling, redownloaded checksums, GitHub asset attestations, and a launch from the public ZIP under an isolated home all passed. See [the security audit](docs/SECURITY_AUDIT.md) for evidence.
+
+## 0.1.7 candidate verification
+
+The deletion-first audit removed 371 net source lines and 4,991 CSS/JS bytes. All 190 DOM elements matched across eight desktop/mobile style states; three sampled video frames matched byte-for-byte. The local warm web-check median fell from 5.377 to 1.999 seconds after moving installation to setup. Native synthetic add/edit/error flows, 59 Swift tests, the full gate, independent verification and P3 autoreview passed before the version bump. The candidate adds numbered beta-release tagging with tests; final candidate CI, security scans, notarization and publication are pending.

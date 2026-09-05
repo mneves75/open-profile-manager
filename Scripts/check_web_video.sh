@@ -26,6 +26,9 @@ if [[ $(npm --version) != 11.* ]]; then
   exit 1
 fi
 
-npm ci --prefix video
+if [[ ! -x video/node_modules/.bin/tsc || ! -x video/node_modules/.bin/eslint ]]; then
+  echo "Video dependencies are missing. Run npm ci --prefix video first." >&2
+  exit 1
+fi
 npm --prefix video run lint
 npm audit --prefix video --audit-level=high
