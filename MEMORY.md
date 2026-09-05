@@ -17,8 +17,8 @@ Ship an unofficial MIT-licensed, local-first profile manager for Codex CLI and t
 
 ## Active work
 
-- Version 0.1.7/build 9 is the current source line and latest published release; 0.1.8 is the next unreleased target.
-- The September audit and beta/production publication are complete. The public notarized app and CLI are installed locally; release evidence is in PROJECT_STATUS.md and memory/2026-09-05.md.
+- Version 0.1.8/build 10 is the current release candidate; 0.1.7 remains the latest published and locally installed release until promotion.
+- The September audit and beta/production publication are complete. The public notarized app is installed at `~/Applications/Open Profile Manager.app` and the CLI at `~/.local/bin/opm`; version 0.1.7, signature and stapled notarization were reverified. Release evidence is in PROJECT_STATUS.md and memory/2026-09-05.md.
 
 ## Project environment
 

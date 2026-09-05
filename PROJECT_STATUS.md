@@ -2,7 +2,7 @@
 
 ## Current release line
 
-Version 0.1.7/build 9 is the latest immutable, signed, notarized, and stapled [stable release](https://github.com/mneves75/open-profile-manager/releases/tag/v0.1.7). The preceding `v0.1.7-beta1` is a GitHub prerelease. Both tags resolve to `cd7ceb9`; version 0.1.8 is the next unreleased target.
+Version 0.1.8/build 10 is the current maintenance release candidate, recording the verified macOS installation locations. Version 0.1.7 remains the latest immutable, signed, notarized, and stapled [stable release](https://github.com/mneves75/open-profile-manager/releases/tag/v0.1.7) until promotion. The next beta tag is `v0.1.8-beta1`; production uses `v0.1.8`.
 
 ## Scope
 
@@ -24,7 +24,7 @@ Version 0.1.7/build 9 is the latest immutable, signed, notarized, and stapled [s
 
 ## Release evidence
 
-Version 0.1.7 removes unused code and presentation options, strengthens terminal exit-code proof, and patches the video toolchain's fast-uri dependency. Pull-request and main CI/CodeQL passed, along with all 59 Swift tests, P3 autoreview, independent audit verification, strict Gitleaks/TruffleHog scans, and npm audit. Apple accepted beta submission `7ad04bec-0b1c-49ca-a92d-db0256a43bc1` and production submission `976817a5-a2ad-4a6c-a961-70ae54e510d3`. Both publications passed universal architecture, Developer ID, stapling, Gatekeeper, matching dSYMs, SPDX SBOM, checksums, GitHub asset attestations, and downloaded CLI/native execution checks. The public production app and CLI were installed locally and passed the packaged smoke again. GitHub Pages deployed successfully; live HTML/CSS/JS matched the merged source exactly, and Dependabot reported zero open alerts.
+Version 0.1.7 removes unused code and presentation options, strengthens terminal exit-code proof, and patches the video toolchain's fast-uri dependency. Pull-request and main CI/CodeQL passed, along with all 59 Swift tests, P3 autoreview, independent audit verification, strict Gitleaks/TruffleHog scans, and npm audit. Apple accepted notarization for both beta and production. Both publications passed universal architecture, Developer ID, stapling, Gatekeeper, matching dSYMs, SPDX SBOM, checksums, GitHub asset attestations, and downloaded CLI/native execution checks. The public production app and CLI were installed locally and passed the packaged smoke again. GitHub Pages deployed successfully; live HTML/CSS/JS matched the merged source exactly, and Dependabot reported zero open alerts.
 
 Version 0.1.6 uses AppKit’s compact unified toolbar so the title-bar controls no longer reserve an oversized header above the profile content. Tag `v0.1.6` resolves to release commit `2d66f4b`. Stable Xcode 26.6 passed the complete gate with 59 tests; Xcode 27 beta independently built the app and passed the same 59 tests under Swift 6.4. Pull-request and main CI, CodeQL, Gitleaks, TruffleHog, npm audit, SBOM generation, the privacy-manifest check, Pages deployment, and real-window QA passed. Apple accepted notarization submission `13b4ce0a-8314-479c-8dd7-70f1d63b32b3f`; Developer ID and Team ID verification, universal architecture checks, stapling, Gatekeeper, matching dSYMs, checksums, GitHub asset attestations, immutable publication, redownloaded execution, and installation of the public release all passed.
 
