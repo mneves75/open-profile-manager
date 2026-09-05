@@ -2,7 +2,7 @@
 
 ## Current release line
 
-Version 0.1.8/build 10 is the current maintenance release candidate, recording the verified macOS installation locations. Version 0.1.7 remains the latest immutable, signed, notarized, and stapled [stable release](https://github.com/mneves75/open-profile-manager/releases/tag/v0.1.7) until promotion. The next beta tag is `v0.1.8-beta1`; production uses `v0.1.8`.
+Version 0.1.8/build 10 is the latest immutable, signed, notarized, and stapled [stable release](https://github.com/mneves75/open-profile-manager/releases/tag/v0.1.8). The preceding `v0.1.8-beta1` is a GitHub prerelease. Both tags resolve to `37b056e`; version 0.1.9 is the next unreleased target.
 
 ## Scope
 
@@ -23,6 +23,8 @@ Version 0.1.8/build 10 is the current maintenance release candidate, recording t
 - Windows or Linux GUI support in 0.1.x
 
 ## Release evidence
+
+Version 0.1.8 is a maintenance release recording the verified installation paths; application behavior is unchanged. All 59 Swift tests, full local checks, strict security scans, independent P3 review, and pull-request/main CI and CodeQL passed. Both beta and production passed Apple notarization, universal architecture/signature checks, stapling, Gatekeeper, matching dSYMs, SBOM/checksums, and downloaded CLI/native smoke tests. GitHub initially returned no beta attestation immediately after publication; after a short wait, all four asset attestations verified successfully. Production publication and all four attestations passed directly. The downloaded production app and CLI were installed and passed signature and packaged smoke checks. Interactive desktop inspection was unavailable because the Mac was locked; the isolated automated window/PTY check passed.
 
 Version 0.1.7 removes unused code and presentation options, strengthens terminal exit-code proof, and patches the video toolchain's fast-uri dependency. Pull-request and main CI/CodeQL passed, along with all 59 Swift tests, P3 autoreview, independent audit verification, strict Gitleaks/TruffleHog scans, and npm audit. Apple accepted notarization for both beta and production. Both publications passed universal architecture, Developer ID, stapling, Gatekeeper, matching dSYMs, SPDX SBOM, checksums, GitHub asset attestations, and downloaded CLI/native execution checks. The public production app and CLI were installed locally and passed the packaged smoke again. GitHub Pages deployed successfully; live HTML/CSS/JS matched the merged source exactly, and Dependabot reported zero open alerts.
 

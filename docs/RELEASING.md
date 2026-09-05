@@ -49,6 +49,7 @@ The release wrapper disables `asc` telemetry, rejects mixed keychain/config/envi
 Keep the stable Xcode app selected explicitly for public packaging. Xcode 27 beta compatibility builds and tests are useful, but its SwiftPM output layout currently places sequential architecture builds in one shared product directory.
 
 Immutable releases lock the tag and assets after publication and provide GitHub-signed release attestations verified by `gh release verify-asset`.
+If publication succeeds but the immediate attestation lookup returns no attestations, preserve the immutable release, wait briefly, and rerun `gh release verify-asset <tag> <asset>` for every uploaded asset. Do not promote the beta until all four checks succeed, and do not rerun the release wrapper for the existing tag.
 If verification fails while the release is positively confirmed to remain a draft, the wrapper removes its own draft and deletes only the exact tag object reserved by that run, using a force-with-lease guard. An ambiguous GitHub response is preserved for manual reconciliation; the wrapper never guesses that an unknown release or tag is safe to delete.
 
 Do not create or push the tag separately. The wrapper reserves it non-forcibly at the already verified commit immediately before creating the draft. The release is published only after all artifacts pass the redownload gate.
