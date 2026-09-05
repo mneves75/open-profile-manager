@@ -17,8 +17,8 @@ Ship an unofficial MIT-licensed, local-first profile manager for Codex CLI and t
 
 ## Active work
 
-- Version 0.1.6 is the current source line and latest published release; 0.1.7 is the next unreleased target.
-- Version 0.1.6 uses AppKit's compact unified toolbar to remove the oversized title-bar area while preserving the existing macOS 15 deployment target.
+- Version 0.1.7/build 9 is the current source line and latest published release; 0.1.8 is the next unreleased target.
+- The September audit and beta/production publication are complete. The public notarized app and CLI are installed locally; release evidence is in PROJECT_STATUS.md and memory/2026-09-05.md.
 
 ## Project environment
 
@@ -28,6 +28,7 @@ Ship an unofficial MIT-licensed, local-first profile manager for Codex CLI and t
 
 ## Verified state
 
+- Version 0.1.7 and its preceding beta1 are immutable releases from `cd7ceb9`. Both passed the full release gate, Apple notarization, GitHub asset attestations, and downloaded execution; production is the latest stable release. The production website matches the merged HTML/CSS/JS, and GitHub reports zero open Dependabot alerts.
 - Fifty-nine tests pass under stable Xcode 26.6, including strict app-server scalar parsing, the final JSONL record bound, numeric managed-launcher marker rejection, official desktop-app signature rejection, PTY process replacement, concurrent ordered status reads, descriptor-relative and ACL-aware registry privacy, firmlink-aware profile-directory isolation, and hostile protocol output.
 - The native app contains 131 complete keys in both `en-US` and `pt-BR`; macOS preference selection and unsupported-language fallback were proven against a signed package, and isolated native renders covered the main profile and editor layouts in both languages.
 - Version 0.1.6 is published from commit `2d66f4b` as a Developer ID-signed, notarized, stapled, immutable GitHub Release. Apple accepted notarization submission `13b4ce0a-8314-479c-8dd7-70f1d63b32b3f`; CI, CodeQL, npm audit, Gitleaks, TruffleHog, GitHub security alerts, release assets, checksums, SBOM, attestations, redownloaded execution, and installation of the public ZIP all passed.

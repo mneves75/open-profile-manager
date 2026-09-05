@@ -1,11 +1,11 @@
-# Security audit — 0.1.6 release
+# Security audit — 0.1.7 release
 
-Date: 2026-08-26
+Date: 2026-09-05
 Scope: the complete source tree, local persistence, child-process protocol, CLI and GUI launch paths, Finder launchers, packaging scripts, the static GitHub Pages site, Remotion authoring sources, dependencies, and CI configuration.
 
 ## Result
 
-No confirmed critical-, high-, medium-, or low-severity findings remain open in the reviewed 0.1.6 release. The review covered every application, test, script, workflow, static-site, and video-authoring source. The 0.1.6 change selects AppKit’s compact unified toolbar style and does not expand the input, persistence, process-launch, network, or distribution boundaries. The released artifacts passed the complete distribution gate described below.
+No confirmed critical-, high-, medium-, or low-severity findings remain open in the reviewed 0.1.7 release. The review covered application, test, script, workflow, static-site, and video-authoring source. The cleanup preserves the storage and process boundaries, patches fast-uri, and adds numbered beta publication through the existing distribution gates. Both beta and production artifacts passed those gates. Historical evidence below remains labeled with the version it tested; the final section records 0.1.7 verification.
 
 ## Fixed findings
 
@@ -83,8 +83,12 @@ The live compatibility tests also found and fixed reliability defects in termina
 - GitHub Pages does not provide repository-controlled response headers. The static site therefore uses a meta content security policy; header-only protections would require a different host. The current site has no authenticated state, form submission, or sensitive action that would justify that migration.
 - Every public downloadable version must be signed with `Developer ID Application`, notarized by Apple, stapled, and assessed by Gatekeeper. Passing an earlier release gate never waives those checks for a later version.
 
-## 0.1.7 candidate review
+## 0.1.7 release verification
 
 The September cleanup preserves descriptor-relative storage, private modes and ACL checks, cross-process writer locking, official-app identity validation and bounded status parsing. It removes unused interfaces rather than weakening these boundaries. The video toolchain's installed fast-uri 3.1.5 reproduced malformed IPv6 normalization; updating the same-major override to 3.1.6 rejects that input while preserving a valid IPv6 positive control, and npm audit reports zero vulnerabilities.
 
-Numbered beta releases use the same clean-main, CI, strict scanner, notarization, draft-redownload and asset-verification gates as production. Beta classification must set prerelease and must not replace the latest stable release. Public distribution verification is recorded after each publication; local Apple Development signing is not evidence of notarization.
+Numbered beta releases use the same clean-main, CI, strict scanner, notarization, draft-redownload and asset-verification gates as production. Published `v0.1.7-beta1` was verified as a prerelease while `v0.1.6` remained latest stable. Production `v0.1.7` then became latest stable. Both immutable tags resolve to release commit `cd7ceb9`.
+
+Stable Xcode passed all 59 tests and the complete quality gate. P3 autoreview and independent source review found no actionable issues. CI and CodeQL passed on the pull request and exact release commit. Gitleaks and TruffleHog passed in strict release mode with zero secret candidates. Both universal artifacts passed Developer ID verification, notarization, stapling, Gatekeeper, dSYM matching, SPDX SBOM/checksum checks, GitHub asset attestations, and downloaded CLI/native execution. Apple accepted beta submission `7ad04bec-0b1c-49ca-a92d-db0256a43bc1` and production submission `976817a5-a2ad-4a6c-a961-70ae54e510d3`.
+
+The installed public production app and CLI passed signature verification and the packaged PTY/window smoke. Its single process-to-window sample was 337.854 ms at load averages 5.67/6.26/6.12; this is a smoke result, not a performance percentile claim. The deployment's live HTML, CSS, and JavaScript matched the merged source, and Dependabot reported zero open alerts on 2026-09-05.
