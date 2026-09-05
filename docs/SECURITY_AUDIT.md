@@ -1,11 +1,11 @@
-# Security audit — 0.1.7 release
+# Security audit — 0.1.8 release
 
 Date: 2026-09-05
 Scope: the complete source tree, local persistence, child-process protocol, CLI and GUI launch paths, Finder launchers, packaging scripts, the static GitHub Pages site, Remotion authoring sources, dependencies, and CI configuration.
 
 ## Result
 
-No confirmed critical-, high-, medium-, or low-severity findings remain open in the reviewed 0.1.7 release. The review covered application, test, script, workflow, static-site, and video-authoring source. The cleanup preserves the storage and process boundaries, patches fast-uri, and adds numbered beta publication through the existing distribution gates. Both beta and production artifacts passed those gates. Historical evidence below remains labeled with the version it tested; the final section records 0.1.7 verification.
+No confirmed security findings remain open in the reviewed 0.1.8 maintenance diff, which changes only version metadata and documentation. The underlying application and distribution boundaries retain the comprehensive 0.1.7 review described below. Both 0.1.8 beta and production artifacts passed distribution verification. Historical evidence remains labeled with the version it tested; the final section records 0.1.8 verification and its limits.
 
 ## Fixed findings
 
@@ -92,3 +92,13 @@ Numbered beta releases use the same clean-main, CI, strict scanner, notarization
 Stable Xcode passed all 59 tests and the complete quality gate. P3 autoreview and independent source review found no actionable issues. CI and CodeQL passed on the pull request and exact release commit. Gitleaks and TruffleHog passed in strict release mode with zero secret candidates. Both universal artifacts passed Developer ID verification, notarization, stapling, Gatekeeper, dSYM matching, SPDX SBOM/checksum checks, GitHub asset attestations, and downloaded CLI/native execution. Apple accepted notarization for both beta and production.
 
 The installed public production app and CLI passed signature verification and the packaged PTY/window smoke. Its single process-to-window sample was 337.854 ms at load averages 5.67/6.26/6.12; this is a smoke result, not a performance percentile claim. The deployment's live HTML, CSS, and JavaScript matched the merged source, and Dependabot reported zero open alerts on 2026-09-05.
+
+## 0.1.8 release verification
+
+All 59 Swift tests, the complete local gate, strict Gitleaks/TruffleHog scans, and CI/CodeQL on the pull request and release commit passed. The autoreview CLI backends were unavailable; an independent reviewer in the active session found no actionable P3 issues in the maintenance diff and its focused follow-up. This is not a successful CLI autoreview run.
+
+TruffleHog initially misclassified a documented Apple notarization submission UUID as an unverified npm token. The original Apple acceptance receipt confirmed its provenance. The unnecessary opaque identifiers were removed from public documentation, and the unchanged strict scanner passed with zero candidates. No scanner exemptions or release-gate changes were introduced.
+
+Both `v0.1.8-beta1` and `v0.1.8` resolve to `37b056e` and are immutable. Beta remained a prerelease while the previous stable release stayed latest; production then became latest stable. Both universal app artifacts passed Developer ID verification, Apple notarization, stapling, Gatekeeper, matching dSYMs, SBOM/checksums, and downloaded execution. The first beta attestation lookup returned no attestations immediately after publication; all four passed after a short wait. Production passed all four directly.
+
+The installed public production app and CLI passed signature and packaged PTY/window checks. The single window sample was 340.260 ms at load averages 13.03/13.24/12.87; no performance improvement is claimed. The Mac was locked, so fresh interactive desktop inspection/reopening was unavailable. The automated isolated window check does not establish interactive editor or real-account behavior.
