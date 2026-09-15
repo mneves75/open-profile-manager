@@ -83,9 +83,9 @@ jobs:
         timeout-minutes: 15
         run: |
           swift build
-          # Swift Testing parallelizes on its own; SwiftPM's --parallel XCTest phase hangs after the run on this image.
-          swift test
-          LIBDISPATCH_COOPERATIVE_POOL_STRICT=1 swift test --filter statusReadsDoNotOccupyCooperativePool
+          # Every test uses Swift Testing; on this image SwiftPM's trailing XCTest phase never exits.
+          swift test --disable-xctest
+          LIBDISPATCH_COOPERATIVE_POOL_STRICT=1 swift test --disable-xctest --filter statusReadsDoNotOccupyCooperativePool
           Scripts/test_interactive_launch.sh
 
       - name: Package and run the Intel app slice
