@@ -32,7 +32,7 @@ Batch independent reads, give brief progress updates, preserve decisions and unf
 
 - Setup: Node 24 (`.nvmrc`), npm 11, then `Scripts/bootstrap.sh`. Run `npm ci --prefix video` after lockfile changes; checks reuse installed dependencies.
 - Focused proof: `swift test --filter <SuiteOrTest>`; terminal changes also need `swift build` and `Scripts/test_interactive_launch.sh`. Site: `Scripts/check_web_video.sh --site-only`. Video: `npm --prefix video run lint`.
-- Before commit: `Scripts/check.sh`. It includes structural-rule positive controls, script contracts, localization, build/version, PTY/exit status, Swift tests and web/video checks. Rerun focused proof after fixes; do not repeat passing gates without cause.
+- Before commit: `Scripts/check.sh`. It includes structural-rule positive controls, script contracts, localization, build/version, PTY/exit status, Swift tests and web/video checks. CI additionally builds, tests, packages and launches the x86_64 slice natively on `macos-15-intel`. Rerun focused proof after fixes; do not repeat passing gates without cause.
 - Domain behavior changes need `ProfileCore` regression tests; native/tooling changes need their own boundary checks. Avoid tests that merely match source text.
 - `Scripts/lint.sh` enforces ast-grep, Swift formatting and shellcheck. No production `try!`, `fatalError`, force-casts or shell interpolation.
 - Native QA: `Scripts/package_app.sh debug`, then `Scripts/test_packaged_app.sh "build/Open Profile Manager.app"`. Isolated-home interactive flows, LLDB and worktree isolation are in `CONTRIBUTING.md`. Window smoke alone does not prove editor or real-account behavior.

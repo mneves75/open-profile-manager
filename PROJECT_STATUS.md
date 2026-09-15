@@ -2,7 +2,7 @@
 
 ## Current release line
 
-Version 0.1.9/build 11 is the latest immutable, signed, notarized, and stapled [stable release](https://github.com/mneves75/open-profile-manager/releases/tag/v0.1.9). The preceding `v0.1.9-beta1` is a GitHub prerelease. Both tags resolve to `70da69e`; version 0.1.10 is the next unreleased target.
+Version 0.1.10/build 12 is the latest immutable, signed, notarized, and stapled [stable release](https://github.com/mneves75/open-profile-manager/releases/tag/v0.1.10). The preceding `v0.1.10-beta1` is a GitHub prerelease. Both tags resolve to `668f0c1`; version 0.1.11 is the next unreleased target.
 
 ## Scope
 
@@ -23,6 +23,8 @@ Version 0.1.9/build 11 is the latest immutable, signed, notarized, and stapled [
 - Windows or Linux GUI support in 0.1.x
 
 ## Release evidence
+
+Version 0.1.10 cancels superseded native refreshes and stops their running app-server reads, rejects profile paths that Foundation would truncate (including through profile-editor tilde expansion), fixes duplicated editor field labels, and adds native x86_64 build, test, packaging, and app-launch checks on GitHub's `macos-15-intel` runner. That runner found the path-truncation bug on the macOS 15 floor. Regression tests failed before and passed after each fix; all 66 Swift tests, the full local gate, a security source review, two-axis code review, P3 autoreview (scoped-clean), and pull-request/main CI and CodeQL passed. The editor sheet and directory chooser were visually inspected in an isolated pt-BR instance: the chooser opens as a sheet attached to the editor, and the label fix was confirmed with an app-window capture. The Intel job initially hung because `LIBDISPATCH_COOPERATIVE_POOL_STRICT` also constrains SwiftPM's own process on that image; that single strict-pool test now runs only in the macOS 26 job. Both beta and production passed Apple notarization, universal architecture and Developer ID checks, stapling, Gatekeeper, dSYMs, SBOM/checksums, all four asset attestations, and downloaded CLI/native smoke tests. The public production app and CLI were installed and passed signature, Gatekeeper, and packaged smoke checks.
 
 Version 0.1.9 fixes an overlapping-refresh race in the native app, moves blocking status reads off Swift's cooperative pool, types core error fields for exhaustive localization, adds standard macOS menus, and restores universal packaging under Xcode 27. Regression tests failed before and passed after the refresh and status-threading fixes; all 63 Swift tests plus the strict single-thread-pool test, full local checks, security source review, two-axis code review, P3 autoreview (scoped-clean), and pull-request/main CI and CodeQL passed. Both beta and production passed Apple notarization, universal architecture and Developer ID checks, stapling, Gatekeeper, dSYMs, SBOM/checksums, all four asset attestations, and downloaded CLI/native smoke tests. The public production app and CLI were installed and passed signature, Gatekeeper, and packaged smoke checks. The Mac was locked, so the editor sheet and directory chooser were not visually inspected; localized menu contents were verified through accessibility.
 
