@@ -31,15 +31,27 @@ for architecture in "${ARCH_LIST[@]}"; do
   fi
 done
 
+# Xcode 27's SwiftPM writes every --arch build into one shared product directory, so a universal
+# package gives each architecture its own scratch path. Single-architecture builds keep .build.
+swift_build() {
+  local architecture=$1
+  shift
+  local scratch=()
+  if [[ ${#ARCH_LIST[@]} -gt 1 ]]; then
+    scratch=(--scratch-path "$ROOT/.build/arch-$architecture")
+  fi
+  swift build ${scratch[@]+"${scratch[@]}"} -c "$CONFIGURATION" --arch "$architecture" "$@"
+}
+
 for architecture in "${ARCH_LIST[@]}"; do
-  swift build -c "$CONFIGURATION" --arch "$architecture"
+  swift_build "$architecture"
 done
 
 product_path() {
   local product=$1
   local architecture=$2
   local bin_path
-  bin_path=$(swift build -c "$CONFIGURATION" --arch "$architecture" --show-bin-path)
+  bin_path=$(swift_build "$architecture" --show-bin-path)
   printf '%s/%s' "$bin_path" "$product"
 }
 

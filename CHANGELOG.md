@@ -20,6 +20,7 @@ All notable changes to this project are documented in this file. The format is b
 - Keep the newest profile statuses and refresh indicator when a save, removal and manual refresh overlap; an older, slower refresh can no longer leave a new profile showing "Checking…".
 - Ignore repeated Save clicks while a profile change is being written.
 - Remove Profile ID AutoFill hints and duplicate accessibility labels, and label the profile list itself for VoiceOver instead of its container.
+- Build each architecture in its own SwiftPM scratch path so universal packaging works with Xcode 27, which otherwise overwrites one architecture's products with the other's.
 
 ### Security
 

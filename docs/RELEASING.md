@@ -46,7 +46,7 @@ The foreground release performs the full gate:
 
 The release wrapper disables `asc` telemetry, rejects mixed keychain/config/environment authentication, and verifies the required notarization command and flags before building.
 
-Keep the stable Xcode app selected explicitly for public packaging. Xcode 27 beta compatibility builds and tests are useful, but its SwiftPM output layout currently places sequential architecture builds in one shared product directory.
+Keep the stable Xcode app selected explicitly for public packaging. Xcode 27's SwiftPM places sequential `--arch` builds in one shared product directory, so universal packaging builds each architecture in its own `.build/arch-<architecture>` scratch path before `lipo` combines them.
 
 Immutable releases lock the tag and assets after publication and provide GitHub-signed release attestations verified by `gh release verify-asset`.
 If publication succeeds but the immediate attestation lookup returns no attestations, preserve the immutable release, wait briefly, and rerun `gh release verify-asset <tag> <asset>` for every uploaded asset. Do not promote the beta until all four checks succeed, and do not rerun the release wrapper for the existing tag.
