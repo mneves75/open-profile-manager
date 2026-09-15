@@ -35,11 +35,14 @@ struct ProfileEditorView: View {
 
       Form {
         Section {
+          // The label closure keeps the row label in the body font; only the typed ID is monospaced.
           TextField(
-            L10n.string("Profile ID"),
             text: $draft.profileID,
             prompt: Text(verbatim: L10n.string("work"))
-          )
+          ) {
+            Text(verbatim: L10n.string("Profile ID"))
+              .font(.body)
+          }
           .font(.body.monospaced())
           .disabled(configuration.mode == .edit)
           .focused($focusedField, equals: .profileID)
@@ -225,7 +228,9 @@ private struct DirectoryField: View {
         .foregroundStyle(.secondary)
         .fixedSize(horizontal: false, vertical: true)
       HStack(spacing: 10) {
+        // The caption above names the field; a grouped Form would otherwise repeat the title as a row label.
         TextField(title, text: $text, prompt: Text(verbatim: prompt))
+          .labelsHidden()
           .font(.body.monospaced())
           .textFieldStyle(.roundedBorder)
           .focused(focus, equals: field)

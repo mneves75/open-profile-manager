@@ -9,6 +9,7 @@ All notable changes to this project are documented in this file. The format is b
 - Reject profile paths longer than 1,023 bytes before Foundation standardizes them. Foundation truncates longer paths to 1,024 bytes (observed on macOS 15, and for partly existing paths on newer systems), and profile-editor tilde expansion could silently store a parent directory of the entered path. Registries with profile paths over 1,023 bytes now fail validation instead of resolving to a truncated directory.
 - Cancel a superseded native refresh: pending status reads are no longer started and running Codex app-server reads stop immediately instead of waiting for their timeout.
 - Expand only `~` and `~/` in native path fields; `~user` forms are no longer expanded.
+- Show each profile-editor directory field's name once, above a full-width input, and keep the Profile ID label in the body font.
 
 ### Changed
 
