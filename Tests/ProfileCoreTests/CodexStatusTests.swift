@@ -450,6 +450,7 @@ struct CodexStatusTests {
       (try? FileManager.default.contentsOfDirectory(atPath: root.path))?
         .filter { $0.hasPrefix("ready-") }.count ?? 0
     }
+    let profileCount = profiles.count
     let batch = Task {
       await manager.statuses(
         profiles: profiles,
@@ -467,7 +468,10 @@ struct CodexStatusTests {
     batch.cancel()
     let statuses = await batch.value
     #expect(ContinuousClock.now - cancelledAt < .seconds(4))
+    // The fifth read is still scheduled but stops before starting a process, so every profile
+    // keeps one result.
     #expect(readyCount() == 4)
+    #expect(statuses.count == profileCount)
     #expect(statuses.allSatisfy { $0.state == .unavailable })
   }
 

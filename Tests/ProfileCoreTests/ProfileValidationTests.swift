@@ -89,7 +89,6 @@ struct ProfileValidationTests {
       codexHome: URL(fileURLWithPath: path)
     )
     #expect(profile.codexHome.path == path)
-    #expect(Profile.maximumPathBytes < Int(PATH_MAX))
   }
 
   @Test("User-entered paths reject relative values before URL rebasing")
@@ -102,5 +101,15 @@ struct ProfileValidationTests {
       .appendingPathComponent(".codex", isDirectory: true)
       .standardizedFileURL
     #expect(try Profile.fileURL(fromUserPath: "~/.codex", field: .codexHome) == expected)
+
+    // NSString tilde expansion truncates at PATH_MAX; with "/" at byte 1,024 the result would be a
+    // valid 1,023-byte parent of the entered directory.
+    let overLong = "/" + String(repeating: "a", count: Profile.maximumPathBytes - 1) + "/child-dir"
+    #expect(throws: ProfileCoreError.self) {
+      try Profile.fileURL(fromUserPath: overLong, field: .codexHome)
+    }
+    #expect(throws: ProfileCoreError.self) {
+      try Profile.fileURL(fromUserPath: "~/" + overLong, field: .codexHome)
+    }
   }
 }

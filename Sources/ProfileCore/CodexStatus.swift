@@ -105,7 +105,7 @@ public struct CodexStatusService: Sendable {
 
   func readStatus(
     for profile: Profile,
-    codexExecutable: URL?,
+    codexExecutable: URL? = nil,
     environment: [String: String] = ProcessInfo.processInfo.environment,
     cancellation: StatusReadCancellation?
   ) -> ProfileStatus {
@@ -195,7 +195,7 @@ public struct CodexStatusService: Sendable {
         return unavailable(profile, Self.cancelledMessage)
       }
       if collector.exceededLimit {
-        return unavailable(profile, "Codex app-server exceeded the status output limit.")
+        return unavailable(profile, Self.outputLimitMessage)
       }
       return unavailable(profile, message)
     }
@@ -223,7 +223,7 @@ public struct CodexStatusService: Sendable {
     }
     _ = collector.waitForResponse(id: 3, until: deadline)
     guard !collector.exceededLimit, !collector.isCancelled else {
-      return failure("Codex app-server exceeded the status output limit.")
+      return failure(Self.outputLimitMessage)
     }
     return Self.parseStatus(profile: profile, messages: collector.snapshot())
   }
@@ -270,6 +270,7 @@ public struct CodexStatusService: Sendable {
   }
 
   private static let cancelledMessage = "Codex status read was cancelled."
+  private static let outputLimitMessage = "Codex app-server exceeded the status output limit."
 
   private static let initializeRequest = Data(
     "{\"id\":1,\"method\":\"initialize\",\"params\":{\"clientInfo\":{\"name\":\"open-profile-manager\",\"title\":\"Open Profile Manager\",\"version\":\"\(OPMVersion.current)\"}}}\n"

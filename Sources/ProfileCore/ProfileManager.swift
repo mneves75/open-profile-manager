@@ -109,7 +109,7 @@ public struct ProfileManager: Sendable {
       var results = [ProfileStatus?](repeating: nil, count: profiles.count)
       while let (index, status) = await group.next() {
         results[index] = status
-        if !Task.isCancelled, let (nextIndex, nextProfile) = remaining.next() {
+        if let (nextIndex, nextProfile) = remaining.next() {
           group.addTask {
             (
               nextIndex,

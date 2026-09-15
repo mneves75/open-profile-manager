@@ -4,6 +4,16 @@ All notable changes to this project are documented in this file. The format is b
 
 ## [0.1.10] - Unreleased
 
+### Fixed
+
+- Reject profile paths longer than 1,023 bytes before Foundation standardizes them. Foundation truncates longer paths to 1,024 bytes (observed on macOS 15, and for partly existing paths on newer systems), and profile-editor tilde expansion could silently store a parent directory of the entered path. Registries with profile paths over 1,023 bytes now fail validation instead of resolving to a truncated directory.
+- Cancel a superseded native refresh: pending status reads are no longer started and running Codex app-server reads stop immediately instead of waiting for their timeout.
+- Expand only `~` and `~/` in native path fields; `~user` forms are no longer expanded.
+
+### Changed
+
+- Build, test, package, and launch the x86_64 app slice natively on GitHub's `macos-15-intel` runner in CI.
+
 ## [0.1.9] - 2026-09-15
 
 ### Added

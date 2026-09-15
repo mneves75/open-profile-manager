@@ -266,9 +266,21 @@ public struct Profile: Codable, Equatable, Sendable {
     return standardized
   }
 
-  public static func fileURL(fromUserPath value: String, field: PathField) throws -> URL {
-    let path = (value.trimmingCharacters(in: .whitespacesAndNewlines) as NSString)
-      .expandingTildeInPath
+  public static func fileURL(
+    fromUserPath value: String,
+    field: PathField,
+    homeDirectory: URL = FileManager.default.homeDirectoryForCurrentUser
+  ) throws -> URL {
+    // Expand "~" by hand: NSString tilde expansion truncates at PATH_MAX before the length check runs.
+    let entered = value.trimmingCharacters(in: .whitespacesAndNewlines)
+    let path =
+      if entered == "~" {
+        homeDirectory.path
+      } else if entered.hasPrefix("~/") {
+        homeDirectory.path + entered.dropFirst()
+      } else {
+        entered
+      }
     guard path.hasPrefix("/") else {
       throw ProfileCoreError.invalidAbsolutePath(field: field, path: path)
     }
@@ -352,5 +364,5 @@ public struct ProfileUpdate: Sendable {
 }
 
 public enum OPMVersion {
-  public static let current = "0.1.9"
+  public static let current = "0.1.10"
 }
