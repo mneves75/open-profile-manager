@@ -82,11 +82,11 @@ jobs:
       - name: Build and test natively
         timeout-minutes: 15
         run: |
-          # On this image `swift test` never exits after its own build, although every test passes;
-          # building first and testing with --skip-build exits normally.
+          # On this image `swift test` never exits after passing unless stdin is closed: a swift-package
+          # process is left waiting on the runner's open stdin. Detached runs with /dev/null exit normally.
           swift build --build-tests
-          swift test --skip-build
-          LIBDISPATCH_COOPERATIVE_POOL_STRICT=1 swift test --skip-build --filter statusReadsDoNotOccupyCooperativePool
+          swift test --skip-build < /dev/null
+          LIBDISPATCH_COOPERATIVE_POOL_STRICT=1 swift test --skip-build --filter statusReadsDoNotOccupyCooperativePool < /dev/null
           Scripts/test_interactive_launch.sh
 
       - name: Package and run the Intel app slice
