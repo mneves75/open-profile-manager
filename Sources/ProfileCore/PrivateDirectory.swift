@@ -202,6 +202,10 @@ enum PrivateDirectory {
     for component in components.dropFirst(existingComponentCount) {
       identityURL.appendPathComponent(component, isDirectory: true)
     }
+    // Fail closed rather than compare a path that macOS 15 Foundation would truncate.
+    guard identityURL.path.utf8.count <= Profile.maximumPathBytes else {
+      throw ProfileCoreError.filesystem(operation: operation)
+    }
     return identityURL.standardizedFileURL
   }
 

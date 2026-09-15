@@ -60,6 +60,41 @@ jobs:
       - name: Verify app signature
         run: codesign --verify --deep --strict --verbose=2 "build/Open Profile Manager.app"
 
+  intel-test:
+    name: Intel x86_64 build and test
+    # GitHub's last x86_64 macOS image; the shipped app is universal, so its Intel slice must run natively.
+    runs-on: macos-15-intel
+    timeout-minutes: 30
+    env:
+      DEVELOPER_DIR: /Applications/Xcode_26.3.app/Contents/Developer
+    steps:
+      - name: Check out source
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Confirm native Intel toolchain
+        run: |
+          test "$(uname -m)" = x86_64
+          test -d "$DEVELOPER_DIR"
+          swift --version
+
+      - name: Build and test natively
+        timeout-minutes: 15
+        run: |
+          swift build
+          # Every test uses Swift Testing; on this image SwiftPM's trailing XCTest phase never exits.
+          swift test --disable-xctest
+          LIBDISPATCH_COOPERATIVE_POOL_STRICT=1 swift test --disable-xctest --filter statusReadsDoNotOccupyCooperativePool
+          Scripts/test_interactive_launch.sh
+
+      - name: Package and run the Intel app slice
+        timeout-minutes: 10
+        run: |
+          Scripts/package_app.sh release
+          test "$(lipo -archs "build/Open Profile Manager.app/Contents/MacOS/OpenProfileManager")" = x86_64
+          Scripts/test_packaged_app.sh "build/Open Profile Manager.app"
+
   secret-scan:
     name: Secret scan
     runs-on: ubuntu-latest

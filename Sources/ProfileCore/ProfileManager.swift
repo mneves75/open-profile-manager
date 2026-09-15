@@ -128,21 +128,30 @@ public struct ProfileManager: Sendable {
 
   /// `readStatus` blocks for up to its timeout on child-process I/O. Each read gets its own thread
   /// (at most four per batch), so the waits occupy neither Swift's cooperative pool nor the
-  /// dispatch workers that deliver the child's pipe callbacks.
+  /// dispatch workers that deliver the child's pipe callbacks. Task cancellation stops the read.
   private static func readStatus(
     _ profile: Profile,
     service: CodexStatusService,
     codexExecutable: URL?
   ) async -> ProfileStatus {
-    await withCheckedContinuation { continuation in
-      let thread = Thread {
-        continuation.resume(
-          returning: service.readStatus(for: profile, codexExecutable: codexExecutable)
-        )
+    let cancellation = StatusReadCancellation()
+    return await withTaskCancellationHandler {
+      await withCheckedContinuation { continuation in
+        let thread = Thread {
+          continuation.resume(
+            returning: service.readStatus(
+              for: profile,
+              codexExecutable: codexExecutable,
+              cancellation: cancellation
+            )
+          )
+        }
+        thread.name = "dev.openprofilemanager.status-read"
+        thread.qualityOfService = .userInitiated
+        thread.start()
       }
-      thread.name = "dev.openprofilemanager.status-read"
-      thread.qualityOfService = .userInitiated
-      thread.start()
+    } onCancel: {
+      cancellation.cancel()
     }
   }
 

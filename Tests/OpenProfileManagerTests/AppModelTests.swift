@@ -25,6 +25,20 @@ struct AppModelTests {
     #expect(Set(fixture.model.statuses.keys.map(\.rawValue)) == ["alpha", "beta"])
   }
 
+  @Test("A newer reload cancels the superseded status read")
+  func newerReloadCancelsSupersededRead() async throws {
+    let fixture = try await OverlappingReloads()
+    defer { fixture.cleanUp() }
+
+    #expect(fixture.reads.wasCancelled(0))
+    #expect(!fixture.reads.wasCancelled(1))
+
+    fixture.reads.complete(1)
+    await fixture.currentReload.value
+    fixture.reads.complete(0)
+    await fixture.staleReload.value
+  }
+
   @Test("A superseded reload finishing last cannot overwrite newer statuses")
   func supersededReloadFinishingLast() async throws {
     let fixture = try await OverlappingReloads()
@@ -95,27 +109,46 @@ private struct OverlappingReloads {
 
 /// Holds each status read open until the test completes it, so reload ordering is deterministic.
 private final class PendingStatusReads: Sendable {
-  private typealias Read = (
-    profiles: [Profile], continuation: CheckedContinuation<[ProfileStatus], Never>
-  )
-  private let pending = Mutex<[Read]>([])
+  private struct Read {
+    let id: UUID
+    let profiles: [Profile]
+    let continuation: CheckedContinuation<[ProfileStatus], Never>
+  }
+
+  private struct State {
+    var reads: [Read] = []
+    var cancelledReadIDs: Set<UUID> = []
+  }
+
+  private let state = Mutex(State())
 
   func read(_ profiles: [Profile]) async -> [ProfileStatus] {
-    await withCheckedContinuation { continuation in
-      pending.withLock { $0.append((profiles, continuation)) }
+    let id = UUID()
+    return await withTaskCancellationHandler {
+      await withCheckedContinuation { continuation in
+        state.withLock {
+          $0.reads.append(Read(id: id, profiles: profiles, continuation: continuation))
+        }
+      }
+    } onCancel: {
+      _ = state.withLock { $0.cancelledReadIDs.insert(id) }
     }
   }
 
   func waitForReads(_ count: Int) async throws {
     let deadline = ContinuousClock.now + .seconds(5)
-    while pending.withLock({ $0.count }) < count {
+    while state.withLock({ $0.reads.count }) < count {
       guard ContinuousClock.now < deadline else { throw CancellationError() }
       try await Task.sleep(for: .milliseconds(5))
     }
   }
 
+  func wasCancelled(_ index: Int) -> Bool {
+    state.withLock { $0.cancelledReadIDs.contains($0.reads[index].id) }
+  }
+
   func complete(_ index: Int) {
-    let read = pending.withLock { $0[index] }
+    let read = state.withLock { $0.reads[index] }
     read.continuation.resume(
       returning: read.profiles.map {
         ProfileStatus(profileID: $0.id, displayName: $0.displayName, state: .available)

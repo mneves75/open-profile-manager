@@ -1,3 +1,4 @@
+import Darwin
 import Foundation
 
 public enum ProfileCoreError: Error, Equatable, LocalizedError, Sendable {
@@ -213,7 +214,8 @@ public struct ProfileID: Codable, Hashable, Comparable, Sendable, CustomStringCo
 
 public struct Profile: Codable, Equatable, Sendable {
   public static let maximumDisplayNameBytes = 128
-  public static let maximumPathBytes = 4_096
+  /// Paths must fit the kernel's `PATH_MAX`; descriptor paths such as `F_GETPATH` cannot represent longer ones.
+  public static let maximumPathBytes = Int(PATH_MAX) - 1
 
   public let id: ProfileID
   public var displayName: String
@@ -247,6 +249,10 @@ public struct Profile: Codable, Equatable, Sendable {
   }
 
   public static func normalizedAbsoluteURL(_ url: URL, field: PathField) throws -> URL {
+    // macOS 15 Foundation truncates standardized paths longer than PATH_MAX, so bound the input first.
+    guard url.path.utf8.count <= maximumPathBytes else {
+      throw ProfileCoreError.invalidAbsolutePath(field: field, path: url.path)
+    }
     let standardized = url.standardizedFileURL
     let path = standardized.path
     guard standardized.isFileURL,
@@ -260,9 +266,21 @@ public struct Profile: Codable, Equatable, Sendable {
     return standardized
   }
 
-  public static func fileURL(fromUserPath value: String, field: PathField) throws -> URL {
-    let path = (value.trimmingCharacters(in: .whitespacesAndNewlines) as NSString)
-      .expandingTildeInPath
+  public static func fileURL(
+    fromUserPath value: String,
+    field: PathField,
+    homeDirectory: URL = FileManager.default.homeDirectoryForCurrentUser
+  ) throws -> URL {
+    // Expand "~" by hand: NSString tilde expansion truncates at PATH_MAX before the length check runs.
+    let entered = value.trimmingCharacters(in: .whitespacesAndNewlines)
+    let path =
+      if entered == "~" {
+        homeDirectory.path
+      } else if entered.hasPrefix("~/") {
+        homeDirectory.path + entered.dropFirst()
+      } else {
+        entered
+      }
     guard path.hasPrefix("/") else {
       throw ProfileCoreError.invalidAbsolutePath(field: field, path: path)
     }
@@ -346,5 +364,5 @@ public struct ProfileUpdate: Sendable {
 }
 
 public enum OPMVersion {
-  public static let current = "0.1.9"
+  public static let current = "0.1.10"
 }
