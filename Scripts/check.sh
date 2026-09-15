@@ -28,4 +28,14 @@ if .build/debug/opm status >/dev/null 2>&1; then
   exit 1
 fi
 
+# The CLI must hand paths to ProfileCore unstandardized: Foundation can truncate long standardized paths.
+LONG_PATH_HOME=$(mktemp -d "${TMPDIR:-/tmp}/opm-long-path.XXXXXX")
+LONG_CODEX_HOME="$LONG_PATH_HOME/$(printf 'p%.0s' {1..1100})"
+if CFFIXED_USER_HOME="$LONG_PATH_HOME" .build/debug/opm profile add long --name Long \
+  --home "$LONG_CODEX_HOME" >/dev/null 2>&1; then
+  echo "An over-long CODEX_HOME must be rejected" >&2
+  exit 1
+fi
+rmdir "$LONG_PATH_HOME"
+
 echo "All checks passed."

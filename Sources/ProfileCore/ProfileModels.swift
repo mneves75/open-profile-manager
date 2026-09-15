@@ -1,3 +1,4 @@
+import Darwin
 import Foundation
 
 public enum ProfileCoreError: Error, Equatable, LocalizedError, Sendable {
@@ -213,7 +214,8 @@ public struct ProfileID: Codable, Hashable, Comparable, Sendable, CustomStringCo
 
 public struct Profile: Codable, Equatable, Sendable {
   public static let maximumDisplayNameBytes = 128
-  public static let maximumPathBytes = 4_096
+  /// Paths must fit the kernel's `PATH_MAX`; descriptor paths such as `F_GETPATH` cannot represent longer ones.
+  public static let maximumPathBytes = Int(PATH_MAX) - 1
 
   public let id: ProfileID
   public var displayName: String
@@ -247,6 +249,10 @@ public struct Profile: Codable, Equatable, Sendable {
   }
 
   public static func normalizedAbsoluteURL(_ url: URL, field: PathField) throws -> URL {
+    // macOS 15 Foundation truncates standardized paths longer than PATH_MAX, so bound the input first.
+    guard url.path.utf8.count <= maximumPathBytes else {
+      throw ProfileCoreError.invalidAbsolutePath(field: field, path: url.path)
+    }
     let standardized = url.standardizedFileURL
     let path = standardized.path
     guard standardized.isFileURL,

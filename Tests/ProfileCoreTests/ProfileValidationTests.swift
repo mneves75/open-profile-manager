@@ -1,3 +1,4 @@
+import Darwin
 import Foundation
 import Testing
 
@@ -61,12 +62,14 @@ struct ProfileValidationTests {
       "/",
       "/Users/..",
       "/tmp/control\u{1B}path",
+      // One byte over the limit, and far beyond PATH_MAX where macOS 15 truncates standardized paths.
       "/" + String(repeating: "p", count: Profile.maximumPathBytes),
+      "/" + String(repeating: "p", count: 4_096),
     ] {
       let url = URL(fileURLWithPath: invalidPath)
       #expect(
         throws: ProfileCoreError.self,
-        "input \(invalidPath.utf8.count) bytes; URL path \(url.path.utf8.count); standardized \(url.standardizedFileURL.path.utf8.count)"
+        "input \(invalidPath.utf8.count) bytes; standardized \(url.standardizedFileURL.path.utf8.count)"
       ) {
         try Profile(
           id: ProfileID("unsafe-path"),
@@ -75,6 +78,18 @@ struct ProfileValidationTests {
         )
       }
     }
+  }
+
+  @Test("Paths at the byte limit are kept whole")
+  func pathAtLimitIsNotTruncated() throws {
+    let path = "/" + String(repeating: "p", count: Profile.maximumPathBytes - 1)
+    let profile = try Profile(
+      id: ProfileID("long-path"),
+      displayName: "Long path",
+      codexHome: URL(fileURLWithPath: path)
+    )
+    #expect(profile.codexHome.path == path)
+    #expect(Profile.maximumPathBytes < Int(PATH_MAX))
   }
 
   @Test("User-entered paths reject relative values before URL rebasing")

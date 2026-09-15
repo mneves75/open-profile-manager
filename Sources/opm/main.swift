@@ -316,7 +316,8 @@ private func absoluteURL(_ path: String, field: PathField) throws -> URL {
   guard path.hasPrefix("/"), !path.utf8.contains(0) else {
     throw ProfileCoreError.invalidAbsolutePath(field: field, path: path)
   }
-  return URL(fileURLWithPath: path).standardizedFileURL
+  // ProfileCore bounds and standardizes the path; standardizing here first could truncate it on macOS 15.
+  return URL(fileURLWithPath: path)
 }
 
 private func printJSON<T: Encodable>(_ value: T) throws {
