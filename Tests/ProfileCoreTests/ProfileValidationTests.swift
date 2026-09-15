@@ -63,11 +63,15 @@ struct ProfileValidationTests {
       "/tmp/control\u{1B}path",
       "/" + String(repeating: "p", count: Profile.maximumPathBytes),
     ] {
-      #expect(throws: ProfileCoreError.self) {
+      let url = URL(fileURLWithPath: invalidPath)
+      #expect(
+        throws: ProfileCoreError.self,
+        "input \(invalidPath.utf8.count) bytes; URL path \(url.path.utf8.count); standardized \(url.standardizedFileURL.path.utf8.count)"
+      ) {
         try Profile(
           id: ProfileID("unsafe-path"),
           displayName: "Unsafe path",
-          codexHome: URL(fileURLWithPath: invalidPath)
+          codexHome: url
         )
       }
     }
