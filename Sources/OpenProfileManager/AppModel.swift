@@ -3,6 +3,13 @@ import Foundation
 import Observation
 import ProfileCore
 
+struct ProfileDraft: Equatable, Sendable {
+  var profileID: String
+  var displayName: String
+  var codexHome: String
+  var guiDataDirectory: String
+}
+
 struct EditorConfiguration: Identifiable, Sendable {
   enum Mode: Sendable {
     case add
@@ -11,22 +18,24 @@ struct EditorConfiguration: Identifiable, Sendable {
 
   let id = UUID()
   let mode: Mode
-  let profileID: String
-  let displayName: String
-  let codexHome: String
-  let guiDataDirectory: String
+  let draft: ProfileDraft
 }
 
 @MainActor
 @Observable
 final class AppModel {
+  typealias StatusReader = @Sendable (ProfileManager, [Profile]) async -> [ProfileStatus]
+
   private let manager: ProfileManager?
-  private var didStart = false
+  private let readStatuses: StatusReader
+  @ObservationIgnored private var didStart = false
+  @ObservationIgnored private var reloadGeneration = 0
 
   var profiles: [Profile] = []
   var selectedProfileID: ProfileID?
   var statuses: [ProfileID: ProfileStatus] = [:]
   var isRefreshing = false
+  var isSaving = false
   var editor: EditorConfiguration?
   var editorErrorMessage: String?
   var pendingRemoval: Profile?
@@ -35,13 +44,23 @@ final class AppModel {
   var alertTitle = L10n.string("Error")
   var alertMessage = ""
 
-  init() {
+  convenience init() {
     do {
-      manager = try ProfileManager()
+      self.init(manager: try ProfileManager())
     } catch {
-      manager = nil
+      self.init(manager: nil)
       showError(error)
     }
+  }
+
+  init(
+    manager: ProfileManager?,
+    readStatuses: @escaping StatusReader = { manager, profiles in
+      await manager.statuses(profiles: profiles)
+    }
+  ) {
+    self.manager = manager
+    self.readStatuses = readStatuses
   }
 
   var selectedProfile: Profile? {
@@ -55,17 +74,21 @@ final class AppModel {
     Task { await reload() }
   }
 
+  /// Reloads can overlap (toolbar refresh, save, removal); only the newest one may publish results.
   func reload() async {
     guard let manager else { return }
+    reloadGeneration += 1
+    let generation = reloadGeneration
     isRefreshing = true
-    defer { isRefreshing = false }
-
-    switch await Task.detached(
-      priority: .userInitiated,
-      operation: {
-        Self.perform { try manager.listProfiles() }
+    defer {
+      if generation == reloadGeneration {
+        isRefreshing = false
       }
-    ).value {
+    }
+
+    let outcome = await Self.perform { try manager.listProfiles() }
+    guard generation == reloadGeneration else { return }
+    switch outcome {
     case .success(let loadedProfiles):
       profiles = loadedProfiles
       if selectedProfileID.map({ selected in loadedProfiles.contains { $0.id == selected } })
@@ -73,7 +96,12 @@ final class AppModel {
       {
         selectedProfileID = loadedProfiles.first?.id
       }
-      await refreshStatuses(for: loadedProfiles, using: manager)
+      let refreshed = await readStatuses(manager, loadedProfiles)
+      guard generation == reloadGeneration else { return }
+      statuses = Dictionary(
+        refreshed.map { ($0.profileID, $0) },
+        uniquingKeysWith: { _, latest in latest }
+      )
     case .failure(let message):
       showError(message)
     }
@@ -83,10 +111,7 @@ final class AppModel {
     editorErrorMessage = nil
     editor = EditorConfiguration(
       mode: .add,
-      profileID: "",
-      displayName: "",
-      codexHome: "",
-      guiDataDirectory: ""
+      draft: ProfileDraft(profileID: "", displayName: "", codexHome: "", guiDataDirectory: "")
     )
   }
 
@@ -94,47 +119,56 @@ final class AppModel {
     editorErrorMessage = nil
     editor = EditorConfiguration(
       mode: .edit,
-      profileID: profile.id.rawValue,
-      displayName: profile.displayName,
-      codexHome: profile.codexHome.path,
-      guiDataDirectory: profile.guiDataDirectory?.path ?? ""
+      draft: ProfileDraft(
+        profileID: profile.id.rawValue,
+        displayName: profile.displayName,
+        codexHome: profile.codexHome.path,
+        guiDataDirectory: profile.guiDataDirectory?.path ?? ""
+      )
     )
   }
 
-  func saveProfile(
-    configuration: EditorConfiguration,
-    profileID: String,
-    displayName: String,
-    codexHome: String,
-    guiDataDirectory: String
-  ) {
-    guard let manager else { return }
-    let trimmedGUIPath = guiDataDirectory.trimmingCharacters(in: .whitespacesAndNewlines)
+  func saveProfile(configuration: EditorConfiguration, draft: ProfileDraft) {
+    guard let manager, !isSaving else { return }
+    let trimmedGUIPath = draft.guiDataDirectory.trimmingCharacters(in: .whitespacesAndNewlines)
     let codexURL: URL
     let guiURL: URL?
     do {
-      codexURL = try Profile.fileURL(fromUserPath: codexHome, field: "CODEX_HOME")
+      codexURL = try Profile.fileURL(fromUserPath: draft.codexHome, field: .codexHome)
       guiURL =
         try trimmedGUIPath.isEmpty
         ? nil
-        : Profile.fileURL(fromUserPath: trimmedGUIPath, field: "GUI data directory")
+        : Profile.fileURL(fromUserPath: trimmedGUIPath, field: .guiDataDirectory)
     } catch {
       editorErrorMessage = L10n.error(error)
       return
     }
     editorErrorMessage = nil
+    isSaving = true
 
     Task {
-      let outcome = await Task.detached(priority: .userInitiated) {
-        Self.save(
-          using: manager,
-          configuration: configuration,
-          profileID: profileID,
-          displayName: displayName,
-          codexHome: codexURL,
-          guiDataDirectory: guiURL
-        )
-      }.value
+      let outcome = await Self.perform {
+        switch configuration.mode {
+        case .add:
+          return try manager.addProfile(
+            id: draft.profileID,
+            displayName: draft.displayName,
+            codexHome: codexURL,
+            guiDataDirectory: guiURL
+          )
+        case .edit:
+          return try manager.updateProfile(
+            id: configuration.draft.profileID,
+            with: ProfileUpdate(
+              displayName: draft.displayName,
+              codexHome: codexURL,
+              guiDataDirectory: guiURL,
+              clearGUIDataDirectory: guiURL == nil
+            )
+          )
+        }
+      }
+      isSaving = false
       switch outcome {
       case .success(let profile):
         editor = nil
@@ -149,10 +183,7 @@ final class AppModel {
   func launchApp(for profile: Profile) {
     guard let manager else { return }
     Task {
-      let outcome = await Task.detached(priority: .userInitiated) {
-        Self.perform { try manager.launchApp(profileID: profile.id.rawValue) }
-      }.value
-      switch outcome {
+      switch await Self.perform({ try manager.launchApp(profileID: profile.id.rawValue) }) {
       case .success(let result) where result.exitCode != 0:
         showError(L10n.string("The desktop app could not be opened."))
       case .success:
@@ -174,14 +205,9 @@ final class AppModel {
     }
 
     Task {
-      let outcome = await Task.detached(priority: .userInitiated) {
-        Self.perform {
-          try manager.installLauncher(
-            profileID: profile.id.rawValue,
-            opmExecutable: executable
-          )
-        }
-      }.value
+      let outcome = await Self.perform {
+        try manager.installLauncher(profileID: profile.id.rawValue, opmExecutable: executable)
+      }
       switch outcome {
       case .success(let url):
         alertTitle = L10n.string("Launcher Installed")
@@ -210,10 +236,7 @@ final class AppModel {
     guard let manager, let pendingRemoval else { return }
     self.pendingRemoval = nil
     Task {
-      let outcome = await Task.detached(priority: .userInitiated) {
-        Self.perform { try manager.removeProfile(id: pendingRemoval.id.rawValue) }
-      }.value
-      switch outcome {
+      switch await Self.perform({ try manager.removeProfile(id: pendingRemoval.id.rawValue) }) {
       case .success:
         selectedProfileID = nil
         await reload()
@@ -228,15 +251,6 @@ final class AppModel {
     alertMessage = ""
   }
 
-  private func refreshStatuses(for profiles: [Profile], using manager: ProfileManager) async {
-    let refreshed = await Task.detached(priority: .userInitiated) {
-      await manager.statuses(profiles: profiles)
-    }.value
-    statuses = Dictionary(
-      uniqueKeysWithValues: refreshed.map { ($0.profileID, $0) }
-    )
-  }
-
   private func showError(_ error: Error) {
     showError(L10n.error(error))
   }
@@ -247,40 +261,11 @@ final class AppModel {
     isShowingAlert = true
   }
 
-  nonisolated private static func save(
-    using manager: ProfileManager,
-    configuration: EditorConfiguration,
-    profileID: String,
-    displayName: String,
-    codexHome: URL,
-    guiDataDirectory: URL?
-  ) -> OperationOutcome<Profile> {
-    perform {
-      switch configuration.mode {
-      case .add:
-        return try manager.addProfile(
-          id: profileID,
-          displayName: displayName,
-          codexHome: codexHome,
-          guiDataDirectory: guiDataDirectory
-        )
-      case .edit:
-        return try manager.updateProfile(
-          id: configuration.profileID,
-          with: ProfileUpdate(
-            displayName: displayName,
-            codexHome: codexHome,
-            guiDataDirectory: guiDataDirectory,
-            clearGUIDataDirectory: guiDataDirectory == nil
-          )
-        )
-      }
-    }
-  }
-
+  /// Registry, launcher, and process work blocks on file and process I/O, so it never runs on the main actor.
+  @concurrent
   nonisolated private static func perform<Value: Sendable>(
-    _ operation: () throws -> Value
-  ) -> OperationOutcome<Value> {
+    _ operation: @Sendable () throws -> Value
+  ) async -> OperationOutcome<Value> {
     do {
       return .success(try operation())
     } catch {

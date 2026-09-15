@@ -93,7 +93,6 @@ private struct ProfileActions: View {
     )
     .buttonStyle(.borderedProminent)
     .controlSize(.large)
-    .accessibilityLabel(L10n.string("Launch Desktop App"))
     Button(
       L10n.string("Install Finder Launcher"),
       systemImage: "macwindow.badge.plus",
@@ -101,11 +100,9 @@ private struct ProfileActions: View {
     )
     .buttonStyle(.bordered)
     .controlSize(.large)
-    .accessibilityLabel(L10n.string("Install Finder Launcher"))
     Button(L10n.string("Copy CLI Command"), systemImage: "terminal", action: onCopyCLI)
       .buttonStyle(.bordered)
       .controlSize(.large)
-      .accessibilityLabel(L10n.string("Copy CLI Command"))
   }
 }
 
@@ -234,7 +231,6 @@ private struct ProfileManagement: View {
   var body: some View {
     HStack(spacing: 12) {
       Button(L10n.string("Edit Profile"), systemImage: "pencil", action: onEdit)
-        .accessibilityLabel(L10n.string("Edit Profile"))
       Spacer()
       Button(
         L10n.string("Remove Profile"),
@@ -242,7 +238,6 @@ private struct ProfileManagement: View {
         role: .destructive,
         action: onRemove
       )
-      .accessibilityLabel(L10n.string("Remove Profile"))
     }
     .padding(.horizontal, 4)
   }
@@ -282,7 +277,6 @@ private struct StatusBadge: View {
       .padding(.vertical, 6)
       .background(color.opacity(0.14), in: Capsule())
       .foregroundStyle(color)
-      .accessibilityLabel(label)
   }
 
   private var label: String {

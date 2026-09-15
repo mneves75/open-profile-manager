@@ -4,6 +4,27 @@ All notable changes to this project are documented in this file. The format is b
 
 ## [0.1.9] - Unreleased
 
+### Added
+
+- Add the standard macOS Hide, Hide Others, Show All, Services, Bring All to Front and Help menu items, plus a View > Refresh command (⌘R), localized in English and Brazilian Portuguese.
+
+### Changed
+
+- Run blocking Codex app-server status reads on dedicated threads so they no longer occupy Swift's shared concurrency pool; a strict single-thread-pool regression test guards this in the project checks.
+- Present the directory chooser as a sheet on the profile editor instead of an app-wide modal panel.
+- Type filesystem operations and path fields in core errors so every native-app error message is mapped at compile time. Two English CLI error phrases are normalized to "create the GUI data directory" and "Application Support directory".
+- Use the current `NSApplication.activate()` API when showing the main window.
+
+### Fixed
+
+- Keep the newest profile statuses and refresh indicator when a save, removal and manual refresh overlap; an older, slower refresh can no longer leave a new profile showing "Checking…".
+- Ignore repeated Save clicks while a profile change is being written.
+- Remove Profile ID AutoFill hints and duplicate accessibility labels, and label the profile list itself for VoiceOver instead of its container.
+
+### Security
+
+- Update the video toolchain's js-yaml override to 4.3.2 to resolve GHSA-2883-xcg3-v3hh (unbounded merge-key CPU use) in development-only lint dependencies.
+
 ## [0.1.8] - 2026-09-05
 
 ### Changed

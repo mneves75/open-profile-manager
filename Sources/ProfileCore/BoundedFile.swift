@@ -5,7 +5,7 @@ enum BoundedFile {
   static func readRegularFile(
     at url: URL,
     maximumBytes: Int,
-    operation: String
+    operation: FilesystemOperation
   ) throws -> Data {
     guard maximumBytes >= 0 else {
       throw ProfileCoreError.filesystem(operation: operation)
@@ -25,6 +25,21 @@ enum BoundedFile {
       throw ProfileCoreError.filesystem(operation: operation)
     }
 
+    return try read(
+      descriptor: descriptor,
+      maximumBytes: maximumBytes,
+      readError: .filesystem(operation: operation),
+      limitError: .filesystem(operation: operation)
+    )
+  }
+
+  /// Reads an already validated descriptor to EOF, failing before the buffered data exceeds `maximumBytes`.
+  static func read(
+    descriptor: Int32,
+    maximumBytes: Int,
+    readError: ProfileCoreError,
+    limitError: ProfileCoreError
+  ) throws -> Data {
     var data = Data()
     var buffer = [UInt8](repeating: 0, count: min(maximumBytes + 1, 65_536))
     while true {
@@ -35,11 +50,11 @@ enum BoundedFile {
         continue
       }
       guard readCount >= 0 else {
-        throw ProfileCoreError.filesystem(operation: operation)
+        throw readError
       }
       guard readCount > 0 else { return data }
       guard data.count <= maximumBytes - readCount else {
-        throw ProfileCoreError.filesystem(operation: operation)
+        throw limitError
       }
       data.append(contentsOf: buffer.prefix(readCount))
     }

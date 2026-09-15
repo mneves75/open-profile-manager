@@ -3,13 +3,13 @@ import Foundation
 public enum ProfileCoreError: Error, Equatable, LocalizedError, Sendable {
   case invalidProfileID(String)
   case invalidDisplayName
-  case invalidAbsolutePath(field: String, path: String)
+  case invalidAbsolutePath(field: PathField, path: String)
   case profileAlreadyExists(String)
   case profileDirectoryAlreadyUsed(path: String, profileID: String)
   case profileNotFound(String)
   case malformedRegistry
   case unsupportedRegistryVersion(Int)
-  case filesystem(operation: String)
+  case filesystem(operation: FilesystemOperation)
   case executableNotFound(String)
   case applicationNotFound
   case processLaunchFailed(String)
@@ -26,7 +26,7 @@ public enum ProfileCoreError: Error, Equatable, LocalizedError, Sendable {
     case .invalidDisplayName:
       "Display name must not be blank."
     case .invalidAbsolutePath(let field, _):
-      "\(field) must be an absolute path."
+      "\(field.rawValue) must be an absolute path."
     case .profileAlreadyExists(let id):
       "Profile '\(id)' already exists. Choose another ID or update the existing profile."
     case .profileDirectoryAlreadyUsed(let path, let profileID):
@@ -55,6 +55,103 @@ public enum ProfileCoreError: Error, Equatable, LocalizedError, Sendable {
       "The profile registry cannot contain more than 128 profiles."
     case .unsafeDirectoryPermissions(let path):
       "Directory '\(path)' must be owned by you with permissions 0700. Update its permissions, then retry."
+    }
+  }
+}
+
+/// Names the user-facing path input in validation errors; raw values are the English CLI text.
+public enum PathField: String, Equatable, Sendable {
+  case appPath = "App path"
+  case applicationSupportDirectory = "Application Support directory"
+  case codexExecutable = "Codex executable"
+  case codexHome = "CODEX_HOME"
+  case executablePath = "Executable path"
+  case guiDataDirectory = "GUI data directory"
+  case launcherDestination = "Launcher destination"
+  case opmExecutable = "opm executable"
+  case registryPath = "Registry path"
+}
+
+/// The filesystem step that failed; `description` completes the English "Could not …" CLI message.
+public enum FilesystemOperation: Equatable, Sendable, CustomStringConvertible {
+  case useCodexHome
+  case createCodexHome
+  case createGUIDataDirectory
+  case readApplicationPropertyList
+  case secureLauncherBundle
+  case makeLauncherExecutable
+  case secureLauncherPropertyList
+  case installFinderLauncher
+  case removeFinderLauncher
+  case createPrivateLauncherDestination
+  case readManagedLauncherPropertyList
+  case setPrivateDirectoryPermissions
+  case inspectRegistryDirectory
+  case validateRegistryDirectoryPath
+  case readRegistryDirectory
+  case openRegistry
+  case readRegularRegistryFile
+  case readPrivateRegistryFile
+  case readRegistry
+  case encodeRegistry
+  case createPrivateRegistryUpdate
+  case removeInheritedRegistryPermissions
+  case setPrivateRegistryPermissions
+  case writeRegistry
+  case secureRegistry
+  case closeRegistryUpdate
+  case replaceRegistry
+  case secureRegistryDirectory
+  case createRegistryDirectory
+  case openRegistryDirectory
+  case openRegistryLock(posixError: Int32)
+  case secureRegistryLock
+  case compareProfileStoragePaths
+  case inspectProfileStorageVolume
+  case validateManagedDirectoryPath
+  case validateManagedDirectory
+  case renderJSONOutput
+
+  public var description: String {
+    switch self {
+    case .useCodexHome: "use CODEX_HOME"
+    case .createCodexHome: "create CODEX_HOME"
+    case .createGUIDataDirectory: "create the GUI data directory"
+    case .readApplicationPropertyList: "read an application property list"
+    case .secureLauncherBundle: "secure the launcher bundle"
+    case .makeLauncherExecutable: "make the launcher executable"
+    case .secureLauncherPropertyList: "secure the launcher property list"
+    case .installFinderLauncher: "install the Finder launcher"
+    case .removeFinderLauncher: "remove the Finder launcher"
+    case .createPrivateLauncherDestination: "create a private launcher destination"
+    case .readManagedLauncherPropertyList: "read a managed launcher property list"
+    case .setPrivateDirectoryPermissions: "set private directory permissions"
+    case .inspectRegistryDirectory: "inspect the profile registry directory"
+    case .validateRegistryDirectoryPath: "validate the profile registry directory path"
+    case .readRegistryDirectory: "read the profile registry directory"
+    case .openRegistry: "open the profile registry"
+    case .readRegularRegistryFile: "read a regular profile registry file"
+    case .readPrivateRegistryFile: "read a private profile registry file"
+    case .readRegistry: "read the profile registry"
+    case .encodeRegistry: "encode the profile registry"
+    case .createPrivateRegistryUpdate: "create a private registry update"
+    case .removeInheritedRegistryPermissions: "remove inherited registry permissions"
+    case .setPrivateRegistryPermissions: "set private registry permissions"
+    case .writeRegistry: "write the profile registry"
+    case .secureRegistry: "secure the profile registry"
+    case .closeRegistryUpdate: "close the profile registry update"
+    case .replaceRegistry: "atomically replace the profile registry"
+    case .secureRegistryDirectory: "secure the profile registry directory"
+    case .createRegistryDirectory: "create the registry directory"
+    case .openRegistryDirectory: "open the profile registry directory"
+    case .openRegistryLock(let posixError):
+      "open the profile registry lock (POSIX error \(posixError))"
+    case .secureRegistryLock: "secure the profile registry lock"
+    case .compareProfileStoragePaths: "compare profile storage paths"
+    case .inspectProfileStorageVolume: "inspect profile storage volume"
+    case .validateManagedDirectoryPath: "validate the managed directory path"
+    case .validateManagedDirectory: "validate the managed directory"
+    case .renderJSONOutput: "render JSON output"
     }
   }
 }
@@ -138,18 +235,18 @@ public struct Profile: Codable, Equatable, Sendable {
     }
     self.id = id
     self.displayName = name
-    self.codexHome = try Self.normalizedAbsoluteURL(codexHome, field: "CODEX_HOME")
+    self.codexHome = try Self.normalizedAbsoluteURL(codexHome, field: .codexHome)
     if let guiDataDirectory {
       self.guiDataDirectory = try Self.normalizedAbsoluteURL(
         guiDataDirectory,
-        field: "GUI data directory"
+        field: .guiDataDirectory
       )
     } else {
       self.guiDataDirectory = nil
     }
   }
 
-  public static func normalizedAbsoluteURL(_ url: URL, field: String) throws -> URL {
+  public static func normalizedAbsoluteURL(_ url: URL, field: PathField) throws -> URL {
     let standardized = url.standardizedFileURL
     let path = standardized.path
     guard standardized.isFileURL,
@@ -163,7 +260,7 @@ public struct Profile: Codable, Equatable, Sendable {
     return standardized
   }
 
-  public static func fileURL(fromUserPath value: String, field: String) throws -> URL {
+  public static func fileURL(fromUserPath value: String, field: PathField) throws -> URL {
     let path = (value.trimmingCharacters(in: .whitespacesAndNewlines) as NSString)
       .expandingTildeInPath
     guard path.hasPrefix("/") else {
@@ -178,7 +275,7 @@ public struct Profile: Codable, Equatable, Sendable {
       ?? applicationSupportDirectory
       .appendingPathComponent("gui", isDirectory: true)
       .appendingPathComponent(id.rawValue, isDirectory: true)
-    return try Self.normalizedAbsoluteURL(directory, field: "GUI data directory")
+    return try Self.normalizedAbsoluteURL(directory, field: .guiDataDirectory)
   }
 
   private enum CodingKeys: String, CodingKey {
@@ -249,5 +346,5 @@ public struct ProfileUpdate: Sendable {
 }
 
 public enum OPMVersion {
-  public static let current = "0.1.8"
+  public static let current = "0.1.9"
 }

@@ -346,6 +346,73 @@ struct CodexStatusTests {
     #expect(statuses.allSatisfy { $0.state == .available })
   }
 
+  @Test("Blocked app-server reads leave Swift's cooperative pool available")
+  func statusReadsDoNotOccupyCooperativePool() async throws {
+    let root = FileManager.default.temporaryDirectory
+      .appendingPathComponent("CodexStatusPoolTests-\(UUID().uuidString)", isDirectory: true)
+    defer { try? FileManager.default.removeItem(at: root) }
+    try FileManager.default.createDirectory(at: root, withIntermediateDirectories: false)
+    #expect(chmod(root.path, 0o700) == 0)
+
+    let registryDirectory = root.appendingPathComponent("registry", isDirectory: true)
+    let manager = try ProfileManager(
+      registryURL: registryDirectory.appendingPathComponent("profiles.json"),
+      applicationSupportDirectory: registryDirectory
+    )
+    var profiles: [Profile] = []
+    for id in ["alpha", "beta"] {
+      profiles.append(
+        try manager.addProfile(
+          id: id,
+          displayName: id.capitalized,
+          codexHome: root.appendingPathComponent("\(id)-home", isDirectory: true)
+        ))
+    }
+
+    // Each read waits for a release file that only a separate Swift task creates.
+    let executable = root.appendingPathComponent("fake-codex")
+    let script = """
+      #!/bin/sh
+      barrier=$(/usr/bin/dirname "$CODEX_HOME")
+      /usr/bin/touch "$barrier/ready-$(/usr/bin/basename "$CODEX_HOME")"
+      attempts=0
+      while [ ! -f "$barrier/release" ]; do
+        attempts=$((attempts + 1))
+        [ "$attempts" -lt 300 ] || exit 1
+        /bin/sleep 0.01
+      done
+      IFS= read -r _
+      printf '%s\\n' '{"id":1,"result":{}}'
+      IFS= read -r _
+      IFS= read -r _
+      IFS= read -r _
+      printf '%s\\n' '{"id":2,"result":{"account":{"type":"chatgpt"},"requiresOpenaiAuth":true}}'
+      printf '%s\\n' '{"id":3,"result":{"rateLimits":{"primary":{"usedPercent":1}}}}'
+      """
+    try Data(script.utf8).write(to: executable)
+    #expect(chmod(executable.path, 0o700) == 0)
+
+    let releaser = Task {
+      let ready = ["alpha-home", "beta-home"].map {
+        root.appendingPathComponent("ready-\($0)").path
+      }
+      while !ready.allSatisfy(FileManager.default.fileExists(atPath:)) {
+        try await Task.sleep(for: .milliseconds(10))
+      }
+      FileManager.default.createFile(
+        atPath: root.appendingPathComponent("release").path, contents: nil)
+    }
+    defer { releaser.cancel() }
+
+    let statuses = await manager.statuses(
+      profiles: profiles,
+      service: CodexStatusService(timeout: 5),
+      codexExecutable: executable
+    )
+    #expect(statuses.map(\.profileID.rawValue) == ["alpha", "beta"])
+    #expect(statuses.allSatisfy { $0.state == .available })
+  }
+
   private func testProfile() throws -> Profile {
     try Profile(
       id: ProfileID("status"),

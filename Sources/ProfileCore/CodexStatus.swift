@@ -95,7 +95,7 @@ public struct CodexStatusService: Sendable {
     environment: [String: String] = ProcessInfo.processInfo.environment
   ) -> ProfileStatus {
     do {
-      try PrivateDirectory.validate(profile.codexHome, operation: "use CODEX_HOME")
+      try PrivateDirectory.validate(profile.codexHome, operation: .useCodexHome)
     } catch {
       return unavailable(profile, "CODEX_HOME is not a private, current-user-owned directory.")
     }
@@ -105,7 +105,7 @@ public struct CodexStatusService: Sendable {
       if let codexExecutable {
         let normalized = try Profile.normalizedAbsoluteURL(
           codexExecutable,
-          field: "Codex executable"
+          field: .codexExecutable
         )
         guard FileManager.default.isExecutableFile(atPath: normalized.path) else {
           return unavailable(profile, "The Codex executable is not available.")

@@ -267,7 +267,7 @@ struct LauncherInstallerTests {
       .appendingPathComponent("LauncherInstallerTests-\(UUID().uuidString)", isDirectory: true)
     try FileManager.default.createDirectory(at: root, withIntermediateDirectories: false)
     guard chmod(root.path, 0o700) == 0 else {
-      throw ProfileCoreError.filesystem(operation: "secure the launcher test directory")
+      throw CocoaError(.fileWriteNoPermission)
     }
     return root
   }

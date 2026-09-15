@@ -426,7 +426,7 @@ struct ProfileRegistryTests {
     let parent = root.appendingPathComponent("new-parent", isDirectory: true)
     let child = parent.appendingPathComponent("new-child", isDirectory: true)
 
-    try PrivateDirectory.ensure(child, operation: "create test directory")
+    try PrivateDirectory.ensure(child, operation: .createCodexHome)
     #expect(mode(at: parent) == 0o700)
     #expect(mode(at: child) == 0o700)
   }
@@ -442,7 +442,7 @@ struct ProfileRegistryTests {
     #expect(chmod(privateChild.path, 0o700) == 0)
 
     #expect(throws: ProfileCoreError.self) {
-      try PrivateDirectory.ensure(privateChild, operation: "validate test directory")
+      try PrivateDirectory.ensure(privateChild, operation: .validateManagedDirectory)
     }
   }
 
@@ -451,7 +451,7 @@ struct ProfileRegistryTests {
       .appendingPathComponent("ProfileRegistryTests-\(UUID().uuidString)", isDirectory: true)
     try FileManager.default.createDirectory(at: url, withIntermediateDirectories: false)
     guard chmod(url.path, 0o700) == 0 else {
-      throw ProfileCoreError.filesystem(operation: "secure the test directory")
+      throw CocoaError(.fileWriteNoPermission)
     }
     return url
   }
@@ -471,7 +471,7 @@ struct ProfileRegistryTests {
   private func writeRegistryFixture(_ data: Data, to url: URL) throws {
     try data.write(to: url)
     guard chmod(url.path, 0o600) == 0 else {
-      throw ProfileCoreError.filesystem(operation: "secure the registry fixture")
+      throw CocoaError(.fileWriteNoPermission)
     }
   }
 
@@ -482,7 +482,7 @@ struct ProfileRegistryTests {
     try process.run()
     process.waitUntilExit()
     guard process.terminationStatus == 0 else {
-      throw ProfileCoreError.filesystem(operation: "add the test ACL")
+      throw CocoaError(.fileWriteNoPermission)
     }
   }
 }

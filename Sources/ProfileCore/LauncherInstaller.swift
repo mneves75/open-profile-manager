@@ -24,7 +24,7 @@ public struct LauncherInstaller: Sendable {
     destinationDirectory: URL = Self.defaultDestination()
   ) throws -> URL {
     let destination = try validatedDestination(destinationDirectory)
-    let executable = try Profile.normalizedAbsoluteURL(opmExecutable, field: "opm executable")
+    let executable = try Profile.normalizedAbsoluteURL(opmExecutable, field: .opmExecutable)
     var executableInformation = stat()
     guard lstat(executable.path, &executableInformation) == 0,
       executableInformation.st_mode & S_IFMT == S_IFREG,
@@ -49,12 +49,12 @@ public struct LauncherInstaller: Sendable {
       )
       for directory in [temporaryURL, contents, macOS] {
         guard chmod(directory.path, S_IRWXU) == 0 else {
-          throw ProfileCoreError.filesystem(operation: "secure the launcher bundle")
+          throw ProfileCoreError.filesystem(operation: .secureLauncherBundle)
         }
       }
       try FileManager.default.copyItem(at: executable, to: launcherExecutable)
       guard chmod(launcherExecutable.path, S_IRWXU) == 0 else {
-        throw ProfileCoreError.filesystem(operation: "make the launcher executable")
+        throw ProfileCoreError.filesystem(operation: .makeLauncherExecutable)
       }
       let plist: [String: Any] = [
         "CFBundleDevelopmentRegion": "en",
@@ -76,7 +76,7 @@ public struct LauncherInstaller: Sendable {
       )
       try plistData.write(to: plistURL, options: .withoutOverwriting)
       guard chmod(plistURL.path, S_IRUSR | S_IWUSR) == 0 else {
-        throw ProfileCoreError.filesystem(operation: "secure the launcher property list")
+        throw ProfileCoreError.filesystem(operation: .secureLauncherPropertyList)
       }
 
       if shouldSign {
@@ -97,7 +97,7 @@ public struct LauncherInstaller: Sendable {
       throw error
     } catch {
       try? FileManager.default.removeItem(at: temporaryURL)
-      throw ProfileCoreError.filesystem(operation: "install the Finder launcher")
+      throw ProfileCoreError.filesystem(operation: .installFinderLauncher)
     }
   }
 
@@ -116,7 +116,7 @@ public struct LauncherInstaller: Sendable {
       try FileManager.default.removeItem(at: url)
       return true
     } catch {
-      throw ProfileCoreError.filesystem(operation: "remove the Finder launcher")
+      throw ProfileCoreError.filesystem(operation: .removeFinderLauncher)
     }
   }
 
@@ -130,10 +130,10 @@ public struct LauncherInstaller: Sendable {
   private func validatedDestination(_ url: URL) throws -> URL {
     let normalized: URL
     do {
-      normalized = try Profile.normalizedAbsoluteURL(url, field: "Launcher destination")
+      normalized = try Profile.normalizedAbsoluteURL(url, field: .launcherDestination)
       try PrivateDirectory.ensure(
         normalized,
-        operation: "create a private launcher destination"
+        operation: .createPrivateLauncherDestination
       )
     } catch {
       throw ProfileCoreError.invalidLauncherDestination(url.path)
@@ -155,7 +155,7 @@ public struct LauncherInstaller: Sendable {
       let data = try? BoundedFile.readRegularFile(
         at: plistURL,
         maximumBytes: Self.maximumLauncherPlistBytes,
-        operation: "read a managed launcher property list"
+        operation: .readManagedLauncherPropertyList
       ),
       let plist = try? PropertyListSerialization.propertyList(
         from: data,

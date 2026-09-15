@@ -75,14 +75,13 @@ struct ProfileValidationTests {
 
   @Test("User-entered paths reject relative values before URL rebasing")
   func userEnteredPaths() throws {
-    #expect(throws: ProfileCoreError.invalidAbsolutePath(field: "CODEX_HOME", path: "profile-home"))
-    {
-      try Profile.fileURL(fromUserPath: "profile-home", field: "CODEX_HOME")
+    #expect(throws: ProfileCoreError.invalidAbsolutePath(field: .codexHome, path: "profile-home")) {
+      try Profile.fileURL(fromUserPath: "profile-home", field: .codexHome)
     }
 
     let expected = FileManager.default.homeDirectoryForCurrentUser
       .appendingPathComponent(".codex", isDirectory: true)
       .standardizedFileURL
-    #expect(try Profile.fileURL(fromUserPath: "~/.codex", field: "CODEX_HOME") == expected)
+    #expect(try Profile.fileURL(fromUserPath: "~/.codex", field: .codexHome) == expected)
   }
 }

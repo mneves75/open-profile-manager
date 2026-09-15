@@ -19,6 +19,8 @@ fi
 
 Scripts/test_interactive_launch.sh
 swift test --parallel
+# A single-thread cooperative pool turns blocking inside Swift tasks into a starvation failure.
+LIBDISPATCH_COOPERATIVE_POOL_STRICT=1 swift test --filter statusReadsDoNotOccupyCooperativePool
 Scripts/check_web_video.sh
 
 if .build/debug/opm status >/dev/null 2>&1; then

@@ -274,7 +274,7 @@ struct LaunchPlannerTests {
       .appendingPathComponent("LaunchPlannerTests-\(UUID().uuidString)", isDirectory: true)
     try FileManager.default.createDirectory(at: url, withIntermediateDirectories: false)
     guard chmod(url.path, 0o700) == 0 else {
-      throw ProfileCoreError.filesystem(operation: "secure the test directory")
+      throw CocoaError(.fileWriteNoPermission)
     }
     return url
   }

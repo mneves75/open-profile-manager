@@ -160,7 +160,7 @@ public struct LaunchPlanner: Sendable {
   ) throws {
     self.applicationSupportDirectory = try Profile.normalizedAbsoluteURL(
       applicationSupportDirectory,
-      field: "Application Support directory"
+      field: .applicationSupportDirectory
     )
     self.applicationSignatureValidator = applicationSignatureValidator
   }
@@ -171,7 +171,7 @@ public struct LaunchPlanner: Sendable {
     codexExecutable: URL? = nil,
     environment: [String: String] = ProcessInfo.processInfo.environment
   ) throws -> ProcessPlan {
-    try PrivateDirectory.validate(profile.codexHome, operation: "use CODEX_HOME")
+    try PrivateDirectory.validate(profile.codexHome, operation: .useCodexHome)
     let executable =
       try codexExecutable.map(validateExecutable)
       ?? ExecutableLocator.resolve(
@@ -190,7 +190,7 @@ public struct LaunchPlanner: Sendable {
   }
 
   public func appPlan(for profile: Profile, explicitAppURL: URL? = nil) throws -> ProcessPlan {
-    try PrivateDirectory.validate(profile.codexHome, operation: "use CODEX_HOME")
+    try PrivateDirectory.validate(profile.codexHome, operation: .useCodexHome)
     let appURL = try discoverApplication(explicitAppURL: explicitAppURL)
     let normalizedDataDirectory = try appDataDirectory(for: profile)
     let childEnvironment = ProfileEnvironment.isolated(
@@ -215,7 +215,7 @@ public struct LaunchPlanner: Sendable {
   public func prepareAppDataDirectory(for profile: Profile) throws {
     try PrivateDirectory.ensure(
       appDataDirectory(for: profile),
-      operation: "create the GUI data directory"
+      operation: .createGUIDataDirectory
     )
   }
 
@@ -261,7 +261,7 @@ public struct LaunchPlanner: Sendable {
   }
 
   private func validateExecutable(_ url: URL) throws -> URL {
-    let normalized = try Profile.normalizedAbsoluteURL(url, field: "Executable path")
+    let normalized = try Profile.normalizedAbsoluteURL(url, field: .executablePath)
     let resolved = normalized.resolvingSymlinksInPath().standardizedFileURL
     var information = stat()
     guard lstat(resolved.path, &information) == 0,
@@ -274,7 +274,7 @@ public struct LaunchPlanner: Sendable {
   }
 
   private func validatedApplication(_ url: URL) -> URL? {
-    guard let normalized = try? Profile.normalizedAbsoluteURL(url, field: "App path"),
+    guard let normalized = try? Profile.normalizedAbsoluteURL(url, field: .appPath),
       normalized.pathExtension == "app"
     else { return nil }
     var bundleInformation = stat()
@@ -286,7 +286,7 @@ public struct LaunchPlanner: Sendable {
       let data = try? BoundedFile.readRegularFile(
         at: plistURL,
         maximumBytes: Self.maximumApplicationPlistBytes,
-        operation: "read an application property list"
+        operation: .readApplicationPropertyList
       ),
       let plist = try? PropertyListSerialization.propertyList(
         from: data,

@@ -45,15 +45,10 @@ struct ContentView: View {
     .sheet(item: $model.editor) { configuration in
       ProfileEditorView(
         configuration: configuration,
-        errorMessage: model.editorErrorMessage
-      ) { id, name, home, guiDirectory in
-        model.saveProfile(
-          configuration: configuration,
-          profileID: id,
-          displayName: name,
-          codexHome: home,
-          guiDataDirectory: guiDirectory
-        )
+        errorMessage: model.editorErrorMessage,
+        isSaving: model.isSaving
+      ) { draft in
+        model.saveProfile(configuration: configuration, draft: draft)
       }
     }
     .alert(model.alertTitle, isPresented: $model.isShowingAlert) {
@@ -95,7 +90,6 @@ private struct EmptyProfilesView: View {
     } actions: {
       Button(L10n.string("Add Profile"), action: onAdd)
         .buttonStyle(.borderedProminent)
-        .accessibilityLabel(L10n.string("Add Profile"))
     }
   }
 }

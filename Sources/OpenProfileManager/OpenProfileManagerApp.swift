@@ -17,6 +17,8 @@ final class OpenProfileManagerApp: NSObject, NSApplicationDelegate {
   }
 
   func applicationDidFinishLaunching(_ notification: Notification) {
+    // A single profile-manager window has no use for AppKit's automatic tab bar and tab menu items.
+    NSWindow.allowsAutomaticWindowTabbing = false
     configureMainMenu(for: NSApplication.shared)
     showMainWindow()
   }
@@ -54,7 +56,7 @@ final class OpenProfileManagerApp: NSObject, NSApplicationDelegate {
   private func showMainWindow() {
     if let mainWindow {
       mainWindow.makeKeyAndOrderFront(nil)
-      NSApplication.shared.activate(ignoringOtherApps: true)
+      NSApplication.shared.activate()
       return
     }
 
@@ -75,7 +77,7 @@ final class OpenProfileManagerApp: NSObject, NSApplicationDelegate {
     window.center()
     mainWindow = window
     window.makeKeyAndOrderFront(nil)
-    NSApplication.shared.activate(ignoringOtherApps: true)
+    NSApplication.shared.activate()
   }
 
   private func configureMainMenu(for application: NSApplication) {
@@ -83,6 +85,7 @@ final class OpenProfileManagerApp: NSObject, NSApplicationDelegate {
     mainMenu.addItem(appMenuItem())
     mainMenu.addItem(fileMenuItem())
     mainMenu.addItem(editMenuItem())
+    mainMenu.addItem(viewMenuItem())
     mainMenu.addItem(windowMenuItem())
     mainMenu.addItem(helpMenuItem())
     application.mainMenu = mainMenu
@@ -101,6 +104,27 @@ final class OpenProfileManagerApp: NSObject, NSApplicationDelegate {
       keyEquivalent: ""
     )
     menu.items.last?.target = self
+    menu.addItem(.separator())
+    let services = NSMenuItem(title: L10n.string("Services"), action: nil, keyEquivalent: "")
+    services.submenu = NSMenu(title: L10n.string("Services"))
+    NSApplication.shared.servicesMenu = services.submenu
+    menu.addItem(services)
+    menu.addItem(.separator())
+    menu.addItem(
+      withTitle: L10n.string("Hide Open Profile Manager"),
+      action: #selector(NSApplication.hide(_:)),
+      keyEquivalent: "h"
+    )
+    menu.addItem(
+      withTitle: L10n.string("Hide Others"),
+      action: #selector(NSApplication.hideOtherApplications(_:)),
+      keyEquivalent: "h"
+    ).keyEquivalentModifierMask = [.command, .option]
+    menu.addItem(
+      withTitle: L10n.string("Show All"),
+      action: #selector(NSApplication.unhideAllApplications(_:)),
+      keyEquivalent: ""
+    )
     menu.addItem(.separator())
     menu.addItem(
       withTitle: L10n.string("Quit Open Profile Manager"),
@@ -152,6 +176,20 @@ final class OpenProfileManagerApp: NSObject, NSApplicationDelegate {
     return item
   }
 
+  private func viewMenuItem() -> NSMenuItem {
+    let item = NSMenuItem(title: L10n.string("View"), action: nil, keyEquivalent: "")
+    let menu = NSMenu(title: L10n.string("View"))
+    let refresh = NSMenuItem(
+      title: L10n.string("Refresh"),
+      action: #selector(refreshStatus),
+      keyEquivalent: "r"
+    )
+    refresh.target = self
+    menu.addItem(refresh)
+    item.submenu = menu
+    return item
+  }
+
   private func windowMenuItem() -> NSMenuItem {
     let item = NSMenuItem(title: L10n.string("Window"), action: nil, keyEquivalent: "")
     let menu = NSMenu(title: L10n.string("Window"))
@@ -165,6 +203,12 @@ final class OpenProfileManagerApp: NSObject, NSApplicationDelegate {
       action: #selector(NSWindow.performZoom(_:)),
       keyEquivalent: ""
     )
+    menu.addItem(.separator())
+    menu.addItem(
+      withTitle: L10n.string("Bring All to Front"),
+      action: #selector(NSApplication.arrangeInFront(_:)),
+      keyEquivalent: ""
+    )
     item.submenu = menu
     NSApplication.shared.windowsMenu = menu
     return item
@@ -172,7 +216,9 @@ final class OpenProfileManagerApp: NSObject, NSApplicationDelegate {
 
   private func helpMenuItem() -> NSMenuItem {
     let item = NSMenuItem(title: L10n.string("Help"), action: nil, keyEquivalent: "")
-    item.submenu = NSMenu(title: L10n.string("Help"))
+    let menu = NSMenu(title: L10n.string("Help"))
+    item.submenu = menu
+    NSApplication.shared.helpMenu = menu
     return item
   }
 
@@ -181,10 +227,20 @@ final class OpenProfileManagerApp: NSObject, NSApplicationDelegate {
     model.presentNewProfile()
   }
 
+  @objc private func refreshStatus() {
+    Task { await model.reload() }
+  }
+
   @objc private func showAboutPanel() {
     NSApplication.shared.orderFrontStandardAboutPanel(
       options: [.applicationName: L10n.string("Open Profile Manager")]
     )
   }
 
+}
+
+extension OpenProfileManagerApp: NSMenuItemValidation {
+  func validateMenuItem(_ menuItem: NSMenuItem) -> Bool {
+    menuItem.action == #selector(refreshStatus) ? !model.isRefreshing : true
+  }
 }

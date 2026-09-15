@@ -16,19 +16,19 @@ public struct ProfileRegistry: Sendable {
     registryURL: URL = ProfileRegistry.defaultRegistryURL(),
     applicationSupportDirectory: URL? = nil
   ) throws {
-    let normalizedURL = try Profile.normalizedAbsoluteURL(registryURL, field: "Registry path")
+    let normalizedURL = try Profile.normalizedAbsoluteURL(registryURL, field: .registryPath)
     let fileName = normalizedURL.lastPathComponent
     let normalizedFileName = fileName.precomposedStringWithCanonicalMapping.lowercased()
     guard !normalizedFileName.hasPrefix(Self.lockFilePrefix),
       !fileName.isEmpty,
       fileName.utf8.count <= 100
     else {
-      throw ProfileCoreError.invalidAbsolutePath(field: "Registry path", path: normalizedURL.path)
+      throw ProfileCoreError.invalidAbsolutePath(field: .registryPath, path: normalizedURL.path)
     }
     self.registryURL = normalizedURL
     self.applicationSupportDirectory = try Profile.normalizedAbsoluteURL(
       applicationSupportDirectory ?? normalizedURL.deletingLastPathComponent(),
-      field: "Application support directory"
+      field: .applicationSupportDirectory
     )
   }
 
@@ -62,9 +62,9 @@ public struct ProfileRegistry: Sendable {
         throw ProfileCoreError.tooManyProfiles
       }
       try validateDirectoryIsolation(profile, against: registry.profiles)
-      try PrivateDirectory.ensure(profile.codexHome, operation: "create CODEX_HOME")
+      try PrivateDirectory.ensure(profile.codexHome, operation: .createCodexHome)
       if let guiDataDirectory = profile.guiDataDirectory {
-        try PrivateDirectory.ensure(guiDataDirectory, operation: "create GUI data directory")
+        try PrivateDirectory.ensure(guiDataDirectory, operation: .createGUIDataDirectory)
       }
       registry.profiles.append(profile)
       registry.profiles.sort { $0.id < $1.id }
@@ -93,9 +93,9 @@ public struct ProfileRegistry: Sendable {
         updated,
         against: registry.profiles.filter { $0.id != id }
       )
-      try PrivateDirectory.ensure(updated.codexHome, operation: "create CODEX_HOME")
+      try PrivateDirectory.ensure(updated.codexHome, operation: .createCodexHome)
       if let guiDataDirectory = updated.guiDataDirectory {
-        try PrivateDirectory.ensure(guiDataDirectory, operation: "create GUI data directory")
+        try PrivateDirectory.ensure(guiDataDirectory, operation: .createGUIDataDirectory)
       }
       registry.profiles[index] = updated
       try save(registry, directoryDescriptor: directoryDescriptor)
@@ -121,17 +121,17 @@ public struct ProfileRegistry: Sendable {
     var directoryInformation = stat()
     if lstat(directory.path, &directoryInformation) != 0 {
       guard errno == ENOENT else {
-        throw ProfileCoreError.filesystem(operation: "inspect the profile registry directory")
+        throw ProfileCoreError.filesystem(operation: .inspectRegistryDirectory)
       }
       try PrivateDirectory.validateCreationPath(
         directory,
-        operation: "validate the profile registry directory path"
+        operation: .validateRegistryDirectoryPath
       )
       return RegistryFile(schemaVersion: 1, profiles: [])
     }
     let directoryDescriptor = try PrivateDirectory.openValidatedDirectory(
       directory,
-      operation: "read the profile registry directory"
+      operation: .readRegistryDirectory
     )
     defer { _ = close(directoryDescriptor) }
     return try load(directoryDescriptor: directoryDescriptor)
@@ -145,7 +145,7 @@ public struct ProfileRegistry: Sendable {
     )
     if descriptor < 0 {
       guard errno == ENOENT else {
-        throw ProfileCoreError.filesystem(operation: "open the profile registry")
+        throw ProfileCoreError.filesystem(operation: .openRegistry)
       }
       return RegistryFile(schemaVersion: 1, profiles: [])
     }
@@ -158,30 +158,20 @@ public struct ProfileRegistry: Sendable {
       (information.st_mode & 0o777) == (S_IRUSR | S_IWUSR),
       information.st_size >= 0
     else {
-      throw ProfileCoreError.filesystem(operation: "read a regular profile registry file")
+      throw ProfileCoreError.filesystem(operation: .readRegularRegistryFile)
     }
     try PrivateDirectory.validateNoExtendedACL(
       descriptor: descriptor,
-      operation: "read a private profile registry file"
+      operation: .readPrivateRegistryFile
     )
     try Self.validateRegistrySize(Int(information.st_size))
 
-    var data = Data()
-    var buffer = [UInt8](repeating: 0, count: 65_536)
-    while true {
-      let readCount = buffer.withUnsafeMutableBytes { rawBuffer in
-        Darwin.read(descriptor, rawBuffer.baseAddress, rawBuffer.count)
-      }
-      if readCount < 0, errno == EINTR {
-        continue
-      }
-      guard readCount >= 0 else {
-        throw ProfileCoreError.filesystem(operation: "read the profile registry")
-      }
-      guard readCount > 0 else { break }
-      try Self.validateRegistrySize(data.count + readCount)
-      data.append(contentsOf: buffer.prefix(readCount))
-    }
+    let data = try BoundedFile.read(
+      descriptor: descriptor,
+      maximumBytes: Int(Self.maximumRegistryBytes),
+      readError: .filesystem(operation: .readRegistry),
+      limitError: .registryTooLarge
+    )
 
     let registry: RegistryFile
     do {
@@ -210,7 +200,7 @@ public struct ProfileRegistry: Sendable {
     do {
       data = try encoder.encode(registry)
     } catch {
-      throw ProfileCoreError.filesystem(operation: "encode the profile registry")
+      throw ProfileCoreError.filesystem(operation: .encodeRegistry)
     }
     try Self.validateRegistrySize(data.count)
 
@@ -222,13 +212,13 @@ public struct ProfileRegistry: Sendable {
       S_IRUSR | S_IWUSR
     )
     guard descriptor >= 0 else {
-      throw ProfileCoreError.filesystem(operation: "create a private registry update")
+      throw ProfileCoreError.filesystem(operation: .createPrivateRegistryUpdate)
     }
 
     do {
       try PrivateDirectory.removeExtendedACL(
         descriptor: descriptor,
-        operation: "remove inherited registry permissions"
+        operation: .removeInheritedRegistryPermissions
       )
     } catch {
       _ = close(descriptor)
@@ -245,7 +235,7 @@ public struct ProfileRegistry: Sendable {
 
     do {
       guard fchmod(descriptor, S_IRUSR | S_IWUSR) == 0 else {
-        throw ProfileCoreError.filesystem(operation: "set private registry permissions")
+        throw ProfileCoreError.filesystem(operation: .setPrivateRegistryPermissions)
       }
       try data.withUnsafeBytes { rawBuffer in
         guard let baseAddress = rawBuffer.baseAddress else { return }
@@ -260,19 +250,19 @@ public struct ProfileRegistry: Sendable {
             continue
           }
           guard writtenCount > 0 else {
-            throw ProfileCoreError.filesystem(operation: "write the profile registry")
+            throw ProfileCoreError.filesystem(operation: .writeRegistry)
           }
           offset += writtenCount
         }
       }
       if fcntl(descriptor, F_FULLFSYNC) != 0 {
         guard fsync(descriptor) == 0 else {
-          throw ProfileCoreError.filesystem(operation: "secure the profile registry")
+          throw ProfileCoreError.filesystem(operation: .secureRegistry)
         }
       }
       guard close(descriptor) == 0 else {
         descriptorIsOpen = false
-        throw ProfileCoreError.filesystem(operation: "close the profile registry update")
+        throw ProfileCoreError.filesystem(operation: .closeRegistryUpdate)
       }
       descriptorIsOpen = false
       guard
@@ -283,7 +273,7 @@ public struct ProfileRegistry: Sendable {
           registryFileName
         ) == 0
       else {
-        throw ProfileCoreError.filesystem(operation: "atomically replace the profile registry")
+        throw ProfileCoreError.filesystem(operation: .replaceRegistry)
       }
       shouldRemoveTemporary = false
       var syncResult: Int32
@@ -291,7 +281,7 @@ public struct ProfileRegistry: Sendable {
         syncResult = fsync(directoryDescriptor)
       } while syncResult != 0 && errno == EINTR
       guard syncResult == 0 || errno == EINVAL || errno == EOPNOTSUPP else {
-        throw ProfileCoreError.filesystem(operation: "secure the profile registry directory")
+        throw ProfileCoreError.filesystem(operation: .secureRegistryDirectory)
       }
     } catch {
       if descriptorIsOpen {
@@ -303,10 +293,10 @@ public struct ProfileRegistry: Sendable {
 
   private func withExclusiveLock<T>(_ operation: (Int32) throws -> T) throws -> T {
     let directory = registryURL.deletingLastPathComponent()
-    try PrivateDirectory.ensure(directory, operation: "create the registry directory")
+    try PrivateDirectory.ensure(directory, operation: .createRegistryDirectory)
     let directoryDescriptor = try PrivateDirectory.openValidatedDirectory(
       directory,
-      operation: "open the profile registry directory"
+      operation: .openRegistryDirectory
     )
     defer { _ = close(directoryDescriptor) }
 
@@ -326,7 +316,7 @@ public struct ProfileRegistry: Sendable {
     let lockOpenError = errno
     guard descriptor >= 0 else {
       throw ProfileCoreError.filesystem(
-        operation: "open the profile registry lock (POSIX error \(lockOpenError))"
+        operation: .openRegistryLock(posixError: lockOpenError)
       )
     }
     defer {
@@ -341,15 +331,15 @@ public struct ProfileRegistry: Sendable {
       fchmod(descriptor, S_IRUSR | S_IWUSR) == 0,
       flock(descriptor, LOCK_EX) == 0
     else {
-      throw ProfileCoreError.filesystem(operation: "secure the profile registry lock")
+      throw ProfileCoreError.filesystem(operation: .secureRegistryLock)
     }
     try PrivateDirectory.removeExtendedACL(
       descriptor: descriptor,
-      operation: "secure the profile registry lock"
+      operation: .secureRegistryLock
     )
     try PrivateDirectory.validateNoExtendedACL(
       descriptor: descriptor,
-      operation: "secure the profile registry lock"
+      operation: .secureRegistryLock
     )
     return try operation(directoryDescriptor)
   }
@@ -483,20 +473,20 @@ public struct ProfileRegistry: Sendable {
   private static func comparablePhysicalPath(_ url: URL) throws -> String {
     let physicalURL = try PrivateDirectory.physicalIdentityURL(
       url,
-      operation: "compare profile storage paths"
+      operation: .compareProfileStoragePaths
     )
     var existingAncestor = physicalURL
     while !FileManager.default.fileExists(atPath: existingAncestor.path) {
       let parent = existingAncestor.deletingLastPathComponent()
       guard parent.path != existingAncestor.path else {
-        throw ProfileCoreError.filesystem(operation: "inspect profile storage volume")
+        throw ProfileCoreError.filesystem(operation: .inspectProfileStorageVolume)
       }
       existingAncestor = parent
     }
     let values = try existingAncestor.resourceValues(forKeys: [.volumeSupportsCaseSensitiveNamesKey]
     )
     guard let isCaseSensitive = values.volumeSupportsCaseSensitiveNames else {
-      throw ProfileCoreError.filesystem(operation: "inspect profile storage volume")
+      throw ProfileCoreError.filesystem(operation: .inspectProfileStorageVolume)
     }
     let path = physicalURL.path.precomposedStringWithCanonicalMapping
     return isCaseSensitive ? path : path.lowercased()
