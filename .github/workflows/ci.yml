@@ -83,16 +83,13 @@ jobs:
         timeout-minutes: 15
         run: |
           swift build
-          # If the test runner outlives its tests, record which processes keep it alive before the step times out.
-          (sleep 600 && echo "swift test is still running after 10 minutes:" && ps -axo pid,ppid,etime,command) &
-          watchdog=$!
-          swift test --parallel
-          pkill -P "$watchdog" || true
-          kill "$watchdog" 2>/dev/null || true
+          # Swift Testing parallelizes on its own; SwiftPM's --parallel XCTest phase hangs after the run on this image.
+          swift test
           LIBDISPATCH_COOPERATIVE_POOL_STRICT=1 swift test --filter statusReadsDoNotOccupyCooperativePool
           Scripts/test_interactive_launch.sh
 
       - name: Package and run the Intel app slice
+        timeout-minutes: 10
         run: |
           Scripts/package_app.sh release
           test "$(lipo -archs "build/Open Profile Manager.app/Contents/MacOS/OpenProfileManager")" = x86_64
