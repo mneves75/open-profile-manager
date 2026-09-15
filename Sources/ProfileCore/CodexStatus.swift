@@ -2,6 +2,7 @@ import CoreFoundation
 import Darwin
 import Dispatch
 import Foundation
+import Synchronization
 
 public enum ProfileStatusState: String, Codable, Sendable {
   case available
@@ -94,6 +95,20 @@ public struct CodexStatusService: Sendable {
     codexExecutable: URL? = nil,
     environment: [String: String] = ProcessInfo.processInfo.environment
   ) -> ProfileStatus {
+    readStatus(
+      for: profile,
+      codexExecutable: codexExecutable,
+      environment: environment,
+      cancellation: nil
+    )
+  }
+
+  func readStatus(
+    for profile: Profile,
+    codexExecutable: URL?,
+    environment: [String: String] = ProcessInfo.processInfo.environment,
+    cancellation: StatusReadCancellation?
+  ) -> ProfileStatus {
     do {
       try PrivateDirectory.validate(profile.codexHome, operation: .useCodexHome)
     } catch {
@@ -150,6 +165,13 @@ public struct CodexStatusService: Sendable {
       }
     }
 
+    cancellation?.onCancel { collector.cancel() }
+    guard !collector.isCancelled else {
+      standardOutput.fileHandleForReading.readabilityHandler = nil
+      standardError.fileHandleForReading.readabilityHandler = nil
+      return unavailable(profile, Self.cancelledMessage)
+    }
+
     do {
       try process.run()
     } catch {
@@ -167,35 +189,41 @@ public struct CodexStatusService: Sendable {
       try? standardError.fileHandleForReading.close()
     }
 
+    // Cancellation and the output limit take precedence over the step-specific failure.
+    func failure(_ message: String) -> ProfileStatus {
+      if collector.isCancelled {
+        return unavailable(profile, Self.cancelledMessage)
+      }
+      if collector.exceededLimit {
+        return unavailable(profile, "Codex app-server exceeded the status output limit.")
+      }
+      return unavailable(profile, message)
+    }
+
     let deadline = Date().addingTimeInterval(timeout)
     guard Self.writeSafely(Self.initializeRequest, to: standardInput.fileHandleForWriting),
       collector.waitForResponse(id: 1, until: deadline),
       !collector.exceededLimit,
+      !collector.isCancelled,
       !collector.responseHasError(id: 1)
     else {
-      return unavailable(
-        profile,
-        collector.exceededLimit
-          ? "Codex app-server exceeded the status output limit."
-          : "Codex app-server did not initialize in time.")
+      return failure("Codex app-server did not initialize in time.")
     }
 
     guard Self.writeSafely(Self.statusRequests, to: standardInput.fileHandleForWriting) else {
-      return unavailable(profile, "Codex app-server stopped before status was available.")
+      return failure("Codex app-server stopped before status was available.")
     }
     // app-server treats stdin EOF as shutdown and may stop before draining already-buffered requests.
     // Keep the transport open until the responses arrive; the defer above closes it during cleanup.
 
-    guard collector.waitForResponse(id: 2, until: deadline), !collector.exceededLimit else {
-      return unavailable(
-        profile,
-        collector.exceededLimit
-          ? "Codex app-server exceeded the status output limit."
-          : "Codex account status timed out.")
+    guard collector.waitForResponse(id: 2, until: deadline), !collector.exceededLimit,
+      !collector.isCancelled
+    else {
+      return failure("Codex account status timed out.")
     }
     _ = collector.waitForResponse(id: 3, until: deadline)
-    guard !collector.exceededLimit else {
-      return unavailable(profile, "Codex app-server exceeded the status output limit.")
+    guard !collector.exceededLimit, !collector.isCancelled else {
+      return failure("Codex app-server exceeded the status output limit.")
     }
     return Self.parseStatus(profile: profile, messages: collector.snapshot())
   }
@@ -240,6 +268,8 @@ public struct CodexStatusService: Sendable {
       message: rateLimitSummary == nil ? "Rate-limit status is unavailable." : nil
     )
   }
+
+  private static let cancelledMessage = "Codex status read was cancelled."
 
   private static let initializeRequest = Data(
     "{\"id\":1,\"method\":\"initialize\",\"params\":{\"clientInfo\":{\"name\":\"open-profile-manager\",\"title\":\"Open Profile Manager\",\"version\":\"\(OPMVersion.current)\"}}}\n"
@@ -360,6 +390,7 @@ private final class BoundedJSONLCollector: @unchecked Sendable {
   private var lines: [Data] = []
   private var isFinished = false
   private var didExceedLimit = false
+  private var didCancel = false
 
   init(limit: Int) {
     self.limit = limit
@@ -367,6 +398,17 @@ private final class BoundedJSONLCollector: @unchecked Sendable {
 
   var exceededLimit: Bool {
     condition.withLock { didExceedLimit }
+  }
+
+  var isCancelled: Bool {
+    condition.withLock { didCancel }
+  }
+
+  func cancel() {
+    condition.withLock {
+      didCancel = true
+      condition.broadcast()
+    }
   }
 
   func append(_ data: Data) {
@@ -425,7 +467,7 @@ private final class BoundedJSONLCollector: @unchecked Sendable {
   func waitForResponse(id: Int, until deadline: Date) -> Bool {
     condition.lock()
     defer { condition.unlock() }
-    while !containsResponse(id: id), !didExceedLimit, !isFinished {
+    while !containsResponse(id: id), !didExceedLimit, !isFinished, !didCancel {
       guard condition.wait(until: deadline) else { break }
     }
     return containsResponse(id: id)
@@ -463,5 +505,37 @@ extension NSCondition {
     lock()
     defer { unlock() }
     return try body()
+  }
+}
+
+/// Lets a caller stop an in-flight status read; a handler registered after cancellation runs at once.
+final class StatusReadCancellation: Sendable {
+  private struct State {
+    var isCancelled = false
+    var handler: (@Sendable () -> Void)?
+  }
+
+  private let state = Mutex(State())
+
+  func cancel() {
+    let handler = state.withLock { state -> (@Sendable () -> Void)? in
+      guard !state.isCancelled else { return nil }
+      state.isCancelled = true
+      defer { state.handler = nil }
+      return state.handler
+    }
+    handler?()
+  }
+
+  func onCancel(_ handler: @escaping @Sendable () -> Void) {
+    let isCancelled = state.withLock { state in
+      if !state.isCancelled {
+        state.handler = handler
+      }
+      return state.isCancelled
+    }
+    if isCancelled {
+      handler()
+    }
   }
 }

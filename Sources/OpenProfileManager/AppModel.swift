@@ -30,6 +30,7 @@ final class AppModel {
   private let readStatuses: StatusReader
   @ObservationIgnored private var didStart = false
   @ObservationIgnored private var reloadGeneration = 0
+  @ObservationIgnored private var statusReadTask: Task<[ProfileStatus], Never>?
 
   var profiles: [Profile] = []
   var selectedProfileID: ProfileID?
@@ -79,6 +80,8 @@ final class AppModel {
     guard let manager else { return }
     reloadGeneration += 1
     let generation = reloadGeneration
+    // A superseded refresh's app-server reads are stopped rather than left to reach their timeout.
+    statusReadTask?.cancel()
     isRefreshing = true
     defer {
       if generation == reloadGeneration {
@@ -96,8 +99,12 @@ final class AppModel {
       {
         selectedProfileID = loadedProfiles.first?.id
       }
-      let refreshed = await readStatuses(manager, loadedProfiles)
+      let readStatuses = readStatuses
+      let statusRead = Task { await readStatuses(manager, loadedProfiles) }
+      statusReadTask = statusRead
+      let refreshed = await statusRead.value
       guard generation == reloadGeneration else { return }
+      statusReadTask = nil
       statuses = Dictionary(
         refreshed.map { ($0.profileID, $0) },
         uniquingKeysWith: { _, latest in latest }

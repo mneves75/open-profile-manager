@@ -413,6 +413,64 @@ struct CodexStatusTests {
     #expect(statuses.allSatisfy { $0.state == .available })
   }
 
+  @Test("Cancelling a status batch stops running reads and starts no more")
+  func cancellingStatusBatchStopsReads() async throws {
+    let root = FileManager.default.temporaryDirectory
+      .appendingPathComponent("CodexStatusCancelTests-\(UUID().uuidString)", isDirectory: true)
+    defer { try? FileManager.default.removeItem(at: root) }
+    try FileManager.default.createDirectory(at: root, withIntermediateDirectories: false)
+    #expect(chmod(root.path, 0o700) == 0)
+
+    let registryDirectory = root.appendingPathComponent("registry", isDirectory: true)
+    let manager = try ProfileManager(
+      registryURL: registryDirectory.appendingPathComponent("profiles.json"),
+      applicationSupportDirectory: registryDirectory
+    )
+    var profiles: [Profile] = []
+    for id in ["p1", "p2", "p3", "p4", "p5"] {
+      profiles.append(
+        try manager.addProfile(
+          id: id,
+          displayName: id,
+          codexHome: root.appendingPathComponent("\(id)-home", isDirectory: true)
+        ))
+    }
+
+    // Each fake app-server announces itself, then hangs without answering.
+    let executable = root.appendingPathComponent("fake-codex")
+    let script = """
+      #!/bin/sh
+      /usr/bin/touch "$(/usr/bin/dirname "$CODEX_HOME")/ready-$(/usr/bin/basename "$CODEX_HOME")"
+      exec /bin/sleep 30
+      """
+    try Data(script.utf8).write(to: executable)
+    #expect(chmod(executable.path, 0o700) == 0)
+
+    let readyCount = {
+      (try? FileManager.default.contentsOfDirectory(atPath: root.path))?
+        .filter { $0.hasPrefix("ready-") }.count ?? 0
+    }
+    let batch = Task {
+      await manager.statuses(
+        profiles: profiles,
+        service: CodexStatusService(timeout: 8),
+        codexExecutable: executable
+      )
+    }
+    let readyDeadline = ContinuousClock.now + .seconds(5)
+    while readyCount() < 4, ContinuousClock.now < readyDeadline {
+      try await Task.sleep(for: .milliseconds(10))
+    }
+    #expect(readyCount() == 4)
+
+    let cancelledAt = ContinuousClock.now
+    batch.cancel()
+    let statuses = await batch.value
+    #expect(ContinuousClock.now - cancelledAt < .seconds(4))
+    #expect(readyCount() == 4)
+    #expect(statuses.allSatisfy { $0.state == .unavailable })
+  }
+
   private func testProfile() throws -> Profile {
     try Profile(
       id: ProfileID("status"),
