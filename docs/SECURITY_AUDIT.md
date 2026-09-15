@@ -1,4 +1,4 @@
-# Security audit — 0.1.9 release
+# Security audit — 0.1.10 release
 
 Date: 2026-09-15
 Scope: the complete source tree, local persistence, child-process protocol, CLI and GUI launch paths, Finder launchers, packaging scripts, the static GitHub Pages site, Remotion authoring sources, dependencies, and CI configuration.
@@ -122,4 +122,17 @@ All 63 Swift tests, the strict single-thread-pool status test, the complete loca
 The first beta attempt stopped at Gitleaks before tagging: SwiftPM plugin and index caches in the ignored `.build` directory had recorded an agent-session messaging token from the build environment. Nothing was committed, packaged, or published. The caches were moved out of the checkout and later release builds ran without session variables. A second attempt stopped at TruffleHog on unverified "Box" matches for an Apple symbol string inside a stale 0.1.8 dSYM in ignored `.scratch`; those artifacts were parked outside the checkout. No scanner exemptions were added. A third attempt was killed by host memory pressure before tagging, and a fourth exposed Xcode 27 overwriting one architecture's SwiftPM products, fixed by per-architecture scratch paths in PR #53.
 
 Both `v0.1.9-beta1` and `v0.1.9` resolve to `70da69e` and are immutable. Beta remained a prerelease while 0.1.8 stayed latest; production then became latest stable. Both universal artifacts passed Developer ID verification, Apple notarization, stapling, Gatekeeper, matching dSYMs, SBOM/checksums, all four asset attestations, and downloaded execution. The installed public app and CLI passed signature, Gatekeeper, and packaged PTY/window checks; the single window sample was 1,272.263 ms at load averages 398.14/276.28/268.71, so no performance claim is made.
+
+## 0.1.10 source review and release verification
+
+A read-only security review covered the complete 0.1.10 diff: status-read cancellation, the path bound, the CLI and identity-path changes, and the new CI job.
+
+- Confirmed and fixed: profile-editor tilde expansion (`NSString.expandingTildeInPath`) truncated paths over `PATH_MAX`, so a 1,034-byte entry with `/` at byte 1,024 was stored as its 1,023-byte parent directory. Tilde expansion is now manual and bounded, with a regression test. The Intel CI job independently showed `URL.standardizedFileURL` truncating a 4,097-byte path to 1,024 bytes on macOS 15; paths are now limited to `PATH_MAX - 1` bytes before any standardization. Existing registries with longer paths fail validation instead of resolving to a truncated directory.
+- Cancellation: no process leak or double termination; each continuation resumes exactly once, cancellation before `run()` starts no process, and later cancellation wakes the waits so the existing cleanup terminates the child.
+- CI: the `macos-15-intel` job uses read-only permissions, SHA-pinned checkout without persisted credentials, no secrets, and ad-hoc signing.
+- A non-discriminating CLI long-path check was replaced with NAME_MAX-safe components and an assertion on the path-validation error.
+
+Before release, Gitleaks again found an agent-session token recorded by SwiftPM plugin caches in the ignored `.build` directory during local builds; the generated cache files were deleted, rebuilt without session variables, and both scanners passed without exemptions. All 66 tests, the full gate, P3 autoreview (scoped-clean), and CI/CodeQL on the pull requests and release commit passed.
+
+Both `v0.1.10-beta1` and `v0.1.10` resolve to `668f0c1` and are immutable. Beta remained a prerelease while 0.1.9 stayed latest; production then became latest stable. Both universal artifacts passed Developer ID verification, Apple notarization, stapling, Gatekeeper, matching dSYMs, SBOM/checksums, all four asset attestations, and downloaded execution. The installed public app and CLI passed signature, Gatekeeper, and packaged PTY/window checks; the single window sample was 588.862 ms at load averages 14.93/18.22/24.32, so no performance claim is made.
 

@@ -17,8 +17,8 @@ Ship an unofficial MIT-licensed, local-first profile manager for Codex CLI and t
 
 ## Active work
 
-- Version 0.1.9/build 11 is the current source line and latest published release; 0.1.10 is the next unreleased target.
-- The public notarized app is installed at `~/Applications/Open Profile Manager.app` and the CLI at `~/.local/bin/opm`; version 0.1.9/build 11, signature, notarization, Gatekeeper and packaged smoke passed. The locked Mac prevented interactive window inspection. Release evidence is in PROJECT_STATUS.md and memory/2026-09-15.md.
+- Version 0.1.10/build 12 is the current source line and latest published release; 0.1.11 is the next unreleased target.
+- The public notarized app is installed at `~/Applications/Open Profile Manager.app` and the CLI at `~/.local/bin/opm`; version 0.1.10/build 12, signature, notarization, Gatekeeper and packaged smoke passed. Release evidence is in PROJECT_STATUS.md and memory/2026-09-15.md.
 
 ## Project environment
 
@@ -28,6 +28,7 @@ Ship an unofficial MIT-licensed, local-first profile manager for Codex CLI and t
 
 ## Verified state
 
+- Version 0.1.10 and its preceding beta1 are immutable releases from `668f0c1`, with all four asset attestations verified. Sixty-six tests pass locally under Xcode 27.0 and natively on x86_64 in CI (`macos-15-intel`, Xcode 26.3); the strict single-thread-pool test runs only in the macOS 26 job because the variable deadlocks SwiftPM on the Intel image.
 - Version 0.1.9 and its preceding beta1 are immutable releases from `70da69e`, with all four asset attestations verified directly. Sixty-three tests pass under Xcode 27.0, plus a strict single-thread cooperative-pool status test run by `Scripts/check.sh`.
 - Version 0.1.8 and its preceding beta1 are immutable releases from `37b056e`. Both passed notarization, downloaded execution and all four GitHub asset attestations; beta attestations needed one retry after GitHub's initial post-publication response. CLI autoreview backends were unavailable, so the maintenance diff received an independent native P3 review. See the security audit for scope and limitations.
 - Version 0.1.7 and its preceding beta1 are immutable releases from `cd7ceb9`. Both passed the full release gate, Apple notarization, GitHub asset attestations, and downloaded execution. The production website matched the merged HTML/CSS/JS, and GitHub reported zero open Dependabot alerts at release.

@@ -48,6 +48,8 @@ The release wrapper disables `asc` telemetry, rejects mixed keychain/config/envi
 
 Release-mode secret scans also read ignored local directories. SwiftPM plugin and index caches under `.build` record the building process environment, and old verification artifacts under `.scratch` can contain scanner false positives. Build releases from an environment without agent-session tokens, and move stale `.scratch` artifacts outside the checkout rather than adding scanner exemptions.
 
+CI also builds, tests, packages, and launches the x86_64 slice on GitHub's `macos-15-intel` runner, which provides Xcode 26.3 and the macOS 15 system floor. Do not run `LIBDISPATCH_COOPERATIVE_POOL_STRICT` commands there: the variable also constrains SwiftPM's own `swift-package` process, which deadlocks on that image after the tests pass.
+
 Keep the stable Xcode app selected explicitly for public packaging. Xcode 27's SwiftPM places sequential `--arch` builds in one shared product directory, so universal packaging builds each architecture in its own `.build/arch-<architecture>` scratch path before `lipo` combines them.
 
 Immutable releases lock the tag and assets after publication and provide GitHub-signed release attestations verified by `gh release verify-asset`.
