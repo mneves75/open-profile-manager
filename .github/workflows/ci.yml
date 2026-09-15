@@ -82,10 +82,11 @@ jobs:
       - name: Build and test natively
         timeout-minutes: 15
         run: |
-          swift build
-          # Every test uses Swift Testing; on this image SwiftPM's trailing XCTest phase never exits.
-          swift test --disable-xctest
-          LIBDISPATCH_COOPERATIVE_POOL_STRICT=1 swift test --disable-xctest --filter statusReadsDoNotOccupyCooperativePool
+          # On this image `swift test` never exits after its own build, although every test passes;
+          # building first and testing with --skip-build exits normally.
+          swift build --build-tests
+          swift test --skip-build
+          LIBDISPATCH_COOPERATIVE_POOL_STRICT=1 swift test --skip-build --filter statusReadsDoNotOccupyCooperativePool
           Scripts/test_interactive_launch.sh
 
       - name: Package and run the Intel app slice
