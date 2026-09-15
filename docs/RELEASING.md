@@ -46,6 +46,8 @@ The foreground release performs the full gate:
 
 The release wrapper disables `asc` telemetry, rejects mixed keychain/config/environment authentication, and verifies the required notarization command and flags before building.
 
+Release-mode secret scans also read ignored local directories. SwiftPM plugin and index caches under `.build` record the building process environment, and old verification artifacts under `.scratch` can contain scanner false positives. Build releases from an environment without agent-session tokens, and move stale `.scratch` artifacts outside the checkout rather than adding scanner exemptions.
+
 Keep the stable Xcode app selected explicitly for public packaging. Xcode 27's SwiftPM places sequential `--arch` builds in one shared product directory, so universal packaging builds each architecture in its own `.build/arch-<architecture>` scratch path before `lipo` combines them.
 
 Immutable releases lock the tag and assets after publication and provide GitHub-signed release attestations verified by `gh release verify-asset`.

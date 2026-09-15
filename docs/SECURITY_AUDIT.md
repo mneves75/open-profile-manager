@@ -115,3 +115,11 @@ A read-only source review covered all of `ProfileCore`, the CLI, the changed nat
 
 Evaluated and dismissed: PATH-based executable discovery, the interval between app-signature validation and `open -a`, and path-based launcher replacement inside the private destination. Each requires the same user or an administrator and grants no privilege boundary crossing. Two English CLI error phrases were normalized; no test, JSON field, or documentation depended on them.
 
+## 0.1.9 release verification
+
+All 63 Swift tests, the strict single-thread-pool status test, the complete local gate, strict Gitleaks/TruffleHog scans, npm audit, P3 autoreview (scoped-clean), and CI/CodeQL on both pull requests and the release commit passed. The video toolchain's js-yaml override moved to 4.3.2 for GHSA-2883-xcg3-v3hh before release.
+
+The first beta attempt stopped at Gitleaks before tagging: SwiftPM plugin and index caches in the ignored `.build` directory had recorded an agent-session messaging token from the build environment. Nothing was committed, packaged, or published. The caches were moved out of the checkout and later release builds ran without session variables. A second attempt stopped at TruffleHog on unverified "Box" matches for an Apple symbol string inside a stale 0.1.8 dSYM in ignored `.scratch`; those artifacts were parked outside the checkout. No scanner exemptions were added. A third attempt was killed by host memory pressure before tagging, and a fourth exposed Xcode 27 overwriting one architecture's SwiftPM products, fixed by per-architecture scratch paths in PR #53.
+
+Both `v0.1.9-beta1` and `v0.1.9` resolve to `70da69e` and are immutable. Beta remained a prerelease while 0.1.8 stayed latest; production then became latest stable. Both universal artifacts passed Developer ID verification, Apple notarization, stapling, Gatekeeper, matching dSYMs, SBOM/checksums, all four asset attestations, and downloaded execution. The installed public app and CLI passed signature, Gatekeeper, and packaged PTY/window checks; the single window sample was 1,272.263 ms at load averages 398.14/276.28/268.71, so no performance claim is made.
+
