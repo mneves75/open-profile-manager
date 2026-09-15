@@ -87,7 +87,8 @@ jobs:
           (sleep 600 && echo "swift test is still running after 10 minutes:" && ps -axo pid,ppid,etime,command) &
           watchdog=$!
           swift test --parallel
-          kill "$watchdog"
+          pkill -P "$watchdog" || true
+          kill "$watchdog" 2>/dev/null || true
           LIBDISPATCH_COOPERATIVE_POOL_STRICT=1 swift test --filter statusReadsDoNotOccupyCooperativePool
           Scripts/test_interactive_launch.sh
 
