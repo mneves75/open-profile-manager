@@ -164,7 +164,7 @@ public struct DoctorService: Sendable {
       do {
         try PrivateDirectory.validateCreationPath(
           url,
-          operation: "validate the managed directory path"
+          operation: .validateManagedDirectoryPath
         )
         return DoctorCheck(
           name: name,
@@ -181,7 +181,7 @@ public struct DoctorService: Sendable {
       }
     }
     do {
-      try PrivateDirectory.validate(url, operation: "validate the managed directory")
+      try PrivateDirectory.validate(url, operation: .validateManagedDirectory)
     } catch {
       return DoctorCheck(
         name: name,

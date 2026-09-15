@@ -2,7 +2,7 @@ import Darwin
 import Foundation
 
 enum PrivateDirectory {
-  static func ensure(_ url: URL, operation: String) throws {
+  static func ensure(_ url: URL, operation: FilesystemOperation) throws {
     let components = try physicalPathComponents(url, operation: operation)
     var parentDescriptor = open("/", O_RDONLY | O_DIRECTORY | O_CLOEXEC)
     guard parentDescriptor >= 0 else {
@@ -42,7 +42,7 @@ enum PrivateDirectory {
       if wasCreated {
         guard fchmod(childDescriptor, S_IRWXU) == 0 else {
           _ = close(childDescriptor)
-          throw ProfileCoreError.filesystem(operation: "set private directory permissions")
+          throw ProfileCoreError.filesystem(operation: .setPrivateDirectoryPermissions)
         }
         do {
           try removeExtendedACL(descriptor: childDescriptor, operation: operation)
@@ -83,12 +83,12 @@ enum PrivateDirectory {
     }
   }
 
-  static func validate(_ url: URL, operation: String) throws {
+  static func validate(_ url: URL, operation: FilesystemOperation) throws {
     let descriptor = try openValidatedDirectory(url, operation: operation)
     _ = close(descriptor)
   }
 
-  static func openValidatedDirectory(_ url: URL, operation: String) throws -> Int32 {
+  static func openValidatedDirectory(_ url: URL, operation: FilesystemOperation) throws -> Int32 {
     let descriptor = try openExistingDirectory(url, operation: operation)
     do {
       try validatePrivateDirectory(
@@ -103,7 +103,7 @@ enum PrivateDirectory {
     return descriptor
   }
 
-  static func validateNoExtendedACL(descriptor: Int32, operation: String) throws {
+  static func validateNoExtendedACL(descriptor: Int32, operation: FilesystemOperation) throws {
     errno = 0
     if let accessControlList = acl_get_fd_np(descriptor, ACL_TYPE_EXTENDED) {
       acl_free(UnsafeMutableRawPointer(accessControlList))
@@ -114,7 +114,9 @@ enum PrivateDirectory {
     }
   }
 
-  private static func openExistingDirectory(_ url: URL, operation: String) throws -> Int32 {
+  private static func openExistingDirectory(_ url: URL, operation: FilesystemOperation) throws
+    -> Int32
+  {
     let components = try physicalPathComponents(url, operation: operation)
     var descriptor = open("/", O_RDONLY | O_DIRECTORY | O_CLOEXEC)
     guard descriptor >= 0 else {
@@ -144,7 +146,8 @@ enum PrivateDirectory {
     return descriptor
   }
 
-  static func physicalPathComponents(_ url: URL, operation: String) throws -> [String] {
+  static func physicalPathComponents(_ url: URL, operation: FilesystemOperation) throws -> [String]
+  {
     guard url.path.hasPrefix("/") else {
       throw ProfileCoreError.filesystem(operation: operation)
     }
@@ -158,7 +161,7 @@ enum PrivateDirectory {
     return components
   }
 
-  static func physicalIdentityURL(_ url: URL, operation: String) throws -> URL {
+  static func physicalIdentityURL(_ url: URL, operation: FilesystemOperation) throws -> URL {
     let components = try physicalPathComponents(url, operation: operation)
     var descriptor = open("/", O_RDONLY | O_DIRECTORY | O_CLOEXEC)
     guard descriptor >= 0 else {
@@ -204,7 +207,7 @@ enum PrivateDirectory {
 
   private static func validatePrivateDirectory(
     descriptor: Int32,
-    operation: String,
+    operation: FilesystemOperation,
     displayPath: String? = nil
   ) throws {
     var information = stat()
@@ -224,7 +227,9 @@ enum PrivateDirectory {
     try validateNoExtendedACL(descriptor: descriptor, operation: operation)
   }
 
-  private static func validateTrustedAncestor(descriptor: Int32, operation: String) throws {
+  private static func validateTrustedAncestor(descriptor: Int32, operation: FilesystemOperation)
+    throws
+  {
     var information = stat()
     let currentUser = geteuid()
     guard fstat(descriptor, &information) == 0,
@@ -242,7 +247,9 @@ enum PrivateDirectory {
     try validateTrustedAncestorACL(descriptor: descriptor, operation: operation)
   }
 
-  private static func validateTrustedAncestorACL(descriptor: Int32, operation: String) throws {
+  private static func validateTrustedAncestorACL(descriptor: Int32, operation: FilesystemOperation)
+    throws
+  {
     errno = 0
     guard let accessControlList = acl_get_fd_np(descriptor, ACL_TYPE_EXTENDED) else {
       guard errno == ENOENT || errno == EOPNOTSUPP else {
@@ -274,7 +281,7 @@ enum PrivateDirectory {
     }
   }
 
-  private static func syncDirectory(_ descriptor: Int32, operation: String) throws {
+  private static func syncDirectory(_ descriptor: Int32, operation: FilesystemOperation) throws {
     var result: Int32
     repeat {
       result = fsync(descriptor)
@@ -284,7 +291,7 @@ enum PrivateDirectory {
     }
   }
 
-  static func removeExtendedACL(descriptor: Int32, operation: String) throws {
+  static func removeExtendedACL(descriptor: Int32, operation: FilesystemOperation) throws {
     guard let emptyAccessControlList = acl_init(0) else {
       throw ProfileCoreError.filesystem(operation: operation)
     }
@@ -296,7 +303,7 @@ enum PrivateDirectory {
     }
   }
 
-  static func validateCreationPath(_ url: URL, operation: String) throws {
+  static func validateCreationPath(_ url: URL, operation: FilesystemOperation) throws {
     let components = try physicalPathComponents(url, operation: operation)
     var descriptor = open("/", O_RDONLY | O_DIRECTORY | O_CLOEXEC)
     guard descriptor >= 0 else {

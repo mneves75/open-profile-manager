@@ -71,9 +71,9 @@ struct ProfileAddCommand: ParsableCommand {
     let profile = try ProfileManager().addProfile(
       id: id,
       displayName: name,
-      codexHome: try absoluteURL(codexHome, field: "CODEX_HOME"),
+      codexHome: try absoluteURL(codexHome, field: .codexHome),
       guiDataDirectory: try guiDataDirectory.map {
-        try absoluteURL($0, field: "GUI data directory")
+        try absoluteURL($0, field: .guiDataDirectory)
       }
     )
     if json {
@@ -229,7 +229,7 @@ struct AppLaunchCommand: ParsableCommand {
   func run() throws {
     let result = try ProfileManager().launchApp(
       profileID: profile,
-      explicitAppURL: try appPath.map { try absoluteURL($0, field: "App path") }
+      explicitAppURL: try appPath.map { try absoluteURL($0, field: .appPath) }
     )
     guard result.exitCode == 0 else { throw ExitCode(result.exitCode) }
   }
@@ -256,7 +256,7 @@ struct LauncherInstallCommand: ParsableCommand {
       profileID: profile,
       opmExecutable: executable,
       destinationDirectory: try destination.map {
-        try absoluteURL($0, field: "Launcher destination")
+        try absoluteURL($0, field: .launcherDestination)
       }
         ?? LauncherInstaller.defaultDestination()
     )
@@ -274,7 +274,7 @@ struct LauncherRemoveCommand: ParsableCommand {
     let removed = try ProfileManager().removeLauncher(
       profileID: profile,
       destinationDirectory: try destination.map {
-        try absoluteURL($0, field: "Launcher destination")
+        try absoluteURL($0, field: .launcherDestination)
       }
         ?? LauncherInstaller.defaultDestination()
     )
@@ -312,7 +312,7 @@ struct VersionCommand: ParsableCommand {
   }
 }
 
-private func absoluteURL(_ path: String, field: String) throws -> URL {
+private func absoluteURL(_ path: String, field: PathField) throws -> URL {
   guard path.hasPrefix("/"), !path.utf8.contains(0) else {
     throw ProfileCoreError.invalidAbsolutePath(field: field, path: path)
   }
@@ -324,7 +324,7 @@ private func printJSON<T: Encodable>(_ value: T) throws {
   encoder.outputFormatting = [.prettyPrinted, .sortedKeys, .withoutEscapingSlashes]
   let data = try encoder.encode(value)
   guard let output = String(data: data, encoding: .utf8) else {
-    throw ProfileCoreError.filesystem(operation: "render JSON output")
+    throw ProfileCoreError.filesystem(operation: .renderJSONOutput)
   }
   print(output)
 }

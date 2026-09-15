@@ -1,11 +1,11 @@
-# Security audit — 0.1.8 release
+# Security audit — 0.1.9 release
 
-Date: 2026-09-05
+Date: 2026-09-15
 Scope: the complete source tree, local persistence, child-process protocol, CLI and GUI launch paths, Finder launchers, packaging scripts, the static GitHub Pages site, Remotion authoring sources, dependencies, and CI configuration.
 
 ## Result
 
-No confirmed security findings remain open in the reviewed 0.1.8 maintenance diff, which changes only version metadata and documentation. The underlying application and distribution boundaries retain the comprehensive 0.1.7 review described below. Both 0.1.8 beta and production artifacts passed distribution verification. Historical evidence remains labeled with the version it tested; the final section records 0.1.8 verification and its limits.
+No confirmed or plausible security findings were identified in the 0.1.9 review diff, which changes native refresh concurrency, status-read threading, typed core error fields, standard menus, and the directory chooser presentation. The underlying application and distribution boundaries retain the comprehensive 0.1.7 review described below. Historical evidence remains labeled with the version it tested; the final section records 0.1.8 verification and its limits.
 
 ## Fixed findings
 
@@ -102,3 +102,16 @@ TruffleHog initially misclassified a documented Apple notarization submission UU
 Both `v0.1.8-beta1` and `v0.1.8` resolve to `37b056e` and are immutable. Beta remained a prerelease while the previous stable release stayed latest; production then became latest stable. Both universal app artifacts passed Developer ID verification, Apple notarization, stapling, Gatekeeper, matching dSYMs, SBOM/checksums, and downloaded execution. The first beta attestation lookup returned no attestations immediately after publication; all four passed after a short wait. Production passed all four directly.
 
 The installed public production app and CLI passed signature and packaged PTY/window checks. The single window sample was 340.260 ms at load averages 13.03/13.24/12.87; no performance improvement is claimed. The Mac was locked, so fresh interactive desktop inspection/reopening was unavailable. The automated isolated window check does not establish interactive editor or real-account behavior.
+
+## 0.1.9 source review
+
+A read-only source review covered all of `ProfileCore`, the CLI, the changed native-app files, and the complete 0.1.9 diff; shellcheck passed for all scripts. Release scripts, the static site, video sources, and CI were unchanged since the 0.1.8 audit and were not re-reviewed.
+
+- Status reads still run at most four bounded app-server exchanges per batch; moving each blocking exchange to its own thread leaves the timeout, termination, output-byte, and record limits unchanged, and each continuation resumes exactly once.
+- Typed `FilesystemOperation` and `PathField` errors carry the same information; untrusted paths and identifiers remain format arguments, never format strings.
+- The registry's shared bounded read keeps ownership, `0600`, and ACL validation before reading and still reports oversized files as `registryTooLarge`.
+- Editing still targets the original profile ID; the save guard only suppresses duplicate submissions and the cross-process registry lock remains authoritative. The directory chooser still cannot create folders, and every selection must pass private-directory validation.
+- The new Services menu only exports user selections; it adds no inbound data path.
+
+Evaluated and dismissed: PATH-based executable discovery, the interval between app-signature validation and `open -a`, and path-based launcher replacement inside the private destination. Each requires the same user or an administrator and grants no privilege boundary crossing. Two English CLI error phrases were normalized; no test, JSON field, or documentation depended on them.
+

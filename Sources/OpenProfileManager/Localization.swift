@@ -76,67 +76,60 @@ enum L10n {
     }
   }
 
-  nonisolated private static func fieldName(_ field: String) -> String {
+  nonisolated private static func fieldName(_ field: PathField) -> String {
     return switch field {
-    case "App path": string("App path")
-    case "Application Support directory", "Application support directory":
-      string("Application Support directory")
-    case "Codex executable": string("Codex executable")
-    case "Executable path": string("Executable path")
-    case "GUI data directory": string("Desktop data directory")
-    case "Launcher destination": string("Launcher destination")
-    case "opm executable": string("opm executable")
-    case "Registry path": string("Profile registry path")
-    case "Path": string("Path")
-    default: field
+    case .appPath: string("App path")
+    case .applicationSupportDirectory: string("Application Support directory")
+    case .codexExecutable: string("Codex executable")
+    case .codexHome: "CODEX_HOME"
+    case .executablePath: string("Executable path")
+    case .guiDataDirectory: string("Desktop data directory")
+    case .launcherDestination: string("Launcher destination")
+    case .opmExecutable: string("opm executable")
+    case .registryPath: string("Profile registry path")
     }
   }
 
-  nonisolated private static func operationName(_ operation: String) -> String {
-    if operation.hasPrefix("open the profile registry lock (POSIX error ") {
-      let code = operation.dropFirst("open the profile registry lock (POSIX error ".count)
-        .dropLast()
-      return string("open the profile registry lock (POSIX error %@)", String(code))
-    }
-
+  nonisolated private static func operationName(_ operation: FilesystemOperation) -> String {
     return switch operation {
-    case "use CODEX_HOME": string("use CODEX_HOME")
-    case "create CODEX_HOME": string("create CODEX_HOME")
-    case "create GUI data directory": string("create the desktop data directory")
-    case "create the GUI data directory": string("create the desktop data directory")
-    case "read an application property list": string("read an application property list")
-    case "secure the launcher bundle": string("secure the launcher bundle")
-    case "make the launcher executable": string("make the launcher executable")
-    case "secure the launcher property list": string("secure the launcher property list")
-    case "install the Finder launcher": string("install the Finder launcher")
-    case "remove the Finder launcher": string("remove the Finder launcher")
-    case "create a private launcher destination": string("create a private launcher destination")
-    case "read a managed launcher property list": string("read a managed launcher property list")
-    case "set private directory permissions": string("set private directory permissions")
-    case "inspect the profile registry directory": string("inspect the profile registry directory")
-    case "validate the profile registry directory path":
-      string("validate the profile registry directory path")
-    case "read the profile registry directory": string("read the profile registry directory")
-    case "open the profile registry": string("open the profile registry")
-    case "read a regular profile registry file": string("read a regular profile registry file")
-    case "read a private profile registry file": string("read a private profile registry file")
-    case "read the profile registry": string("read the profile registry")
-    case "encode the profile registry": string("encode the profile registry")
-    case "create a private registry update": string("create a private registry update")
-    case "remove inherited registry permissions": string("remove inherited registry permissions")
-    case "set private registry permissions": string("set private registry permissions")
-    case "write the profile registry": string("write the profile registry")
-    case "secure the profile registry": string("secure the profile registry")
-    case "close the profile registry update": string("close the profile registry update")
-    case "atomically replace the profile registry":
-      string("atomically replace the profile registry")
-    case "secure the profile registry directory": string("secure the profile registry directory")
-    case "create the registry directory": string("create the registry directory")
-    case "open the profile registry directory": string("open the profile registry directory")
-    case "secure the profile registry lock": string("secure the profile registry lock")
-    case "compare profile storage paths": string("compare profile storage paths")
-    case "inspect profile storage volume": string("inspect the profile storage volume")
-    default: string("complete the requested operation")
+    case .useCodexHome: string("use CODEX_HOME")
+    case .createCodexHome: string("create CODEX_HOME")
+    case .createGUIDataDirectory: string("create the desktop data directory")
+    case .readApplicationPropertyList: string("read an application property list")
+    case .secureLauncherBundle: string("secure the launcher bundle")
+    case .makeLauncherExecutable: string("make the launcher executable")
+    case .secureLauncherPropertyList: string("secure the launcher property list")
+    case .installFinderLauncher: string("install the Finder launcher")
+    case .removeFinderLauncher: string("remove the Finder launcher")
+    case .createPrivateLauncherDestination: string("create a private launcher destination")
+    case .readManagedLauncherPropertyList: string("read a managed launcher property list")
+    case .setPrivateDirectoryPermissions: string("set private directory permissions")
+    case .inspectRegistryDirectory: string("inspect the profile registry directory")
+    case .validateRegistryDirectoryPath: string("validate the profile registry directory path")
+    case .readRegistryDirectory: string("read the profile registry directory")
+    case .openRegistry: string("open the profile registry")
+    case .readRegularRegistryFile: string("read a regular profile registry file")
+    case .readPrivateRegistryFile: string("read a private profile registry file")
+    case .readRegistry: string("read the profile registry")
+    case .encodeRegistry: string("encode the profile registry")
+    case .createPrivateRegistryUpdate: string("create a private registry update")
+    case .removeInheritedRegistryPermissions: string("remove inherited registry permissions")
+    case .setPrivateRegistryPermissions: string("set private registry permissions")
+    case .writeRegistry: string("write the profile registry")
+    case .secureRegistry: string("secure the profile registry")
+    case .closeRegistryUpdate: string("close the profile registry update")
+    case .replaceRegistry: string("atomically replace the profile registry")
+    case .secureRegistryDirectory: string("secure the profile registry directory")
+    case .createRegistryDirectory: string("create the registry directory")
+    case .openRegistryDirectory: string("open the profile registry directory")
+    case .openRegistryLock(let posixError):
+      string("open the profile registry lock (POSIX error %@)", String(posixError))
+    case .secureRegistryLock: string("secure the profile registry lock")
+    case .compareProfileStoragePaths: string("compare profile storage paths")
+    case .inspectProfileStorageVolume: string("inspect the profile storage volume")
+    // Doctor checks and CLI JSON rendering handle these internally; they never reach the native app.
+    case .validateManagedDirectoryPath, .validateManagedDirectory, .renderJSONOutput:
+      string("complete the requested operation")
     }
   }
 }

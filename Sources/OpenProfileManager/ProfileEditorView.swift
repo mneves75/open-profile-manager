@@ -5,27 +5,25 @@ import SwiftUI
 struct ProfileEditorView: View {
   let configuration: EditorConfiguration
   let errorMessage: String?
-  let onSave: (String, String, String, String) -> Void
+  let isSaving: Bool
+  let onSave: (ProfileDraft) -> Void
 
   @Environment(\.dismiss) private var dismiss
-  @State private var profileID: String
-  @State private var displayName: String
-  @State private var codexHome: String
-  @State private var guiDataDirectory: String
+  // Seeded once per presentation: each `sheet(item:)` configuration carries a fresh identity.
+  @State private var draft: ProfileDraft
   @FocusState private var focusedField: EditorField?
 
   init(
     configuration: EditorConfiguration,
     errorMessage: String?,
-    onSave: @escaping (String, String, String, String) -> Void
+    isSaving: Bool,
+    onSave: @escaping (ProfileDraft) -> Void
   ) {
     self.configuration = configuration
     self.errorMessage = errorMessage
+    self.isSaving = isSaving
     self.onSave = onSave
-    _profileID = State(initialValue: configuration.profileID)
-    _displayName = State(initialValue: configuration.displayName)
-    _codexHome = State(initialValue: configuration.codexHome)
-    _guiDataDirectory = State(initialValue: configuration.guiDataDirectory)
+    _draft = State(initialValue: configuration.draft)
   }
 
   var body: some View {
@@ -39,17 +37,16 @@ struct ProfileEditorView: View {
         Section {
           TextField(
             L10n.string("Profile ID"),
-            text: $profileID,
+            text: $draft.profileID,
             prompt: Text(verbatim: L10n.string("work"))
           )
           .font(.body.monospaced())
           .disabled(configuration.mode == .edit)
-          .textContentType(.username)
           .focused($focusedField, equals: .profileID)
           .onSubmit { focusedField = .displayName }
           TextField(
             L10n.string("Display name"),
-            text: $displayName,
+            text: $draft.displayName,
             prompt: Text(verbatim: L10n.string("Work"))
           )
           .focused($focusedField, equals: .displayName)
@@ -59,7 +56,7 @@ struct ProfileEditorView: View {
         Section {
           DirectoryField(
             title: "CODEX_HOME",
-            text: $codexHome,
+            text: $draft.codexHome,
             prompt: "~/.codex",
             focus: $focusedField,
             field: .codexHome,
@@ -67,7 +64,7 @@ struct ProfileEditorView: View {
           )
           DirectoryField(
             title: L10n.string("Desktop data directory (optional)"),
-            text: $guiDataDirectory,
+            text: $draft.guiDataDirectory,
             prompt: L10n.string("Managed automatically"),
             focus: $focusedField,
             field: .guiDataDirectory
@@ -100,11 +97,9 @@ struct ProfileEditorView: View {
       Divider()
       EditorFooter(
         isEditing: configuration.mode == .edit,
-        canSave: canSave,
+        canSave: canSave && !isSaving,
         onCancel: { dismiss() },
-        onSave: {
-          onSave(profileID, displayName, codexHome, guiDataDirectory)
-        }
+        onSave: { onSave(draft) }
       )
     }
     .frame(
@@ -121,16 +116,16 @@ struct ProfileEditorView: View {
   }
 
   private var canSave: Bool {
-    ProfileID.isValid(profileID)
-      && !displayName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
-      && isValidPath(codexHome)
-      && isValidPath(guiDataDirectory, allowingEmpty: true)
+    ProfileID.isValid(draft.profileID)
+      && !draft.displayName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+      && isValidPath(draft.codexHome, field: .codexHome)
+      && isValidPath(draft.guiDataDirectory, field: .guiDataDirectory, allowingEmpty: true)
   }
 
-  private func isValidPath(_ value: String, allowingEmpty: Bool = false) -> Bool {
+  private func isValidPath(_ value: String, field: PathField, allowingEmpty: Bool = false) -> Bool {
     let trimmed = value.trimmingCharacters(in: .whitespacesAndNewlines)
     if trimmed.isEmpty { return allowingEmpty }
-    return (try? Profile.fileURL(fromUserPath: trimmed, field: "Path")) != nil
+    return (try? Profile.fileURL(fromUserPath: trimmed, field: field)) != nil
   }
 }
 
@@ -188,12 +183,10 @@ private struct EditorFooter: View {
   private var buttons: some View {
     Button(L10n.string("Cancel"), role: .cancel, action: onCancel)
       .keyboardShortcut(.cancelAction)
-      .accessibilityLabel(L10n.string("Cancel"))
     Button(saveTitle, action: onSave)
       .keyboardShortcut(.defaultAction)
       .buttonStyle(.borderedProminent)
       .disabled(!canSave)
-      .accessibilityLabel(saveTitle)
   }
 
   private var saveTitle: String {
@@ -249,10 +242,19 @@ private struct DirectoryField: View {
     let panel = NSOpenPanel()
     panel.canChooseFiles = false
     panel.canChooseDirectories = true
+    // Panel-created folders inherit the umask (0755) and would fail the 0700 profile-directory check.
     panel.canCreateDirectories = false
     panel.allowsMultipleSelection = false
-    if panel.runModal() == .OK, let url = panel.url {
-      text = url.path
+    Task {
+      let response =
+        if let window = NSApplication.shared.keyWindow {
+          await panel.beginSheetModal(for: window)
+        } else {
+          panel.runModal()
+        }
+      if response == .OK, let url = panel.url {
+        text = url.path
+      }
     }
   }
 }

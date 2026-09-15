@@ -27,9 +27,9 @@ struct ProfileSidebar: View {
       }
       .scrollContentBackground(.hidden)
       .listStyle(.plain)
+      .accessibilityLabel(L10n.string("Codex profiles"))
     }
     .navigationTitle(L10n.string("Profiles"))
-    .accessibilityLabel(L10n.string("Codex profiles"))
   }
 }
 
