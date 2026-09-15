@@ -82,12 +82,10 @@ jobs:
       - name: Build and test natively
         timeout-minutes: 15
         run: |
-          # On this image a single `swift test` process covering both test targets never exits after every
-          # test passes (an orphaned swift-package remains); one run per target exits normally.
-          swift build --build-tests
-          swift test --skip-build --filter ProfileCoreTests
-          swift test --skip-build --filter OpenProfileManagerTests
-          LIBDISPATCH_COOPERATIVE_POOL_STRICT=1 swift test --skip-build --filter statusReadsDoNotOccupyCooperativePool
+          swift build
+          swift test
+          # The strict single-thread-pool status test runs in the macOS 26 job (Scripts/check.sh): on this
+          # image's Xcode 26.3, LIBDISPATCH_COOPERATIVE_POOL_STRICT also deadlocks SwiftPM's swift-package.
           Scripts/test_interactive_launch.sh
 
       - name: Package and run the Intel app slice
