@@ -1,16 +1,17 @@
-# Security audit — 0.1.10 release
+# Security audit — 0.1.11 release
 
-Date: 2026-09-15
+Date: 2026-09-23
 Scope: the complete source tree, local persistence, child-process protocol, CLI and GUI launch paths, Finder launchers, packaging scripts, the static GitHub Pages site, Remotion authoring sources, dependencies, and CI configuration.
 
 ## Result
 
-No confirmed or plausible security findings were identified in the 0.1.9 review diff, which changes native refresh concurrency, status-read threading, typed core error fields, standard menus, and the directory chooser presentation. The underlying application and distribution boundaries retain the comprehensive 0.1.7 review described below. Historical evidence remains labeled with the version it tested; the final section records 0.1.8 verification and its limits.
+The 0.1.11 full review (below) found one plausible cross-user exposure, fixed before release: the owner-only directory check could be satisfied on a volume that ignores ownership. No confirmed or plausible security findings were identified in the 0.1.9 review diff, which changes native refresh concurrency, status-read threading, typed core error fields, standard menus, and the directory chooser presentation. The underlying application and distribution boundaries retain the comprehensive 0.1.7 review described below. Historical evidence remains labeled with the version it tested; the final section records 0.1.8 verification and its limits.
 
 ## Fixed findings
 
 | Finding | Severity | Resolution | Evidence |
 | --- | --- | --- | --- |
+| A profile, GUI data, launcher or registry directory on a volume mounted with ownership ignored (`noowners`) passed the owner-only check, because every user appears to own every object there | Medium (cross-user effect documented by `mount(8)`, not observed with a second account) | Directory and ancestor validation reject volumes with `MNT_IGNORE_OWNERSHIP` through `fstatfs` on the validated descriptor, with a typed localized error; `opm doctor` reports the cause | Registry and doctor regressions attach a real `noowners` APFS image with `hdiutil`; both failed before the fix and pass after it |
 | A release could pass when TruffleHog was unavailable and ignored non-verified candidates | Low | Added a release mode that requires TruffleHog and fails on verified, unknown, or unverified results | Contract tests cover normal/release arguments, missing scanner, and invalid options; the real strict scan reports zero candidates |
 | The redownload gate validated the canonical app cryptographically without executing it | Low | Added an isolated-home smoke that checks the bundled CLI version and PTY behavior and waits for an on-screen native window | The public 0.1.6/build 8 release passed the bundled-version check, all three PTY flows, and visible-window proof before publication and after installation |
 | The Remotion authoring tree resolved Nano ID 3.3.17, which is affected by CVE-2026-67213 | High | Replaced the exact override with the compatible patched range `^3.3.18` and regenerated the npm lockfile at 3.3.18 | `npm audit --audit-level=low` reports zero vulnerabilities; the complete web/video gate passes under the pinned Node 24/npm 11 runtime |
@@ -136,3 +137,11 @@ Before release, Gitleaks again found an agent-session token recorded by SwiftPM 
 
 Both `v0.1.10-beta1` and `v0.1.10` resolve to `668f0c1` and are immutable. Beta remained a prerelease while 0.1.9 stayed latest; production then became latest stable. Both universal artifacts passed Developer ID verification, Apple notarization, stapling, Gatekeeper, matching dSYMs, SBOM/checksums, all four asset attestations, and downloaded execution. The installed public app and CLI passed signature, Gatekeeper, and packaged PTY/window checks; the single window sample was 588.862 ms at load averages 14.93/18.22/24.32, so no performance claim is made.
 
+## 0.1.11 full review
+
+A full-repository review ran in a structured coverage ledger: eight units covering private storage, per-profile isolation, app-server protocol parsing, launch identity, Finder launchers, the native app, CI and release, and the static site. Each unit was reviewed by its own source reviewer; two independent coverage critics found no gaps.
+
+- Fixed: the owner-only directory check relied on `st_uid` and mode bits alone. On a volume mounted with ownership ignored, macOS reports every object as owned by the inspecting user, so `opm profile add` accepted such a `CODEX_HOME` and `opm doctor` reported it as private. A sandboxed check on an APFS image attached with `-owners off` reproduced this; access by a second account follows from `mount(8)` but was not observed. Validation now rejects these volumes before creating anything.
+- Hardening notes, not findings: the release gate runs the dev-only video lint in the signing session; a status read handler already dispatched could touch a closed pipe, and cancellation signals only the direct app-server process; managed desktop data for a removed profile ID is reused if that ID is added again; Finder launchers are ad hoc signed without the hardened runtime; the Intel CI job is not a required status check.
+
+Before release, Gitleaks again found an agent-session token recorded by SwiftPM plugin caches in the ignored `.build` directory; the cache was removed and later builds ran without session variables.

@@ -11,6 +11,10 @@ Scripts/check.sh
 
 Use Swift 6.3/Xcode 26.6 or a compatible newer stable toolchain. Keep changes focused, add tests through the `ProfileCore` interface, and use Conventional Commit messages.
 
+## Agent instructions
+
+`CLAUDE.md` imports `AGENTS.md` because Claude Code, by default, reads a `CLAUDE.md` in the working directory or any parent instead of `AGENTS.md`, and some sessions cannot read `AGENTS.md` directly. Keep `AGENTS.md` to current rules, without model names or dated provenance. When editing it, check the change against [Claude Code's instruction-file guide](https://code.claude.com/docs/en/memory), [Claude's prompting best practices](https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/claude-prompting-best-practices), and [Codex's AGENTS.md guide](https://learn.chatgpt.com/docs/agent-configuration/agents-md).
+
 ## Product and security constraints
 
 - Do not add automatic quota-based profile switching or any rate-limit circumvention.

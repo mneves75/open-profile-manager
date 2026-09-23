@@ -16,7 +16,7 @@ Open Profile Manager is an unofficial, local-first launcher for the official Cod
 - Swift 6 language mode and complete concurrency checking are mandatory. Keep blocking work off the GUI's MainActor. Support macOS 15; gate newer APIs with `#available` and a fallback.
 - Apple documentation: before adopting Swift, SwiftUI or AppKit APIs from macOS 26 or later, read the matching guide in `/Applications/Xcode.app/Contents/PlugIns/IDEIntelligenceChat.framework/Versions/A/Resources/AdditionalDocumentation` (the same path under `Xcode-beta.app` only for an installed beta SDK). developer.apple.com renders with JavaScript, so fetch Markdown: append `.md` to `/documentation` URLs (`https://developer.apple.com/documentation/swiftui/view.md`); for `/design` and `/tutorials`, also insert `/tutorials/data` before the path (`https://developer.apple.com/tutorials/data/design/human-interface-guidelines/buttons.md`); use `.json` for pages without Markdown, such as tutorial overviews.
 - Use `Process.executableURL`, explicit argument arrays and environments; never a shell for user-controlled input. Treat identifiers, paths, app metadata and child output as untrusted.
-- Preserve atomic writes, descriptor-relative I/O, cross-process writer locking, registry/protocol bounds and path isolation. Profile directories are `0700`, files `0600`, without extended ACLs.
+- Preserve atomic writes, descriptor-relative I/O, cross-process writer locking, registry/protocol bounds and path isolation. Profile directories are `0700`, files `0600`, without extended ACLs, on volumes that enforce ownership.
 - Prefer deletion and simple modules over compatibility layers or speculative abstractions. Reuse existing capabilities; keep dependencies minimal and pinned. No project-owned network service or telemetry.
 - Preserve native `en-US`/`pt-BR` localization and English CLI/JSON contracts. Keep personal paths and account details out of public QA artifacts.
 
@@ -26,7 +26,7 @@ Read `PROJECT_STATUS.md`, `MEMORY.md`, relevant recent `memory/` entries, then `
 
 Plan substantial changes, then finish authorized implementation and verification. User instructions outrank skill procedure; name the exact conflicting instruction if blocked. No push, release, installation over user apps or branch/worktree change without authorization. Delegate independent substantial work with disjoint ownership; review returned diffs and proof. Keep one writer and one build/package operation per checkout.
 
-Batch independent reads, give brief progress updates, preserve decisions and unfinished proof across compaction, and stop once acceptance checks pass. Keep model/effort settings in the harness. This follows current [Fable 5.1](https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/prompting-claude-fable-5-1) and [GPT-6 Astra](https://developers.openai.com/api/docs/guides/latest-model?model=gpt-6-astra) guidance (checked 2026-09-04): clear scope and completion criteria, targeted edits, proportionate tests, no repeated prompting rules.
+Batch independent reads, give brief progress updates, preserve decisions and unfinished proof across compaction, and stop once acceptance checks pass. Keep model/effort settings in the harness.
 
 ## Verification
 

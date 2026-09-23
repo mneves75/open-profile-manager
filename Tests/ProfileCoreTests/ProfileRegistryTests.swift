@@ -446,6 +446,45 @@ struct ProfileRegistryTests {
     }
   }
 
+  @Test("Profile directories on volumes that ignore ownership are rejected")
+  func ownershipIgnoringVolumeRejection() throws {
+    let root = try temporaryDirectory()
+    defer { try? FileManager.default.removeItem(at: root) }
+    let volume = try OwnershipIgnoringVolume(in: root)
+    defer { volume.detach() }
+    let codexHome = volume.mountPoint.appendingPathComponent("codex", isDirectory: true)
+    let registry = try ProfileRegistry(registryURL: root.appendingPathComponent("profiles.json"))
+    let profile = try Profile(
+      id: ProfileID("external"),
+      displayName: "External",
+      codexHome: codexHome
+    )
+
+    expectOwnershipNotEnforced { try registry.add(profile) }
+    #expect(!FileManager.default.fileExists(atPath: codexHome.path))
+    #expect(try registry.list().isEmpty)
+
+    try FileManager.default.createDirectory(at: codexHome, withIntermediateDirectories: false)
+    #expect(chmod(codexHome.path, 0o700) == 0)
+    expectOwnershipNotEnforced {
+      try PrivateDirectory.validate(codexHome, operation: .useCodexHome)
+    }
+    expectOwnershipNotEnforced {
+      try PrivateDirectory.validateCreationPath(
+        codexHome.appendingPathComponent("missing", isDirectory: true),
+        operation: .useCodexHome
+      )
+    }
+  }
+
+  private func expectOwnershipNotEnforced(_ operation: () throws -> Void) {
+    let error = #expect(throws: ProfileCoreError.self) { try operation() }
+    guard case .ownershipNotEnforced = error else {
+      Issue.record("Expected ownershipNotEnforced, got \(String(describing: error))")
+      return
+    }
+  }
+
   private func temporaryDirectory() throws -> URL {
     let url = FileManager.default.temporaryDirectory
       .appendingPathComponent("ProfileRegistryTests-\(UUID().uuidString)", isDirectory: true)

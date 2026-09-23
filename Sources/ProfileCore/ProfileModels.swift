@@ -19,6 +19,7 @@ public enum ProfileCoreError: Error, Equatable, LocalizedError, Sendable {
   case registryTooLarge
   case tooManyProfiles
   case unsafeDirectoryPermissions(String)
+  case ownershipNotEnforced(String)
 
   public var errorDescription: String? {
     switch self {
@@ -56,6 +57,8 @@ public enum ProfileCoreError: Error, Equatable, LocalizedError, Sendable {
       "The profile registry cannot contain more than 128 profiles."
     case .unsafeDirectoryPermissions(let path):
       "Directory '\(path)' must be owned by you with permissions 0700. Update its permissions, then retry."
+    case .ownershipNotEnforced(let path):
+      "Directory '\(path)' is on a volume that ignores file ownership, so other users can open it. Choose a directory on a volume that enforces ownership."
     }
   }
 }
@@ -364,5 +367,5 @@ public struct ProfileUpdate: Sendable {
 }
 
 public enum OPMVersion {
-  public static let current = "0.1.10"
+  public static let current = "0.1.11"
 }

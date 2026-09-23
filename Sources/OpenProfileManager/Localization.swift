@@ -73,6 +73,11 @@ enum L10n {
         "Directory '%@' must be owned by you with permissions 0700. Update its permissions, then retry.",
         path
       )
+    case .ownershipNotEnforced(let path):
+      return string(
+        "Directory '%@' is on a volume that ignores file ownership, so other users can open it. Choose a directory on a volume that enforces ownership.",
+        path
+      )
     }
   }
 

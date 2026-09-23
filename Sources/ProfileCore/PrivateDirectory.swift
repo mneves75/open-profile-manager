@@ -56,6 +56,7 @@ enum PrivateDirectory {
           try validatePrivateDirectory(
             descriptor: childDescriptor,
             operation: operation,
+            requestedPath: url.path,
             displayPath: index == components.indices.last ? url.path : nil
           )
         } catch {
@@ -64,7 +65,11 @@ enum PrivateDirectory {
         }
       } else {
         do {
-          try validateTrustedAncestor(descriptor: childDescriptor, operation: operation)
+          try validateTrustedAncestor(
+            descriptor: childDescriptor,
+            operation: operation,
+            requestedPath: url.path
+          )
         } catch {
           _ = close(childDescriptor)
           throw error
@@ -94,6 +99,7 @@ enum PrivateDirectory {
       try validatePrivateDirectory(
         descriptor: descriptor,
         operation: operation,
+        requestedPath: url.path,
         displayPath: url.path
       )
     } catch {
@@ -134,7 +140,11 @@ enum PrivateDirectory {
         throw ProfileCoreError.filesystem(operation: operation)
       }
       do {
-        try validateTrustedAncestor(descriptor: childDescriptor, operation: operation)
+        try validateTrustedAncestor(
+          descriptor: childDescriptor,
+          operation: operation,
+          requestedPath: url.path
+        )
       } catch {
         _ = close(childDescriptor)
         _ = close(descriptor)
@@ -212,8 +222,14 @@ enum PrivateDirectory {
   private static func validatePrivateDirectory(
     descriptor: Int32,
     operation: FilesystemOperation,
+    requestedPath: String,
     displayPath: String? = nil
   ) throws {
+    try validateOwnershipEnforced(
+      descriptor: descriptor,
+      operation: operation,
+      requestedPath: requestedPath
+    )
     var information = stat()
     guard fstat(descriptor, &information) == 0,
       information.st_mode & S_IFMT == S_IFDIR,
@@ -231,9 +247,16 @@ enum PrivateDirectory {
     try validateNoExtendedACL(descriptor: descriptor, operation: operation)
   }
 
-  private static func validateTrustedAncestor(descriptor: Int32, operation: FilesystemOperation)
-    throws
-  {
+  private static func validateTrustedAncestor(
+    descriptor: Int32,
+    operation: FilesystemOperation,
+    requestedPath: String
+  ) throws {
+    try validateOwnershipEnforced(
+      descriptor: descriptor,
+      operation: operation,
+      requestedPath: requestedPath
+    )
     var information = stat()
     let currentUser = geteuid()
     guard fstat(descriptor, &information) == 0,
@@ -249,6 +272,22 @@ enum PrivateDirectory {
       throw ProfileCoreError.filesystem(operation: operation)
     }
     try validateTrustedAncestorACL(descriptor: descriptor, operation: operation)
+  }
+
+  // Owner and mode checks separate users only where the volume records ownership: on a
+  // `noowners` volume every object appears to belong to whichever user inspects it.
+  private static func validateOwnershipEnforced(
+    descriptor: Int32,
+    operation: FilesystemOperation,
+    requestedPath: String
+  ) throws {
+    var information = statfs()
+    guard fstatfs(descriptor, &information) == 0 else {
+      throw ProfileCoreError.filesystem(operation: operation)
+    }
+    guard information.f_flags & UInt32(MNT_IGNORE_OWNERSHIP) == 0 else {
+      throw ProfileCoreError.ownershipNotEnforced(requestedPath)
+    }
   }
 
   private static func validateTrustedAncestorACL(descriptor: Int32, operation: FilesystemOperation)
@@ -328,7 +367,11 @@ enum PrivateDirectory {
         return
       }
       do {
-        try validateTrustedAncestor(descriptor: childDescriptor, operation: operation)
+        try validateTrustedAncestor(
+          descriptor: childDescriptor,
+          operation: operation,
+          requestedPath: url.path
+        )
       } catch {
         _ = close(childDescriptor)
         throw error
@@ -339,6 +382,7 @@ enum PrivateDirectory {
     try validatePrivateDirectory(
       descriptor: descriptor,
       operation: operation,
+      requestedPath: url.path,
       displayPath: url.path
     )
   }

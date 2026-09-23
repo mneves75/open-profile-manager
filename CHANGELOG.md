@@ -2,7 +2,15 @@
 
 All notable changes to this project are documented in this file. The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and the project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [0.1.11] - Unreleased
+## [0.1.11] - 2026-09-23
+
+### Security
+
+- Reject profile, GUI data, launcher and registry directories on volumes that ignore file ownership. On such a volume every local user appears to own every file, so the owner-only check could accept a `CODEX_HOME` that other users can open. `opm doctor` now reports these directories as failures with a specific message.
+
+### Changed
+
+- Remove dated model references from the agent instructions and document how `CLAUDE.md` and `AGENTS.md` load for contributors.
 
 ## [0.1.10] - 2026-09-15
 

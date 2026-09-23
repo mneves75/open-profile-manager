@@ -171,6 +171,8 @@ public struct DoctorService: Sendable {
           state: .pass,
           detail: "Directory does not exist yet and will be created privately on launch."
         )
+      } catch ProfileCoreError.ownershipNotEnforced {
+        return ownershipNotEnforcedCheck(name: name)
       } catch {
         return DoctorCheck(
           name: name,
@@ -182,6 +184,8 @@ public struct DoctorService: Sendable {
     }
     do {
       try PrivateDirectory.validate(url, operation: .validateManagedDirectory)
+    } catch ProfileCoreError.ownershipNotEnforced {
+      return ownershipNotEnforcedCheck(name: name)
     } catch {
       return DoctorCheck(
         name: name,
@@ -193,6 +197,16 @@ public struct DoctorService: Sendable {
       )
     }
     return DoctorCheck(name: name, state: .pass, detail: "Directory is private.")
+  }
+
+  private func ownershipNotEnforcedCheck(name: String) -> DoctorCheck {
+    DoctorCheck(
+      name: name,
+      state: .failure,
+      detail: "Directory is on a volume that ignores file ownership, so other users can open it.",
+      remediation:
+        "Choose a directory on a volume that enforces ownership, or turn off \"Ignore ownership on this volume\" in the volume's Get Info window."
+    )
   }
 
 }
