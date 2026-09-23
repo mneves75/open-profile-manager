@@ -2,7 +2,7 @@
 
 ## Current release line
 
-Version 0.1.10/build 12 is the latest immutable, signed, notarized, and stapled [stable release](https://github.com/mneves75/open-profile-manager/releases/tag/v0.1.10). The preceding `v0.1.10-beta1` is a GitHub prerelease. Both tags resolve to `668f0c1`; version 0.1.11 is the next unreleased target.
+Version 0.1.11/build 13 is the latest immutable, signed, notarized, and stapled [stable release](https://github.com/mneves75/open-profile-manager/releases/tag/v0.1.11). The preceding `v0.1.11-beta1` is a GitHub prerelease. Both tags resolve to `0a60fc0`; version 0.1.12 is the next unreleased target.
 
 ## Scope
 
@@ -23,6 +23,8 @@ Version 0.1.10/build 12 is the latest immutable, signed, notarized, and stapled 
 - Windows or Linux GUI support in 0.1.x
 
 ## Release evidence
+
+Version 0.1.11 rejects profile, GUI data, launcher and registry directories on volumes that ignore file ownership, where macOS reports every object as owned by whoever inspects it, and has `opm doctor` report the cause. It also removes dated model references from the agent instructions. A full security review (eight coverage units, two clean coverage critics, independent validation) found this as its only lead; a sandboxed check reproduced `opm` accepting such a `CODEX_HOME`, while a second account's access follows from `mount(8)` and was not observed. Registry and doctor regressions that attach a real `noowners` disk image failed before and pass after the fix. The full local gate under stable Xcode, P3 autoreview (scoped-clean), an independent verification on a different model, and pull-request/main CI (including the Intel job) and CodeQL passed. Both beta and production passed Apple notarization, Developer ID and Gatekeeper checks, stapling, SBOM/checksums, all four asset attestations, and downloaded CLI/native smoke tests; the first beta attempt stopped before tagging when Apple's timestamp service did not answer, and the retry passed. The public production app and CLI were installed and passed signature, Gatekeeper, and packaged smoke checks.
 
 Version 0.1.10 cancels superseded native refreshes and stops their running app-server reads, rejects profile paths that Foundation would truncate (including through profile-editor tilde expansion), fixes duplicated editor field labels, and adds native x86_64 build, test, packaging, and app-launch checks on GitHub's `macos-15-intel` runner. That runner found the path-truncation bug on the macOS 15 floor. Regression tests failed before and passed after each fix; all 66 Swift tests, the full local gate, a security source review, two-axis code review, P3 autoreview (scoped-clean), and pull-request/main CI and CodeQL passed. The editor sheet and directory chooser were visually inspected in an isolated pt-BR instance: the chooser opens as a sheet attached to the editor, and the label fix was confirmed with an app-window capture. The Intel job initially hung because `LIBDISPATCH_COOPERATIVE_POOL_STRICT` also constrains SwiftPM's own process on that image; that single strict-pool test now runs only in the macOS 26 job. Both beta and production passed Apple notarization, universal architecture and Developer ID checks, stapling, Gatekeeper, dSYMs, SBOM/checksums, all four asset attestations, and downloaded CLI/native smoke tests. The public production app and CLI were installed and passed signature, Gatekeeper, and packaged smoke checks.
 
