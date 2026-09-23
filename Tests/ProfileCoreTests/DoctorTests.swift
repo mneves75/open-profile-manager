@@ -92,6 +92,36 @@ struct DoctorTests {
     #expect(guiCheck(in: guiReport)?.state == .failure)
   }
 
+  @Test("Doctor reports profile directories on volumes that ignore ownership")
+  func ownershipIgnoringVolume() throws {
+    let root = try privateTemporaryDirectory()
+    defer { try? FileManager.default.removeItem(at: root) }
+    let volume = try OwnershipIgnoringVolume(in: root)
+    defer { volume.detach() }
+    let registry = try ProfileRegistry(
+      registryURL: root.appendingPathComponent("registry/profiles.json"),
+      applicationSupportDirectory: root.appendingPathComponent("support", isDirectory: true)
+    )
+    let codexHome = volume.mountPoint.appendingPathComponent("codex", isDirectory: true)
+    let profile = try Profile(
+      id: ProfileID("automatic"),
+      displayName: "Automatic",
+      codexHome: codexHome,
+      guiDataDirectory: volume.mountPoint.appendingPathComponent("gui", isDirectory: true)
+    )
+
+    let report = DoctorService().run(
+      registry: registry,
+      profile: profile,
+      environment: ["PATH": "/usr/bin:/bin"]
+    )
+    for name in ["CODEX_HOME (automatic)", "GUI data directory (automatic)"] {
+      let check = report.checks.first { $0.name == name }
+      #expect(check?.state == .failure)
+      #expect(check?.detail.contains("ignores file ownership") == true)
+    }
+  }
+
   private func guiCheck(in report: DoctorReport) -> DoctorCheck? {
     report.checks.first { $0.name == "GUI data directory (automatic)" }
   }
