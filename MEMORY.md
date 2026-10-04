@@ -17,9 +17,9 @@ Ship an unofficial MIT-licensed, local-first profile manager for Codex CLI and t
 
 ## Active work
 
-- Version 0.1.11/build 13 is the current source line and latest published release; 0.1.12 is the next unreleased target.
-- The public notarized app is installed at `~/Applications/Open Profile Manager.app` and the CLI at `~/.local/bin/opm`; version 0.1.11/build 13, checksum, attestation, signature, notarization, Gatekeeper and packaged smoke passed. Release evidence is in PROJECT_STATUS.md and memory/2026-09-23.md.
-- Follow-ups from the 0.1.11 review: a rejected `profile add` can leave an empty unregistered `CODEX_HOME`; hardening notes are listed in docs/SECURITY_AUDIT.md.
+- Version 0.1.12/build 14 is the current source line and latest published release; 0.1.13 is the next unreleased target.
+- The public notarized app is installed at `~/Applications/Open Profile Manager.app` and the CLI at `~/.local/bin/opm`; version 0.1.12/build 14, checksum, attestation, signature, notarization, Gatekeeper, staple and packaged smoke passed. Release evidence is in PROJECT_STATUS.md and memory/2026-10-04.md.
+- Remaining hardening notes (not findings) are listed in docs/SECURITY_AUDIT.md under 0.1.11 and 0.1.12.
 
 ## Project environment
 
@@ -29,6 +29,7 @@ Ship an unofficial MIT-licensed, local-first profile manager for Codex CLI and t
 
 ## Verified state
 
+- Version 0.1.12 and its preceding beta1 are immutable releases from `0bb57fe`, with all four asset attestations verified. The full gate passes under stable Xcode 27.0 (65 core, 6 native and the strict pool test) and Node 26; CI passes natively on x86_64. Verify release assets with `gh release verify-asset`; `gh attestation verify` looks for SLSA provenance and returns 404.
 - Version 0.1.11 and its preceding beta1 are immutable releases from `0a60fc0`, with all four asset attestations verified. The full gate passes under stable Xcode 27.0 (62 core, 6 native and the strict pool test), and CI passes natively on x86_64; the `noowners` regressions attach disk images with `hdiutil` without root on GitHub runners.
 - Version 0.1.10 and its preceding beta1 are immutable releases from `668f0c1`, with all four asset attestations verified. Sixty-six tests pass locally under Xcode 27.0 and natively on x86_64 in CI (`macos-15-intel`, Xcode 26.3); the strict single-thread-pool test runs only in the macOS 26 job because the variable deadlocks SwiftPM on the Intel image.
 - Version 0.1.9 and its preceding beta1 are immutable releases from `70da69e`, with all four asset attestations verified directly. Sixty-three tests pass under Xcode 27.0, plus a strict single-thread cooperative-pool status test run by `Scripts/check.sh`.
