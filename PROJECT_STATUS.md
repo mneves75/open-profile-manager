@@ -2,7 +2,7 @@
 
 ## Current release line
 
-Version 0.1.12/build 14 is the latest immutable, signed, notarized, and stapled [stable release](https://github.com/mneves75/open-profile-manager/releases/tag/v0.1.12). The preceding `v0.1.12-beta1` is a GitHub prerelease. Both tags resolve to `0bb57fe`; version 0.1.13 is the next unreleased target.
+Version 0.1.13/build 15 is the latest immutable, signed, notarized, and stapled [stable release](https://github.com/mneves75/open-profile-manager/releases/tag/v0.1.13). The preceding `v0.1.13-beta1` is a GitHub prerelease. Both tags resolve to `b1c881b`; version 0.1.14 is the next unreleased target.
 
 ## Scope
 
@@ -23,6 +23,8 @@ Version 0.1.12/build 14 is the latest immutable, signed, notarized, and stapled 
 - Windows or Linux GUI support in 0.1.x
 
 ## Release evidence
+
+Version 0.1.13 is a maintenance release that folds all open Dependabot updates into one tested change: pinned CI actions (each SHA verified against its tag), Remotion 4.0.523 and ESLint 10.10.0 for the development-only video tooling, and removal of the `brace-expansion` overrides that no longer match any package. App and CLI behavior is unchanged. One sampled frame of each of the three product videos rendered byte-identically under Remotion 4.0.505 and 4.0.523. The full local gate under stable Xcode 27.0, release-mode secret scans, P3 autoreview (scoped-clean), and pull-request/main CI (including the Intel job) and CodeQL passed. Both beta and production passed Apple notarization, Developer ID and Gatekeeper checks, stapling, SBOM/checksums, all four asset attestations, and downloaded CLI/native smoke tests. The public production app and CLI were installed and passed checksum, attestation, signature, Gatekeeper, staple, and packaged smoke checks.
 
 Version 0.1.12 removes the directories that a rejected profile add or edit created, so a failed change no longer leaves an empty, unregistered `CODEX_HOME` behind; only directories the failed call created are removed, only while empty, and never after the new registry is published. It also finishes the Node 26 migration of the site and video tooling and clears seventeen high-severity npm advisories in the development-only video toolchain. Regression tests failed before and pass after the fix, and a planted mutant that removes a pre-existing directory is caught. The full local gate (65 core, 6 native and the strict pool test), release-mode secret scans, two-axis code review, a scoped security review of the deletion path, P3 autoreview (scoped-clean), and pull-request/main CI (including the Intel job) and CodeQL passed. An independent verifier on a different model passed the rollback, Node, dependency and metadata criteria, including the red-before run and real CLI controls with a positive control; its sandbox could not attach disk images, and CI ran those two tests. The first beta attempt stopped before tagging because a scheduled disk cleanup removed `video/node_modules`; the retry passed. Both beta and production passed Apple notarization, Developer ID and Gatekeeper checks, stapling, SBOM/checksums, all four asset attestations, and downloaded CLI/native smoke tests. The public production app and CLI were installed and passed checksum, attestation, signature, Gatekeeper, staple, and packaged smoke checks.
 
