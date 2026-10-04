@@ -90,7 +90,7 @@ See [SECURITY.md](SECURITY.md) for vulnerability reporting, [the threat model](d
 
 ## Project status
 
-Version 0.1.12/build 14 is the latest [published stable release](https://github.com/mneves75/open-profile-manager/releases/tag/v0.1.12), following the verified `v0.1.12-beta1` prerelease. Both releases are immutable, Developer ID-signed, notarized, and stapled. Version 0.1.13 is the next unreleased target. See [PROJECT_STATUS.md](PROJECT_STATUS.md), [CHANGELOG.md](CHANGELOG.md), and the [release procedure](docs/RELEASING.md).
+Version 0.1.13/build 15 is the latest [published stable release](https://github.com/mneves75/open-profile-manager/releases/tag/v0.1.13), following the verified `v0.1.13-beta1` prerelease. Both releases are immutable, Developer ID-signed, notarized, and stapled. Version 0.1.14 is the next unreleased target. See [PROJECT_STATUS.md](PROJECT_STATUS.md), [CHANGELOG.md](CHANGELOG.md), and the [release procedure](docs/RELEASING.md).
 
 ## Contributing
 
