@@ -10,8 +10,8 @@ if [[ "$MODE" != all && "$MODE" != --site-only ]]; then
   exit 64
 fi
 
-if [[ $(node --version) != v24.* ]]; then
-  echo "Node 24 is required for web and video checks" >&2
+if [[ $(node --version) != v26.* ]]; then
+  echo "Node 26 is required for web and video checks" >&2
   exit 1
 fi
 node --check docs/app.js

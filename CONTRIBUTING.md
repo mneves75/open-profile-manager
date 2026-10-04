@@ -38,7 +38,7 @@ For product-site timing changes, follow the repeatable conditions in [docs/PERFO
 
 ## Fast local verification
 
-Select Node 24 from `.nvmrc` and npm 11 before bootstrap. Bootstrap installs the locked video dependencies and the local lint hook. Run `npm ci --prefix video` again when `video/package-lock.json` changes; verification reuses that installation. CI installs from the lockfile before running the same gate.
+Select Node 26 from `.nvmrc` and npm 11 before bootstrap. Bootstrap installs the locked video dependencies and the local lint hook. Run `npm ci --prefix video` again when `video/package-lock.json` changes; verification reuses that installation. CI installs from the lockfile before running the same gate.
 
 For Swift changes, start with `swift test --filter ProfileCoreTests` (or the affected test). For video source, use `npm --prefix video run lint`; for the website, use `Scripts/check_web_video.sh --site-only`. Run `Scripts/check.sh` before committing. `Scripts/launch.sh` always packages current debug source before opening the app.
 

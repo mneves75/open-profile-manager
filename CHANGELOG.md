@@ -2,7 +2,19 @@
 
 All notable changes to this project are documented in this file. The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and the project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [0.1.12] - Unreleased
+## [0.1.12] - 2026-10-04
+
+### Fixed
+
+- Remove the directories that a rejected `opm profile add` or native-app profile add or edit created. Previously a profile whose GUI data directory was unsafe, or whose registry update failed, left an empty, unregistered `CODEX_HOME` (and any parent directories created for it) behind. Only directories created by the failed call are removed, and only while empty; existing directories are never touched.
+
+### Security
+
+- Update the video authoring toolchain's `fast-uri` (3.1.8), `brace-expansion` (1.1.21, 2.1.7) and `typescript-eslint` (8.70.1, which drops the unpatched `braces`/`micromatch` chain) to clear seventeen high-severity npm advisories. These are development-only dependencies; the released app and CLI contain no JavaScript.
+
+### Changed
+
+- Require Node 26 for the site and video tooling, matching `.nvmrc`; CI and Pages read the version from `.nvmrc`. Node 26 enters long-term support on 2026-10-28.
 
 ## [0.1.11] - 2026-09-23
 

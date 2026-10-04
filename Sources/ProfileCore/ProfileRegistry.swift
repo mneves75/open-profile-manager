@@ -62,13 +62,9 @@ public struct ProfileRegistry: Sendable {
         throw ProfileCoreError.tooManyProfiles
       }
       try validateDirectoryIsolation(profile, against: registry.profiles)
-      try PrivateDirectory.ensure(profile.codexHome, operation: .createCodexHome)
-      if let guiDataDirectory = profile.guiDataDirectory {
-        try PrivateDirectory.ensure(guiDataDirectory, operation: .createGUIDataDirectory)
-      }
       registry.profiles.append(profile)
       registry.profiles.sort { $0.id < $1.id }
-      try save(registry, directoryDescriptor: directoryDescriptor)
+      try saveCreatingDirectories(for: profile, registry, directoryDescriptor: directoryDescriptor)
       return profile
     }
   }
@@ -93,12 +89,8 @@ public struct ProfileRegistry: Sendable {
         updated,
         against: registry.profiles.filter { $0.id != id }
       )
-      try PrivateDirectory.ensure(updated.codexHome, operation: .createCodexHome)
-      if let guiDataDirectory = updated.guiDataDirectory {
-        try PrivateDirectory.ensure(guiDataDirectory, operation: .createGUIDataDirectory)
-      }
       registry.profiles[index] = updated
-      try save(registry, directoryDescriptor: directoryDescriptor)
+      try saveCreatingDirectories(for: updated, registry, directoryDescriptor: directoryDescriptor)
       return updated
     }
   }
@@ -192,7 +184,40 @@ public struct ProfileRegistry: Sendable {
     return registry
   }
 
+  /// Creates the profile's directories, then saves the registry. A failure before the new
+  /// registry replaces the old one removes the directories this call created, so a rejected
+  /// change leaves no empty, unregistered profile storage behind.
+  private func saveCreatingDirectories(
+    for profile: Profile,
+    _ registry: RegistryFile,
+    directoryDescriptor: Int32
+  ) throws {
+    var createdDirectories: [CreatedPrivateDirectories] = []
+    do {
+      createdDirectories.append(
+        try PrivateDirectory.ensure(profile.codexHome, operation: .createCodexHome)
+      )
+      if let guiDataDirectory = profile.guiDataDirectory {
+        createdDirectories.append(
+          try PrivateDirectory.ensure(guiDataDirectory, operation: .createGUIDataDirectory)
+        )
+      }
+      try replaceRegistry(registry, directoryDescriptor: directoryDescriptor)
+    } catch {
+      for directories in createdDirectories.reversed() {
+        directories.removeEmpty()
+      }
+      throw error
+    }
+    try syncRegistryDirectory(directoryDescriptor)
+  }
+
   private func save(_ registry: RegistryFile, directoryDescriptor: Int32) throws {
+    try replaceRegistry(registry, directoryDescriptor: directoryDescriptor)
+    try syncRegistryDirectory(directoryDescriptor)
+  }
+
+  private func replaceRegistry(_ registry: RegistryFile, directoryDescriptor: Int32) throws {
     let encoder = JSONEncoder()
     encoder.outputFormatting = [.prettyPrinted, .sortedKeys, .withoutEscapingSlashes]
     let data: Data
@@ -276,18 +301,21 @@ public struct ProfileRegistry: Sendable {
         throw ProfileCoreError.filesystem(operation: .replaceRegistry)
       }
       shouldRemoveTemporary = false
-      var syncResult: Int32
-      repeat {
-        syncResult = fsync(directoryDescriptor)
-      } while syncResult != 0 && errno == EINTR
-      guard syncResult == 0 || errno == EINVAL || errno == EOPNOTSUPP else {
-        throw ProfileCoreError.filesystem(operation: .secureRegistryDirectory)
-      }
     } catch {
       if descriptorIsOpen {
         _ = close(descriptor)
       }
       throw error
+    }
+  }
+
+  private func syncRegistryDirectory(_ directoryDescriptor: Int32) throws {
+    var syncResult: Int32
+    repeat {
+      syncResult = fsync(directoryDescriptor)
+    } while syncResult != 0 && errno == EINTR
+    guard syncResult == 0 || errno == EINVAL || errno == EOPNOTSUPP else {
+      throw ProfileCoreError.filesystem(operation: .secureRegistryDirectory)
     }
   }
 

@@ -431,6 +431,24 @@ struct ProfileRegistryTests {
     #expect(mode(at: child) == 0o700)
   }
 
+  @Test("Rolling back created directories removes only empty ones, deepest first")
+  func createdDirectoryRollback() throws {
+    let root = try temporaryDirectory()
+    defer { try? FileManager.default.removeItem(at: root) }
+    let parent = root.appendingPathComponent("parent", isDirectory: true)
+    let child = parent.appendingPathComponent("child", isDirectory: true)
+
+    try PrivateDirectory.ensure(child, operation: .createCodexHome).removeEmpty()
+    #expect(!FileManager.default.fileExists(atPath: parent.path))
+    #expect(mode(at: root) == 0o700)
+
+    let created = try PrivateDirectory.ensure(child, operation: .createCodexHome)
+    try Data("kept".utf8).write(to: child.appendingPathComponent("config.toml"))
+    created.removeEmpty()
+    #expect(
+      FileManager.default.fileExists(atPath: child.appendingPathComponent("config.toml").path))
+  }
+
   @Test("Private directories beneath untrusted writable ancestors are rejected")
   func writableAncestorRejection() throws {
     let root = try temporaryDirectory()
@@ -474,6 +492,81 @@ struct ProfileRegistryTests {
         codexHome.appendingPathComponent("missing", isDirectory: true),
         operation: .useCodexHome
       )
+    }
+  }
+
+  @Test("A rejected add removes only the directories it created")
+  func rejectedAddRollsBackCreatedDirectories() throws {
+    let root = try temporaryDirectory()
+    defer { try? FileManager.default.removeItem(at: root) }
+    let registry = try ProfileRegistry(registryURL: root.appendingPathComponent("profiles.json"))
+    let unsafeGUI = try unsafeDirectory(in: root)
+    let newParent = root.appendingPathComponent("new-parent", isDirectory: true)
+    let newProfile = try Profile(
+      id: ProfileID("new-home"),
+      displayName: "New home",
+      codexHome: newParent.appendingPathComponent("codex", isDirectory: true),
+      guiDataDirectory: unsafeGUI
+    )
+
+    expectUnsafePermissions { try registry.add(newProfile) }
+    #expect(!FileManager.default.fileExists(atPath: newParent.path))
+    #expect(mode(at: unsafeGUI) == 0o755)
+    #expect(try registry.list().isEmpty)
+
+    let existingHome = root.appendingPathComponent("existing-home", isDirectory: true)
+    try FileManager.default.createDirectory(at: existingHome, withIntermediateDirectories: false)
+    #expect(chmod(existingHome.path, 0o700) == 0)
+    let existingProfile = try Profile(
+      id: ProfileID("existing-home"),
+      displayName: "Existing home",
+      codexHome: existingHome,
+      guiDataDirectory: unsafeGUI
+    )
+
+    expectUnsafePermissions { try registry.add(existingProfile) }
+    #expect(mode(at: existingHome) == 0o700)
+    #expect(try registry.list().isEmpty)
+  }
+
+  @Test("A rejected update keeps the profile's directories and removes new ones")
+  func rejectedUpdateRollsBackCreatedDirectories() throws {
+    let root = try temporaryDirectory()
+    defer { try? FileManager.default.removeItem(at: root) }
+    let registry = try ProfileRegistry(registryURL: root.appendingPathComponent("profiles.json"))
+    let currentHome = root.appendingPathComponent("current-home", isDirectory: true)
+    let profile = try Profile(
+      id: ProfileID("work"),
+      displayName: "Work",
+      codexHome: currentHome
+    )
+    try registry.add(profile)
+    let newParent = root.appendingPathComponent("new-parent", isDirectory: true)
+    let update = ProfileUpdate(
+      codexHome: newParent.appendingPathComponent("codex", isDirectory: true),
+      guiDataDirectory: try unsafeDirectory(in: root)
+    )
+
+    expectUnsafePermissions { try registry.update(profile.id, with: update) }
+    #expect(!FileManager.default.fileExists(atPath: newParent.path))
+    #expect(mode(at: currentHome) == 0o700)
+    #expect(try registry.list() == [profile])
+  }
+
+  private func unsafeDirectory(in root: URL) throws -> URL {
+    let directory = root.appendingPathComponent("unsafe-gui", isDirectory: true)
+    try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: false)
+    guard chmod(directory.path, 0o755) == 0 else {
+      throw CocoaError(.fileWriteNoPermission)
+    }
+    return directory
+  }
+
+  private func expectUnsafePermissions(_ operation: () throws -> Void) {
+    let error = #expect(throws: ProfileCoreError.self) { try operation() }
+    guard case .unsafeDirectoryPermissions = error else {
+      Issue.record("Expected unsafeDirectoryPermissions, got \(String(describing: error))")
+      return
     }
   }
 
