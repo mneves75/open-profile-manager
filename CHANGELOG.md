@@ -2,7 +2,15 @@
 
 All notable changes to this project are documented in this file. The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and the project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [0.1.13] - Unreleased
+## [0.1.13] - 2026-10-04
+
+### Changed
+
+- Update the development-only video toolchain to Remotion 4.0.523 and ESLint 10.10.0. Sampled frames of all three product videos render byte-identically to Remotion 4.0.505.
+- Update the pinned CI actions: `actions/cache` 6.1.0, `actions/deploy-pages` 5.0.1, `anchore/sbom-action` 0.24.2 and `github/codeql-action` 4.38.0.
+- Remove the `brace-expansion` overrides, which no longer match any package after the ESLint update.
+
+The app and CLI behave as in 0.1.12.
 
 ## [0.1.12] - 2026-10-04
 
