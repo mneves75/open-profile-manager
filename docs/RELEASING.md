@@ -20,7 +20,7 @@ The ZIP is the canonical app artifact because `ditto` preserves the macOS bundle
 - `asc` 3.4.0 or newer, with an authenticated default profile stored in the System Keychain and authorized for Apple notarization.
 - GitHub immutable releases enabled for the repository.
 - `APP_IDENTITY` set to the exact Developer ID identity.
-- Node 24 and npm 11, matching `.nvmrc` and `video/package.json`.
+- Node 26 and npm 11, matching `.nvmrc` and `video/package.json`.
 - Gitleaks and TruffleHog installed; release mode treats verified, unknown, and unverified secret candidates as blockers for maintainer review.
 - Clean `main`, identical to `origin/main`, with successful CI and CodeQL for `HEAD`.
 

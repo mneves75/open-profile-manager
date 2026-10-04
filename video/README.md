@@ -8,7 +8,7 @@ Three deterministic Remotion compositions live here:
 
 All visible profiles, paths, and quota values are synthetic. Audio is generated locally from `scripts/gen-sfx.mjs`; there is no downloaded music or recorded screen content.
 
-Authoring requires Node 24 and npm 11, matching the repository `.nvmrc` and this directory's `package.json`. Use the committed lockfile for reproducible installs.
+Authoring requires Node 26 and npm 11, matching the repository `.nvmrc` and this directory's `package.json`. Use the committed lockfile for reproducible installs.
 
 ```bash
 npm ci

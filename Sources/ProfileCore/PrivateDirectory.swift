@@ -1,14 +1,82 @@
 import Darwin
 import Foundation
 
+/// The directories one `PrivateDirectory.ensure` call created, each held as its parent's
+/// descriptor and its name so removal stays descriptor-relative. Directories that already
+/// existed, including ones another process created concurrently, are never recorded.
+final class CreatedPrivateDirectories {
+  private var entries: [(parentDescriptor: Int32, name: String)] = []
+
+  fileprivate func record(
+    parentDescriptor: Int32,
+    name: String,
+    operation: FilesystemOperation
+  ) throws {
+    let duplicate = fcntl(parentDescriptor, F_DUPFD_CLOEXEC, 0)
+    guard duplicate >= 0 else {
+      _ = unlinkat(parentDescriptor, name, AT_REMOVEDIR)
+      throw ProfileCoreError.filesystem(operation: operation)
+    }
+    entries.append((duplicate, name))
+  }
+
+  /// Removes the recorded directories, deepest first. `AT_REMOVEDIR` refuses a directory that
+  /// is no longer empty, so anything written into one in the meantime is kept.
+  func removeEmpty() {
+    for entry in entries.reversed() {
+      _ = unlinkat(entry.parentDescriptor, entry.name, AT_REMOVEDIR)
+    }
+    closeDescriptors()
+  }
+
+  private func closeDescriptors() {
+    for entry in entries {
+      _ = close(entry.parentDescriptor)
+    }
+    entries.removeAll()
+  }
+
+  deinit {
+    closeDescriptors()
+  }
+}
+
 enum PrivateDirectory {
-  static func ensure(_ url: URL, operation: FilesystemOperation) throws {
+  /// Creates any missing components of `url` as private directories and validates the result.
+  /// If a later component fails, the components this call created are removed again.
+  @discardableResult
+  static func ensure(_ url: URL, operation: FilesystemOperation) throws
+    -> CreatedPrivateDirectories
+  {
     let components = try physicalPathComponents(url, operation: operation)
     var parentDescriptor = open("/", O_RDONLY | O_DIRECTORY | O_CLOEXEC)
     guard parentDescriptor >= 0 else {
       throw ProfileCoreError.filesystem(operation: operation)
     }
     defer { _ = close(parentDescriptor) }
+    let createdDirectories = CreatedPrivateDirectories()
+    do {
+      try ensure(
+        components: components,
+        of: url,
+        from: &parentDescriptor,
+        recordingIn: createdDirectories,
+        operation: operation
+      )
+    } catch {
+      createdDirectories.removeEmpty()
+      throw error
+    }
+    return createdDirectories
+  }
+
+  private static func ensure(
+    components: [String],
+    of url: URL,
+    from parentDescriptor: inout Int32,
+    recordingIn createdDirectories: CreatedPrivateDirectories,
+    operation: FilesystemOperation
+  ) throws {
     var enteredPrivatePath = false
 
     for (index, component) in components.enumerated() {
@@ -25,6 +93,11 @@ enum PrivateDirectory {
         enteredPrivatePath = true
         if mkdirat(parentDescriptor, component, S_IRWXU) == 0 {
           wasCreated = true
+          try createdDirectories.record(
+            parentDescriptor: parentDescriptor,
+            name: component,
+            operation: operation
+          )
         } else {
           guard errno == EEXIST else {
             throw ProfileCoreError.filesystem(operation: operation)
