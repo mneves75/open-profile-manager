@@ -2,7 +2,7 @@
 
 All notable changes to this project are documented in this file. The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and the project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [0.1.12] - Unreleased
+## [0.1.12] - 2026-10-04
 
 ### Fixed
 

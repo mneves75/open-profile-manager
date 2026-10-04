@@ -431,6 +431,24 @@ struct ProfileRegistryTests {
     #expect(mode(at: child) == 0o700)
   }
 
+  @Test("Rolling back created directories removes only empty ones, deepest first")
+  func createdDirectoryRollback() throws {
+    let root = try temporaryDirectory()
+    defer { try? FileManager.default.removeItem(at: root) }
+    let parent = root.appendingPathComponent("parent", isDirectory: true)
+    let child = parent.appendingPathComponent("child", isDirectory: true)
+
+    try PrivateDirectory.ensure(child, operation: .createCodexHome).removeEmpty()
+    #expect(!FileManager.default.fileExists(atPath: parent.path))
+    #expect(mode(at: root) == 0o700)
+
+    let created = try PrivateDirectory.ensure(child, operation: .createCodexHome)
+    try Data("kept".utf8).write(to: child.appendingPathComponent("config.toml"))
+    created.removeEmpty()
+    #expect(
+      FileManager.default.fileExists(atPath: child.appendingPathComponent("config.toml").path))
+  }
+
   @Test("Private directories beneath untrusted writable ancestors are rejected")
   func writableAncestorRejection() throws {
     let root = try temporaryDirectory()

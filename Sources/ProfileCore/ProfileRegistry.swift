@@ -64,7 +64,7 @@ public struct ProfileRegistry: Sendable {
       try validateDirectoryIsolation(profile, against: registry.profiles)
       registry.profiles.append(profile)
       registry.profiles.sort { $0.id < $1.id }
-      try save(registry, creatingDirectoriesFor: profile, directoryDescriptor: directoryDescriptor)
+      try saveCreatingDirectories(for: profile, registry, directoryDescriptor: directoryDescriptor)
       return profile
     }
   }
@@ -90,7 +90,7 @@ public struct ProfileRegistry: Sendable {
         against: registry.profiles.filter { $0.id != id }
       )
       registry.profiles[index] = updated
-      try save(registry, creatingDirectoriesFor: updated, directoryDescriptor: directoryDescriptor)
+      try saveCreatingDirectories(for: updated, registry, directoryDescriptor: directoryDescriptor)
       return updated
     }
   }
@@ -187,9 +187,9 @@ public struct ProfileRegistry: Sendable {
   /// Creates the profile's directories, then saves the registry. A failure before the new
   /// registry replaces the old one removes the directories this call created, so a rejected
   /// change leaves no empty, unregistered profile storage behind.
-  private func save(
+  private func saveCreatingDirectories(
+    for profile: Profile,
     _ registry: RegistryFile,
-    creatingDirectoriesFor profile: Profile,
     directoryDescriptor: Int32
   ) throws {
     var createdDirectories: [CreatedPrivateDirectories] = []

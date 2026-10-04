@@ -55,110 +55,94 @@ enum PrivateDirectory {
     }
     defer { _ = close(parentDescriptor) }
     let createdDirectories = CreatedPrivateDirectories()
+    var enteredPrivatePath = false
+
     do {
-      try ensure(
-        components: components,
-        of: url,
-        from: &parentDescriptor,
-        recordingIn: createdDirectories,
-        operation: operation
-      )
+      for (index, component) in components.enumerated() {
+        var childDescriptor = openat(
+          parentDescriptor,
+          component,
+          O_RDONLY | O_DIRECTORY | O_NOFOLLOW | O_CLOEXEC
+        )
+        var wasCreated = false
+        if childDescriptor < 0 {
+          guard errno == ENOENT else {
+            throw ProfileCoreError.filesystem(operation: operation)
+          }
+          enteredPrivatePath = true
+          if mkdirat(parentDescriptor, component, S_IRWXU) == 0 {
+            wasCreated = true
+            try createdDirectories.record(
+              parentDescriptor: parentDescriptor,
+              name: component,
+              operation: operation
+            )
+          } else {
+            guard errno == EEXIST else {
+              throw ProfileCoreError.filesystem(operation: operation)
+            }
+          }
+          childDescriptor = openat(
+            parentDescriptor,
+            component,
+            O_RDONLY | O_DIRECTORY | O_NOFOLLOW | O_CLOEXEC
+          )
+        }
+        guard childDescriptor >= 0 else {
+          throw ProfileCoreError.filesystem(operation: operation)
+        }
+        if wasCreated {
+          guard fchmod(childDescriptor, S_IRWXU) == 0 else {
+            _ = close(childDescriptor)
+            throw ProfileCoreError.filesystem(operation: .setPrivateDirectoryPermissions)
+          }
+          do {
+            try removeExtendedACL(descriptor: childDescriptor, operation: operation)
+          } catch {
+            _ = close(childDescriptor)
+            throw error
+          }
+        }
+        if enteredPrivatePath || index == components.indices.last {
+          do {
+            try validatePrivateDirectory(
+              descriptor: childDescriptor,
+              operation: operation,
+              requestedPath: url.path,
+              displayPath: index == components.indices.last ? url.path : nil
+            )
+          } catch {
+            _ = close(childDescriptor)
+            throw error
+          }
+        } else {
+          do {
+            try validateTrustedAncestor(
+              descriptor: childDescriptor,
+              operation: operation,
+              requestedPath: url.path
+            )
+          } catch {
+            _ = close(childDescriptor)
+            throw error
+          }
+        }
+        if wasCreated {
+          do {
+            try syncDirectory(parentDescriptor, operation: operation)
+          } catch {
+            _ = close(childDescriptor)
+            throw error
+          }
+        }
+        _ = close(parentDescriptor)
+        parentDescriptor = childDescriptor
+      }
     } catch {
       createdDirectories.removeEmpty()
       throw error
     }
     return createdDirectories
-  }
-
-  private static func ensure(
-    components: [String],
-    of url: URL,
-    from parentDescriptor: inout Int32,
-    recordingIn createdDirectories: CreatedPrivateDirectories,
-    operation: FilesystemOperation
-  ) throws {
-    var enteredPrivatePath = false
-
-    for (index, component) in components.enumerated() {
-      var childDescriptor = openat(
-        parentDescriptor,
-        component,
-        O_RDONLY | O_DIRECTORY | O_NOFOLLOW | O_CLOEXEC
-      )
-      var wasCreated = false
-      if childDescriptor < 0 {
-        guard errno == ENOENT else {
-          throw ProfileCoreError.filesystem(operation: operation)
-        }
-        enteredPrivatePath = true
-        if mkdirat(parentDescriptor, component, S_IRWXU) == 0 {
-          wasCreated = true
-          try createdDirectories.record(
-            parentDescriptor: parentDescriptor,
-            name: component,
-            operation: operation
-          )
-        } else {
-          guard errno == EEXIST else {
-            throw ProfileCoreError.filesystem(operation: operation)
-          }
-        }
-        childDescriptor = openat(
-          parentDescriptor,
-          component,
-          O_RDONLY | O_DIRECTORY | O_NOFOLLOW | O_CLOEXEC
-        )
-      }
-      guard childDescriptor >= 0 else {
-        throw ProfileCoreError.filesystem(operation: operation)
-      }
-      if wasCreated {
-        guard fchmod(childDescriptor, S_IRWXU) == 0 else {
-          _ = close(childDescriptor)
-          throw ProfileCoreError.filesystem(operation: .setPrivateDirectoryPermissions)
-        }
-        do {
-          try removeExtendedACL(descriptor: childDescriptor, operation: operation)
-        } catch {
-          _ = close(childDescriptor)
-          throw error
-        }
-      }
-      if enteredPrivatePath || index == components.indices.last {
-        do {
-          try validatePrivateDirectory(
-            descriptor: childDescriptor,
-            operation: operation,
-            requestedPath: url.path,
-            displayPath: index == components.indices.last ? url.path : nil
-          )
-        } catch {
-          _ = close(childDescriptor)
-          throw error
-        }
-      } else {
-        do {
-          try validateTrustedAncestor(
-            descriptor: childDescriptor,
-            operation: operation,
-            requestedPath: url.path
-          )
-        } catch {
-          _ = close(childDescriptor)
-          throw error
-        }
-      }
-      if wasCreated {
-        do {
-          try syncDirectory(parentDescriptor, operation: operation)
-        } catch {
-          _ = close(childDescriptor)
-          throw error
-        }
-      }
-      _ = close(parentDescriptor)
-      parentDescriptor = childDescriptor
-    }
   }
 
   static func validate(_ url: URL, operation: FilesystemOperation) throws {
