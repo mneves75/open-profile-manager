@@ -4,6 +4,10 @@ All notable changes to this project are documented in this file. The format is b
 
 ## [0.1.14] - Unreleased
 
+### Changed
+
+- Agent enforcement for Claude Code: a new `.claude/settings.json` denies reading Codex `auth.json` files, asks before pushes, releases, local installs, `gh release` and branch or worktree creation, and runs `Scripts/check.sh` at Stop when the tree changed.
+
 ## [0.1.13] - 2026-10-04
 
 ### Changed
