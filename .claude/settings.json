@@ -21,12 +21,12 @@
       "Bash(*Scripts/release.sh*)",
       "Bash(*Scripts/install-local.sh*)",
       "Bash(gh release*)",
-      "Bash(git worktree add*)",
-      "Bash(git * worktree add*)",
+      "Bash(git worktree*)",
+      "Bash(git * worktree*)",
       "Bash(git switch*)",
       "Bash(git * switch*)",
-      "Bash(git checkout -b*)",
-      "Bash(git * checkout -b*)"
+      "Bash(git checkout*)",
+      "Bash(git * checkout*)"
     ]
   },
   "hooks": {
