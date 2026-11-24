@@ -60,7 +60,7 @@ private struct ProfileRow: View {
           .lineLimit(1)
         HStack(spacing: 4) {
           Text(verbatim: profileID)
-          if let planType = formattedPlanType {
+          if let planType = ProfileStatusPresentation.formattedPlanType(for: status) {
             Text(verbatim: "·")
             Text(verbatim: planType)
           }
@@ -81,11 +81,6 @@ private struct ProfileRow: View {
     .padding(.vertical, 4)
     .contentShape(Rectangle())
   }
-
-  private var formattedPlanType: String? {
-    guard let plan = status?.account?.planType, !plan.isEmpty else { return nil }
-    return plan.prefix(1).uppercased() + plan.dropFirst()
-  }
 }
 
 private struct StatusDot: View {
@@ -99,12 +94,7 @@ private struct StatusDot: View {
   }
 
   private var color: Color {
-    switch state {
-    case .available: .green
-    case .notAuthenticated: .orange
-    case .unavailable: .red
-    case nil: .secondary.opacity(0.5)
-    }
+    state == nil ? .secondary.opacity(0.5) : ProfileStatusPresentation.color(for: state)
   }
 
   private var label: String {

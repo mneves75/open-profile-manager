@@ -53,7 +53,8 @@ struct AppModelTests {
     #expect(Set(fixture.model.statuses.keys.map(\.rawValue)) == ["alpha", "beta"])
   }
 
-  @Test("Removing a profile drops stale status and closes the inspector when empty")
+  @Test(
+    "Removing a profile drops stale status, finishes reload, and closes the inspector when empty")
   func removalPrunesStaleStateAndSelection() async throws {
     let root = try privateTemporaryDirectory()
     defer { try? FileManager.default.removeItem(at: root) }
@@ -80,8 +81,11 @@ struct AppModelTests {
     model.requestRemoval(of: profile)
     model.confirmRemoval()
 
+    try await reads.waitForReads(2)
+    reads.complete(1)
+
     let deadline = ContinuousClock.now + .seconds(5)
-    while model.isSaving || !model.profiles.isEmpty {
+    while model.isSaving || model.isRefreshing {
       guard ContinuousClock.now < deadline else { throw CancellationError() }
       try await Task.sleep(for: .milliseconds(5))
     }
@@ -90,9 +94,10 @@ struct AppModelTests {
     #expect(model.statuses.isEmpty)
     #expect(model.selectedProfileID == nil)
     #expect(!model.isInspectorPresented)
+    #expect(!model.isRefreshing)
   }
 
-  @Test("Rapid command copies supersede prior feedback timers without clearing the newer indicator")
+  @Test("Rapid command copies cancel prior feedback timers deterministically")
   func rapidCommandCopiesCancelPriorTimer() async throws {
     let root = try privateTemporaryDirectory()
     defer { try? FileManager.default.removeItem(at: root) }
@@ -107,35 +112,83 @@ struct AppModelTests {
       codexHome: root.appendingPathComponent("beta", isDirectory: true)
     )
     var copiedStrings: [String] = []
+    let timers = PendingTimers()
     let model = AppModel(
       manager: nil,
-      writePasteboard: { copiedStrings.append($0) },
-      copyFeedbackDuration: .milliseconds(80)
+      writePasteboard: { value in
+        copiedStrings.append(value)
+        return true
+      },
+      sleep: { _ in
+        try await timers.wait()
+      }
     )
 
     model.copyCLICommand(for: alpha)
+    try await timers.waitForCount(1)
     #expect(model.copiedCommand == .cli(alpha.id))
-    try await Task.sleep(for: .milliseconds(45))
 
     model.copyLoginCommand(for: beta)
+    try await timers.waitForCount(2)
+    #expect(timers.wasCancelled(0))
+    #expect(!timers.wasCancelled(1))
     #expect(model.copiedCommand == .login(beta.id))
     #expect(copiedStrings == ["opm run alpha", "opm login beta"])
 
-    try await Task.sleep(for: .milliseconds(50))
+    timers.resume(0)
+    await Task.yield()
     #expect(model.copiedCommand == .login(beta.id))
 
-    try await Task.sleep(for: .milliseconds(60))
+    timers.resume(1)
+    let deadline = ContinuousClock.now + .seconds(5)
+    while model.copiedCommand != nil {
+      guard ContinuousClock.now < deadline else { throw CancellationError() }
+      await Task.yield()
+    }
     #expect(model.copiedCommand == nil)
   }
 
-  @Test("Suggested profile IDs produce valid lowercase slugs from display names")
-  func suggestedIDSlugs() {
-    #expect(ProfileDraft.suggestedID(from: "Work EU") == "work-eu")
-    #expect(ProfileDraft.suggestedID(from: "  São Paulo — Pesquisa! ") == "sao-paulo-pesquisa")
-    #expect(ProfileDraft.suggestedID(from: "---") == "")
-    let long = ProfileDraft.suggestedID(from: String(repeating: "a", count: 50))
-    #expect(long.utf8.count == 32)
-    #expect(ProfileID.isValid(long))
+  @Test("Failed pasteboard writes do not show copied feedback")
+  func failedPasteboardWriteSkipsFeedback() throws {
+    let root = try privateTemporaryDirectory()
+    defer { try? FileManager.default.removeItem(at: root) }
+    let profile = try Profile(
+      id: ProfileID("alpha"),
+      displayName: "Alpha",
+      codexHome: root.appendingPathComponent("alpha", isDirectory: true)
+    )
+    let model = AppModel(
+      manager: nil,
+      writePasteboard: { _ in false }
+    )
+    model.copyCLICommand(for: profile)
+    #expect(model.copiedCommand == nil)
+  }
+
+  @Test("Profile menu shortcuts are disabled while a modal editor or alert is presented")
+  func profileShortcutsDisabledDuringModalState() throws {
+    let root = try privateTemporaryDirectory()
+    defer { try? FileManager.default.removeItem(at: root) }
+    let profile = try Profile(
+      id: ProfileID("alpha"),
+      displayName: "Alpha",
+      codexHome: root.appendingPathComponent("alpha", isDirectory: true)
+    )
+    let model = AppModel(manager: nil)
+    model.profiles = [profile]
+    model.selectedProfileID = profile.id
+    #expect(model.canPerformProfileShortcut)
+
+    model.presentEditor(for: profile)
+    #expect(!model.canPerformProfileShortcut)
+
+    model.editor = nil
+    model.isShowingRemoveConfirmation = true
+    #expect(!model.canPerformProfileShortcut)
+
+    model.isShowingRemoveConfirmation = false
+    model.isShowingAlert = true
+    #expect(!model.canPerformProfileShortcut)
   }
 }
 
@@ -238,5 +291,50 @@ private final class PendingStatusReads: Sendable {
       returning: read.profiles.map {
         ProfileStatus(profileID: $0.id, displayName: $0.displayName, state: .available)
       })
+  }
+}
+
+/// Holds injected sleep calls open until the test advances them explicitly.
+private final class PendingTimers: Sendable {
+  private struct Entry {
+    let id: UUID
+    let continuation: CheckedContinuation<Void, Error>
+  }
+
+  private struct State {
+    var entries: [Entry] = []
+    var cancelledIDs: Set<UUID> = []
+  }
+
+  private let state = Mutex(State())
+
+  func wait() async throws {
+    let id = UUID()
+    return try await withTaskCancellationHandler {
+      try await withCheckedThrowingContinuation { continuation in
+        state.withLock {
+          $0.entries.append(Entry(id: id, continuation: continuation))
+        }
+      }
+    } onCancel: {
+      _ = state.withLock { $0.cancelledIDs.insert(id) }
+    }
+  }
+
+  func waitForCount(_ count: Int) async throws {
+    let deadline = ContinuousClock.now + .seconds(5)
+    while state.withLock({ $0.entries.count }) < count {
+      guard ContinuousClock.now < deadline else { throw CancellationError() }
+      try await Task.sleep(for: .milliseconds(5))
+    }
+  }
+
+  func wasCancelled(_ index: Int) -> Bool {
+    state.withLock { $0.cancelledIDs.contains($0.entries[index].id) }
+  }
+
+  func resume(_ index: Int) {
+    let entry = state.withLock { $0.entries[index] }
+    entry.continuation.resume()
   }
 }

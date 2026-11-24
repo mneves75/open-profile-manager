@@ -62,7 +62,9 @@ struct ContentView: View {
         .help(L10n.string("Refresh account and quota status"))
         if model.selectedProfile != nil {
           Button(
-            L10n.string("Show Inspector"),
+            model.isInspectorPresented
+              ? L10n.string("Hide Inspector")
+              : L10n.string("Show Inspector"),
             systemImage: "sidebar.right",
             action: model.toggleInspector
           )

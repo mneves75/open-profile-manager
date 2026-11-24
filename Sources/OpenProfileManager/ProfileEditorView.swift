@@ -54,7 +54,7 @@ struct ProfileEditorView: View {
           .focused($focusedField, equals: .displayName)
           .onChange(of: draft.displayName) { _, newValue in
             guard configuration.mode == .add, !didEditProfileID else { return }
-            draft.profileID = ProfileDraft.suggestedID(from: newValue)
+            draft.profileID = ProfileID.suggested(from: newValue)
           }
           .onSubmit {
             focusedField = configuration.mode == .edit ? .codexHome : .profileID
@@ -72,7 +72,7 @@ struct ProfileEditorView: View {
           .focused($focusedField, equals: .profileID)
           .onChange(of: draft.profileID) { _, newValue in
             if configuration.mode == .add,
-              newValue != ProfileDraft.suggestedID(from: draft.displayName)
+              newValue != ProfileID.suggested(from: draft.displayName)
             {
               didEditProfileID = true
             }

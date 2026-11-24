@@ -338,16 +338,22 @@ extension OpenProfileManagerApp: NSMenuItemValidation {
   func validateMenuItem(_ menuItem: NSMenuItem) -> Bool {
     switch menuItem.action {
     case #selector(refreshStatus):
-      !model.isRefreshing
-    case #selector(toggleInspector),
-      #selector(launchSelectedProfile),
+      return !model.isRefreshing
+    case #selector(toggleInspector):
+      menuItem.title =
+        model.isInspectorPresented
+        ? L10n.string("Hide Inspector")
+        : L10n.string("Show Inspector")
+      return model.selectedProfile != nil
+    case #selector(launchSelectedProfile),
       #selector(copySelectedCLICommand),
       #selector(editSelectedProfile),
       #selector(installSelectedLauncher),
       #selector(removeSelectedProfile):
-      model.selectedProfile != nil
+      return model.canPerformProfileShortcut
+        && NSApplication.shared.keyWindow?.attachedSheet == nil
     default:
-      true
+      return true
     }
   }
 }

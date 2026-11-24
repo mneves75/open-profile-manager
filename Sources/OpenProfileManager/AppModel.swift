@@ -8,30 +8,6 @@ struct ProfileDraft: Equatable, Sendable {
   var displayName: String
   var codexHome: String
   var guiDataDirectory: String
-
-  static func suggestedID(from displayName: String) -> String {
-    var result = ""
-    var previousWasHyphen = false
-    for scalar in displayName.folding(
-      options: [.diacriticInsensitive, .caseInsensitive], locale: Locale(identifier: "en_US_POSIX")
-    ).unicodeScalars {
-      if (scalar.value >= 97 && scalar.value <= 122) || (scalar.value >= 48 && scalar.value <= 57) {
-        result.unicodeScalars.append(scalar)
-        previousWasHyphen = false
-      } else if scalar == " " || scalar == "-" || scalar == "_", !result.isEmpty, !previousWasHyphen
-      {
-        result.append("-")
-        previousWasHyphen = true
-      }
-      if result.utf8.count >= 32 {
-        break
-      }
-    }
-    while result.hasSuffix("-") {
-      result.removeLast()
-    }
-    return result
-  }
 }
 
 enum CopiedCommand: Equatable, Sendable {
@@ -55,11 +31,13 @@ struct EditorConfiguration: Identifiable, Sendable {
 @Observable
 final class AppModel {
   typealias StatusReader = @Sendable (ProfileManager, [Profile]) async -> [ProfileStatus]
-  typealias PasteboardWriter = @MainActor (String) -> Void
+  typealias PasteboardWriter = @MainActor (String) -> Bool
+  typealias Sleeper = @Sendable (Duration) async throws -> Void
 
   private let manager: ProfileManager?
   private let readStatuses: StatusReader
   private let writePasteboard: PasteboardWriter
+  private let sleep: Sleeper
   private let copyFeedbackDuration: Duration
   @ObservationIgnored private var didStart = false
   @ObservationIgnored private var reloadGeneration = 0
@@ -97,19 +75,31 @@ final class AppModel {
     },
     writePasteboard: @escaping PasteboardWriter = { value in
       NSPasteboard.general.clearContents()
-      NSPasteboard.general.setString(value, forType: .string)
+      return NSPasteboard.general.setString(value, forType: .string)
+    },
+    sleep: @escaping Sleeper = { duration in
+      try await Task.sleep(for: duration)
     },
     copyFeedbackDuration: Duration = .seconds(2)
   ) {
     self.manager = manager
     self.readStatuses = readStatuses
     self.writePasteboard = writePasteboard
+    self.sleep = sleep
     self.copyFeedbackDuration = copyFeedbackDuration
   }
 
   var selectedProfile: Profile? {
     guard let selectedProfileID else { return nil }
     return profiles.first { $0.id == selectedProfileID }
+  }
+
+  var canPerformProfileShortcut: Bool {
+    selectedProfile != nil
+      && editor == nil
+      && !isShowingRemoveConfirmation
+      && !isShowingAlert
+      && !isSaving
   }
 
   func start() {
@@ -284,8 +274,16 @@ final class AppModel {
   }
 
   func revealInFinder(_ url: URL) {
-    guard FileManager.default.fileExists(atPath: url.path) else { return }
-    NSWorkspace.shared.activateFileViewerSelecting([url])
+    Task {
+      switch await Self.perform({ FileManager.default.fileExists(atPath: url.path) }) {
+      case .success(true):
+        NSWorkspace.shared.activateFileViewerSelecting([url])
+      case .success(false):
+        showError(L10n.string("Directory '%@' does not exist on disk.", url.path))
+      case .failure(let message):
+        showError(message)
+      }
+    }
   }
 
   func toggleInspector() {
@@ -327,12 +325,13 @@ final class AppModel {
   }
 
   private func copyCommand(_ command: String, indicator: CopiedCommand) {
-    writePasteboard(command)
+    guard writePasteboard(command) else { return }
     copiedCommand = indicator
     copyFeedbackTask?.cancel()
     let duration = copyFeedbackDuration
+    let sleep = sleep
     copyFeedbackTask = Task {
-      try? await Task.sleep(for: duration)
+      try? await sleep(duration)
       guard !Task.isCancelled else { return }
       if self.copiedCommand == indicator {
         self.copiedCommand = nil

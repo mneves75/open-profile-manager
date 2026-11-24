@@ -164,7 +164,7 @@ private struct ProfileHero: View {
 
         StatusPill(state: status?.state)
 
-        if let plan = formattedPlan {
+        if let plan = ProfileStatusPresentation.formattedPlanType(for: status) {
           Text(verbatim: "·")
             .foregroundStyle(.tertiary)
           Text(verbatim: plan)
@@ -173,11 +173,6 @@ private struct ProfileHero: View {
         }
       }
     }
-  }
-
-  private var formattedPlan: String? {
-    guard let plan = status?.account?.planType, !plan.isEmpty else { return nil }
-    return plan.prefix(1).uppercased() + plan.dropFirst()
   }
 }
 
@@ -195,7 +190,6 @@ private struct ProfileActionBar: View {
       Button(L10n.string("Launch"), systemImage: "arrow.up.forward.app.fill", action: onLaunch)
         .opmProminentButtonStyle()
         .controlSize(.large)
-        .keyboardShortcut(.return, modifiers: .command)
 
       Button(action: onCopyCLI) {
         Label(
@@ -206,7 +200,6 @@ private struct ProfileActionBar: View {
       }
       .opmSecondaryButtonStyle()
       .controlSize(.large)
-      .keyboardShortcut("c", modifiers: [.command, .shift])
 
       Menu {
         Button(L10n.string("Edit Profile"), systemImage: "pencil", action: onEdit)
@@ -306,10 +299,13 @@ private struct QuotaSection: View {
     }
   }
 
+  private static let fiveHourWindowMinutes: Int64 = 300
+  private static let weeklyWindowMinutes: Int64 = 10_080
+
   private func windowTitle(for window: RateLimitWindow, fallback: String) -> String {
     switch window.windowDurationMinutes {
-    case 300: L10n.string("5-Hour Window")
-    case 10_080: L10n.string("Weekly Window")
+    case Self.fiveHourWindowMinutes: L10n.string("5-Hour Window")
+    case Self.weeklyWindowMinutes: L10n.string("Weekly Window")
     default: fallback
     }
   }
@@ -434,12 +430,7 @@ private struct StatusPill: View {
   }
 
   private var color: Color {
-    switch state {
-    case .available: .green
-    case .notAuthenticated: .orange
-    case .unavailable: .red
-    case nil: .secondary
-    }
+    ProfileStatusPresentation.color(for: state)
   }
 }
 

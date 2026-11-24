@@ -20,6 +20,16 @@ struct ProfileValidationTests {
     }
   }
 
+  @Test("Suggested profile IDs produce valid lowercase slugs from display names")
+  func suggestedIDSlugs() {
+    #expect(ProfileID.suggested(from: "Work EU") == "work-eu")
+    #expect(ProfileID.suggested(from: "  São Paulo — Pesquisa! ") == "sao-paulo-pesquisa")
+    #expect(ProfileID.suggested(from: "---") == "")
+    let long = ProfileID.suggested(from: String(repeating: "a", count: 50))
+    #expect(long.utf8.count == 32)
+    #expect(ProfileID.isValid(long))
+  }
+
   @Test("Profile names are trimmed and cannot be blank")
   func displayNameValidation() throws {
     let profile = try Profile(

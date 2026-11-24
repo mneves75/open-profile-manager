@@ -1,4 +1,21 @@
+import ProfileCore
 import SwiftUI
+
+enum ProfileStatusPresentation {
+  static func color(for state: ProfileStatusState?) -> Color {
+    switch state {
+    case .available: .green
+    case .notAuthenticated: .orange
+    case .unavailable: .red
+    case nil: .secondary
+    }
+  }
+
+  static func formattedPlanType(for status: ProfileStatus?) -> String? {
+    guard let plan = status?.account?.planType, !plan.isEmpty else { return nil }
+    return plan.prefix(1).uppercased() + plan.dropFirst()
+  }
+}
 
 enum QuotaTone {
   static func color(for usedPercent: Int) -> Color {
