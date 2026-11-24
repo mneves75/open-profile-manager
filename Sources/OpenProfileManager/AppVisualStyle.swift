@@ -25,14 +25,6 @@ enum QuotaTone {
     default: .accentColor
     }
   }
-
-  static func sidebarColor(for usedPercent: Int) -> Color {
-    switch usedPercent {
-    case 90...: .red
-    case 70..<90: .orange
-    default: .secondary
-    }
-  }
 }
 
 struct GlassActionGroup<Content: View>: View {

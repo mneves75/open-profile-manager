@@ -75,7 +75,7 @@ private struct ProfileRow: View {
       if let usedPercent = status?.rateLimits?.primary?.usedPercent {
         Text(verbatim: "\(usedPercent)%")
           .font(.caption.monospacedDigit().weight(.medium))
-          .foregroundStyle(QuotaTone.sidebarColor(for: usedPercent))
+          .foregroundStyle(.secondary)
       }
     }
     .padding(.vertical, 4)
