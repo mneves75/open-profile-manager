@@ -148,8 +148,8 @@ struct AppModelTests {
     #expect(model.copiedCommand == nil)
   }
 
-  @Test("Failed pasteboard writes do not show copied feedback")
-  func failedPasteboardWriteSkipsFeedback() throws {
+  @Test("Failed pasteboard writes clear copied feedback and cancel any active timer")
+  func failedPasteboardWriteSkipsFeedback() async throws {
     let root = try privateTemporaryDirectory()
     defer { try? FileManager.default.removeItem(at: root) }
     let profile = try Profile(
@@ -157,12 +157,22 @@ struct AppModelTests {
       displayName: "Alpha",
       codexHome: root.appendingPathComponent("alpha", isDirectory: true)
     )
+    var shouldSucceed = true
+    let timers = PendingTimers()
     let model = AppModel(
       manager: nil,
-      writePasteboard: { _ in false }
+      writePasteboard: { _ in shouldSucceed },
+      sleep: { _ in try await timers.wait() }
     )
     model.copyCLICommand(for: profile)
+    try await timers.waitForCount(1)
+    #expect(model.copiedCommand == .cli(profile.id))
+
+    shouldSucceed = false
+    model.copyCLICommand(for: profile)
     #expect(model.copiedCommand == nil)
+    #expect(timers.wasCancelled(0))
+    timers.resume(0)
   }
 
   @Test("Profile menu shortcuts are disabled while a modal editor or alert is presented")

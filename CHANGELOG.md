@@ -9,7 +9,7 @@ All notable changes to this project are documented in this file. The format is b
 - Native macOS UI redesign with system Light and Dark appearance support, `#available(macOS 26, *)` Liquid Glass action controls (with semantic macOS 15 fallbacks), spacious quota metric cards, progressive disclosure via a toggleable profile Inspector (`⌥⌘I`), sidebar context menus, a Profile menu with modal-safe keyboard shortcuts (`⌘↩`, `⇧⌘C`, `⌘E`, `⌘⌫`), transient clipboard copy confirmation, inline login/doctor remediation actions, and automatic `ProfileID` slug suggestions in the streamlined profile editor.
 - `opm profile edit` CLI command (`--name`, `--home`/`--codex-home`, `--gui-data-dir`, `--clear-gui-data-dir`, `--json`) reusing `ProfileManager.updateProfile`, plus concise help abstracts across all `opm` subcommands.
 - Four structural `ast-grep` rules (`no-expanding-tilde-in-path`, `no-account-email-in-adapters`, `no-panel-create-directories`, `no-adapter-standardized-url`) with positive and negative rule fixtures encoding recurring historical defect classes.
-- Claude Code project settings (`.claude/settings.json`) enforcing read denies on `~/.codex*/**/auth.json` at both tool and shell-sandbox layers, interactive prompts before release/push/install/branch actions, and a Stop verification hook.
+- Claude Code project settings (`.claude/settings.json`) enforcing read denies on `~/.codex*/**/auth.json` at both tool and shell-sandbox layers, interactive prompts before release/push/install/branch actions, and optional `claude-gate` Stop verification when installed.
 
 ### Changed
 

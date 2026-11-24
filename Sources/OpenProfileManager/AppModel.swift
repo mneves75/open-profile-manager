@@ -325,9 +325,12 @@ final class AppModel {
   }
 
   private func copyCommand(_ command: String, indicator: CopiedCommand) {
-    guard writePasteboard(command) else { return }
-    copiedCommand = indicator
     copyFeedbackTask?.cancel()
+    guard writePasteboard(command) else {
+      copiedCommand = nil
+      return
+    }
+    copiedCommand = indicator
     let duration = copyFeedbackDuration
     let sleep = sleep
     copyFeedbackTask = Task {
