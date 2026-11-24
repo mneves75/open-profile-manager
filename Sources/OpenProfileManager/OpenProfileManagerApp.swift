@@ -17,7 +17,6 @@ final class OpenProfileManagerApp: NSObject, NSApplicationDelegate {
   }
 
   func applicationDidFinishLaunching(_ notification: Notification) {
-    // A single profile-manager window has no use for AppKit's automatic tab bar and tab menu items.
     NSWindow.allowsAutomaticWindowTabbing = false
     configureMainMenu(for: NSApplication.shared)
     showMainWindow()
@@ -61,10 +60,10 @@ final class OpenProfileManagerApp: NSObject, NSApplicationDelegate {
     }
 
     let content = ContentView(model: model)
-      .frame(minWidth: 760, minHeight: 520)
+      .frame(minWidth: 720, minHeight: 480)
     let window = NSWindow(
-      contentRect: NSRect(x: 0, y: 0, width: 940, height: 640),
-      styleMask: [.titled, .closable, .miniaturizable, .resizable],
+      contentRect: NSRect(x: 0, y: 0, width: 920, height: 600),
+      styleMask: [.titled, .closable, .miniaturizable, .resizable, .fullSizeContentView],
       backing: .buffered,
       defer: false
     )
@@ -72,7 +71,11 @@ final class OpenProfileManagerApp: NSObject, NSApplicationDelegate {
     window.identifier = NSUserInterfaceItemIdentifier("main")
     window.isReleasedWhenClosed = false
     window.isRestorable = false
-    window.toolbarStyle = .unifiedCompact
+    if #available(macOS 26, *) {
+      window.toolbarStyle = .unified
+    } else {
+      window.toolbarStyle = .unifiedCompact
+    }
     window.title = L10n.string("Open Profile Manager")
     window.center()
     mainWindow = window
@@ -85,6 +88,7 @@ final class OpenProfileManagerApp: NSObject, NSApplicationDelegate {
     mainMenu.addItem(appMenuItem())
     mainMenu.addItem(fileMenuItem())
     mainMenu.addItem(editMenuItem())
+    mainMenu.addItem(profileMenuItem())
     mainMenu.addItem(viewMenuItem())
     mainMenu.addItem(windowMenuItem())
     mainMenu.addItem(helpMenuItem())
@@ -176,6 +180,59 @@ final class OpenProfileManagerApp: NSObject, NSApplicationDelegate {
     return item
   }
 
+  private func profileMenuItem() -> NSMenuItem {
+    let item = NSMenuItem(title: L10n.string("Profile"), action: nil, keyEquivalent: "")
+    let menu = NSMenu(title: L10n.string("Profile"))
+
+    let launch = NSMenuItem(
+      title: L10n.string("Launch Desktop App"),
+      action: #selector(launchSelectedProfile),
+      keyEquivalent: "\r"
+    )
+    launch.target = self
+    menu.addItem(launch)
+
+    let copyCLI = NSMenuItem(
+      title: L10n.string("Copy CLI Command"),
+      action: #selector(copySelectedCLICommand),
+      keyEquivalent: "C"
+    )
+    copyCLI.keyEquivalentModifierMask = [.command, .shift]
+    copyCLI.target = self
+    menu.addItem(copyCLI)
+
+    menu.addItem(.separator())
+
+    let edit = NSMenuItem(
+      title: L10n.string("Edit Profile"),
+      action: #selector(editSelectedProfile),
+      keyEquivalent: "e"
+    )
+    edit.target = self
+    menu.addItem(edit)
+
+    let installLauncher = NSMenuItem(
+      title: L10n.string("Install Finder Launcher"),
+      action: #selector(installSelectedLauncher),
+      keyEquivalent: ""
+    )
+    installLauncher.target = self
+    menu.addItem(installLauncher)
+
+    menu.addItem(.separator())
+
+    let remove = NSMenuItem(
+      title: L10n.string("Remove Profile"),
+      action: #selector(removeSelectedProfile),
+      keyEquivalent: "\u{8}"
+    )
+    remove.target = self
+    menu.addItem(remove)
+
+    item.submenu = menu
+    return item
+  }
+
   private func viewMenuItem() -> NSMenuItem {
     let item = NSMenuItem(title: L10n.string("View"), action: nil, keyEquivalent: "")
     let menu = NSMenu(title: L10n.string("View"))
@@ -186,6 +243,16 @@ final class OpenProfileManagerApp: NSObject, NSApplicationDelegate {
     )
     refresh.target = self
     menu.addItem(refresh)
+
+    let inspector = NSMenuItem(
+      title: L10n.string("Show Inspector"),
+      action: #selector(toggleInspector),
+      keyEquivalent: "i"
+    )
+    inspector.keyEquivalentModifierMask = [.command, .option]
+    inspector.target = self
+    menu.addItem(inspector)
+
     item.submenu = menu
     return item
   }
@@ -231,16 +298,56 @@ final class OpenProfileManagerApp: NSObject, NSApplicationDelegate {
     Task { await model.reload() }
   }
 
+  @objc private func toggleInspector() {
+    model.toggleInspector()
+  }
+
+  @objc private func launchSelectedProfile() {
+    guard let profile = model.selectedProfile else { return }
+    model.launchApp(for: profile)
+  }
+
+  @objc private func copySelectedCLICommand() {
+    guard let profile = model.selectedProfile else { return }
+    model.copyCLICommand(for: profile)
+  }
+
+  @objc private func editSelectedProfile() {
+    guard let profile = model.selectedProfile else { return }
+    model.presentEditor(for: profile)
+  }
+
+  @objc private func installSelectedLauncher() {
+    guard let profile = model.selectedProfile else { return }
+    model.installLauncher(for: profile)
+  }
+
+  @objc private func removeSelectedProfile() {
+    guard let profile = model.selectedProfile else { return }
+    model.requestRemoval(of: profile)
+  }
+
   @objc private func showAboutPanel() {
     NSApplication.shared.orderFrontStandardAboutPanel(
       options: [.applicationName: L10n.string("Open Profile Manager")]
     )
   }
-
 }
 
 extension OpenProfileManagerApp: NSMenuItemValidation {
   func validateMenuItem(_ menuItem: NSMenuItem) -> Bool {
-    menuItem.action == #selector(refreshStatus) ? !model.isRefreshing : true
+    switch menuItem.action {
+    case #selector(refreshStatus):
+      !model.isRefreshing
+    case #selector(toggleInspector),
+      #selector(launchSelectedProfile),
+      #selector(copySelectedCLICommand),
+      #selector(editSelectedProfile),
+      #selector(installSelectedLauncher),
+      #selector(removeSelectedProfile):
+      model.selectedProfile != nil
+    default:
+      true
+    }
   }
 }

@@ -46,4 +46,26 @@ if [[ "$long_path_output" != *"CODEX_HOME must be an absolute path."* ]]; then
   exit 1
 fi
 
+EDIT_CODEX_HOME="$LONG_PATH_HOME/codex-edit"
+EDIT_GUI_DIR="$LONG_PATH_HOME/gui-edit"
+mkdir -m 0700 "$EDIT_CODEX_HOME" "$EDIT_GUI_DIR"
+CFFIXED_USER_HOME="$LONG_PATH_HOME" .build/debug/opm profile add edit-me \
+  --name "Original" --home "$EDIT_CODEX_HOME" --gui-data-dir "$EDIT_GUI_DIR" >/dev/null
+if CFFIXED_USER_HOME="$LONG_PATH_HOME" .build/debug/opm profile edit edit-me >/dev/null 2>&1; then
+  echo "'opm profile edit' without changes must fail validation" >&2
+  exit 1
+fi
+if CFFIXED_USER_HOME="$LONG_PATH_HOME" .build/debug/opm profile edit edit-me \
+  --gui-data-dir "$EDIT_GUI_DIR" --clear-gui-data-dir >/dev/null 2>&1; then
+  echo "'opm profile edit' must reject combining --gui-data-dir and --clear-gui-data-dir" >&2
+  exit 1
+fi
+CFFIXED_USER_HOME="$LONG_PATH_HOME" .build/debug/opm profile edit edit-me \
+  --name "Renamed" --clear-gui-data-dir >/dev/null
+edit_show_output=$(CFFIXED_USER_HOME="$LONG_PATH_HOME" .build/debug/opm profile show edit-me)
+if [[ "$edit_show_output" != *"Name: Renamed"* || "$edit_show_output" != *"GUI data: automatic"* ]]; then
+  echo "Unexpected 'opm profile edit' result: $edit_show_output" >&2
+  exit 1
+fi
+
 echo "All checks passed."
