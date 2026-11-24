@@ -157,18 +157,18 @@ struct AppModelTests {
       displayName: "Alpha",
       codexHome: root.appendingPathComponent("alpha", isDirectory: true)
     )
-    var shouldSucceed = true
+    let shouldSucceed = Mutex(true)
     let timers = PendingTimers()
     let model = AppModel(
       manager: nil,
-      writePasteboard: { _ in shouldSucceed },
+      writePasteboard: { _ in shouldSucceed.withLock { $0 } },
       sleep: { _ in try await timers.wait() }
     )
     model.copyCLICommand(for: profile)
     try await timers.waitForCount(1)
     #expect(model.copiedCommand == .cli(profile.id))
 
-    shouldSucceed = false
+    shouldSucceed.withLock { $0 = false }
     model.copyCLICommand(for: profile)
     #expect(model.copiedCommand == nil)
     #expect(timers.wasCancelled(0))
