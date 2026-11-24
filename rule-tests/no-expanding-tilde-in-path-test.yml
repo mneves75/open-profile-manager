@@ -1,0 +1,5 @@
+id: no-expanding-tilde-in-path
+valid:
+  - 'let url = try Profile.fileURL(fromUserPath: path, field: .codexHome)'
+invalid:
+  - 'let expanded = (path as NSString).expandingTildeInPath'

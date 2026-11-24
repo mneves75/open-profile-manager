@@ -1,0 +1,5 @@
+id: no-panel-create-directories
+valid:
+  - 'panel.canCreateDirectories = false'
+invalid:
+  - 'panel.canCreateDirectories = true'

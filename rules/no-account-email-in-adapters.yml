@@ -1,0 +1,11 @@
+id: no-account-email-in-adapters
+language: Swift
+severity: error
+message: Never read or render account email in GUI or CLI adapters; structured JSON output encodes ProfileStatus directly.
+files:
+  - Sources/OpenProfileManager/**/*.swift
+  - Sources/opm/**/*.swift
+rule:
+  any:
+    - pattern: $EXPRESSION.email
+    - pattern: $EXPRESSION?.email

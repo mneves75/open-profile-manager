@@ -8,6 +8,36 @@ struct ProfileDraft: Equatable, Sendable {
   var displayName: String
   var codexHome: String
   var guiDataDirectory: String
+
+  static func suggestedID(from displayName: String) -> String {
+    var result = ""
+    var previousWasHyphen = false
+    for scalar in displayName.folding(
+      options: [.diacriticInsensitive, .caseInsensitive], locale: Locale(identifier: "en_US_POSIX")
+    ).unicodeScalars {
+      if (scalar.value >= 97 && scalar.value <= 122) || (scalar.value >= 48 && scalar.value <= 57) {
+        result.unicodeScalars.append(scalar)
+        previousWasHyphen = false
+      } else if scalar == " " || scalar == "-" || scalar == "_", !result.isEmpty, !previousWasHyphen
+      {
+        result.append("-")
+        previousWasHyphen = true
+      }
+      if result.utf8.count >= 32 {
+        break
+      }
+    }
+    while result.hasSuffix("-") {
+      result.removeLast()
+    }
+    return result
+  }
+}
+
+enum CopiedCommand: Equatable, Sendable {
+  case cli(ProfileID)
+  case login(ProfileID)
+  case doctor(ProfileID)
 }
 
 struct EditorConfiguration: Identifiable, Sendable {
@@ -25,18 +55,24 @@ struct EditorConfiguration: Identifiable, Sendable {
 @Observable
 final class AppModel {
   typealias StatusReader = @Sendable (ProfileManager, [Profile]) async -> [ProfileStatus]
+  typealias PasteboardWriter = @MainActor (String) -> Void
 
   private let manager: ProfileManager?
   private let readStatuses: StatusReader
+  private let writePasteboard: PasteboardWriter
+  private let copyFeedbackDuration: Duration
   @ObservationIgnored private var didStart = false
   @ObservationIgnored private var reloadGeneration = 0
   @ObservationIgnored private var statusReadTask: Task<[ProfileStatus], Never>?
+  @ObservationIgnored private var copyFeedbackTask: Task<Void, Never>?
 
   var profiles: [Profile] = []
   var selectedProfileID: ProfileID?
   var statuses: [ProfileID: ProfileStatus] = [:]
   var isRefreshing = false
   var isSaving = false
+  var isInspectorPresented = false
+  var copiedCommand: CopiedCommand?
   var editor: EditorConfiguration?
   var editorErrorMessage: String?
   var pendingRemoval: Profile?
@@ -58,10 +94,17 @@ final class AppModel {
     manager: ProfileManager?,
     readStatuses: @escaping StatusReader = { manager, profiles in
       await manager.statuses(profiles: profiles)
-    }
+    },
+    writePasteboard: @escaping PasteboardWriter = { value in
+      NSPasteboard.general.clearContents()
+      NSPasteboard.general.setString(value, forType: .string)
+    },
+    copyFeedbackDuration: Duration = .seconds(2)
   ) {
     self.manager = manager
     self.readStatuses = readStatuses
+    self.writePasteboard = writePasteboard
+    self.copyFeedbackDuration = copyFeedbackDuration
   }
 
   var selectedProfile: Profile? {
@@ -80,7 +123,6 @@ final class AppModel {
     guard let manager else { return }
     reloadGeneration += 1
     let generation = reloadGeneration
-    // A superseded refresh's app-server reads are stopped rather than left to reach their timeout.
     statusReadTask?.cancel()
     isRefreshing = true
     defer {
@@ -94,10 +136,13 @@ final class AppModel {
     switch outcome {
     case .success(let loadedProfiles):
       profiles = loadedProfiles
-      if selectedProfileID.map({ selected in loadedProfiles.contains { $0.id == selected } })
-        != true
-      {
+      let validIDs = Set(loadedProfiles.map(\.id))
+      statuses = statuses.filter { validIDs.contains($0.key) }
+      if selectedProfileID.map({ validIDs.contains($0) }) != true {
         selectedProfileID = loadedProfiles.first?.id
+      }
+      if loadedProfiles.isEmpty {
+        isInspectorPresented = false
       }
       let readStatuses = readStatuses
       let statusRead = Task { await readStatuses(manager, loadedProfiles) }
@@ -227,25 +272,48 @@ final class AppModel {
   }
 
   func copyCLICommand(for profile: Profile) {
-    NSPasteboard.general.clearContents()
-    NSPasteboard.general.setString(
-      "opm run \(profile.id.rawValue)",
-      forType: .string
-    )
+    copyCommand("opm run \(profile.id.rawValue)", indicator: .cli(profile.id))
+  }
+
+  func copyLoginCommand(for profile: Profile) {
+    copyCommand("opm login \(profile.id.rawValue)", indicator: .login(profile.id))
+  }
+
+  func copyDoctorCommand(for profile: Profile) {
+    copyCommand("opm doctor \(profile.id.rawValue)", indicator: .doctor(profile.id))
+  }
+
+  func revealInFinder(_ url: URL) {
+    guard FileManager.default.fileExists(atPath: url.path) else { return }
+    NSWorkspace.shared.activateFileViewerSelecting([url])
+  }
+
+  func toggleInspector() {
+    guard selectedProfile != nil else { return }
+    isInspectorPresented.toggle()
   }
 
   func requestRemoval(of profile: Profile) {
+    guard !isSaving else { return }
     pendingRemoval = profile
     isShowingRemoveConfirmation = true
   }
 
   func confirmRemoval() {
-    guard let manager, let pendingRemoval else { return }
+    guard let manager, let pendingRemoval, !isSaving else { return }
     self.pendingRemoval = nil
+    isSaving = true
     Task {
-      switch await Self.perform({ try manager.removeProfile(id: pendingRemoval.id.rawValue) }) {
+      let outcome = await Self.perform {
+        try manager.removeProfile(id: pendingRemoval.id.rawValue)
+      }
+      isSaving = false
+      switch outcome {
       case .success:
-        selectedProfileID = nil
+        statuses.removeValue(forKey: pendingRemoval.id)
+        if selectedProfileID == pendingRemoval.id {
+          selectedProfileID = nil
+        }
         await reload()
       case .failure(let message):
         showError(message)
@@ -256,6 +324,20 @@ final class AppModel {
   func dismissAlert() {
     isShowingAlert = false
     alertMessage = ""
+  }
+
+  private func copyCommand(_ command: String, indicator: CopiedCommand) {
+    writePasteboard(command)
+    copiedCommand = indicator
+    copyFeedbackTask?.cancel()
+    let duration = copyFeedbackDuration
+    copyFeedbackTask = Task {
+      try? await Task.sleep(for: duration)
+      guard !Task.isCancelled else { return }
+      if self.copiedCommand == indicator {
+        self.copiedCommand = nil
+      }
+    }
   }
 
   private func showError(_ error: Error) {

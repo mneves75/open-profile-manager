@@ -1,0 +1,8 @@
+id: no-panel-create-directories
+language: Swift
+severity: error
+message: Keep canCreateDirectories = false on NSOpenPanel; panel-created folders inherit umask 0755 and fail the 0700 private-directory check.
+files:
+  - Sources/OpenProfileManager/**/*.swift
+rule:
+  pattern: $PANEL.canCreateDirectories = true
