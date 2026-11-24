@@ -52,6 +52,164 @@ struct AppModelTests {
     #expect(!fixture.model.isRefreshing)
     #expect(Set(fixture.model.statuses.keys.map(\.rawValue)) == ["alpha", "beta"])
   }
+
+  @Test(
+    "Removing a profile drops stale status, finishes reload, and closes the inspector when empty")
+  func removalPrunesStaleStateAndSelection() async throws {
+    let root = try privateTemporaryDirectory()
+    defer { try? FileManager.default.removeItem(at: root) }
+    let manager = try ProfileManager(
+      registryURL: root.appendingPathComponent("registry/profiles.json"),
+      applicationSupportDirectory: root.appendingPathComponent("registry", isDirectory: true)
+    )
+    let profile = try manager.addProfile(
+      id: "work",
+      displayName: "Work",
+      codexHome: root.appendingPathComponent("work-home", isDirectory: true)
+    )
+    let reads = PendingStatusReads()
+    let model = AppModel(manager: manager) { _, profiles in
+      await reads.read(profiles)
+    }
+
+    let initialReload = Task { await model.reload() }
+    try await reads.waitForReads(1)
+    reads.complete(0)
+    await initialReload.value
+
+    model.isInspectorPresented = true
+    model.requestRemoval(of: profile)
+    model.confirmRemoval()
+
+    try await reads.waitForReads(2)
+    reads.complete(1)
+
+    let deadline = ContinuousClock.now + .seconds(5)
+    while model.isSaving || model.isRefreshing {
+      guard ContinuousClock.now < deadline else { throw CancellationError() }
+      try await Task.sleep(for: .milliseconds(5))
+    }
+
+    #expect(model.profiles.isEmpty)
+    #expect(model.statuses.isEmpty)
+    #expect(model.selectedProfileID == nil)
+    #expect(!model.isInspectorPresented)
+    #expect(!model.isRefreshing)
+  }
+
+  @Test("Rapid command copies cancel prior feedback timers deterministically")
+  func rapidCommandCopiesCancelPriorTimer() async throws {
+    let root = try privateTemporaryDirectory()
+    defer { try? FileManager.default.removeItem(at: root) }
+    let alpha = try Profile(
+      id: ProfileID("alpha"),
+      displayName: "Alpha",
+      codexHome: root.appendingPathComponent("alpha", isDirectory: true)
+    )
+    let beta = try Profile(
+      id: ProfileID("beta"),
+      displayName: "Beta",
+      codexHome: root.appendingPathComponent("beta", isDirectory: true)
+    )
+    var copiedStrings: [String] = []
+    let timers = PendingTimers()
+    let model = AppModel(
+      manager: nil,
+      writePasteboard: { value in
+        copiedStrings.append(value)
+        return true
+      },
+      sleep: { _ in
+        try await timers.wait()
+      }
+    )
+
+    model.copyCLICommand(for: alpha)
+    try await timers.waitForCount(1)
+    #expect(model.copiedCommand == .cli(alpha.id))
+
+    model.copyLoginCommand(for: beta)
+    try await timers.waitForCount(2)
+    #expect(timers.wasCancelled(0))
+    #expect(!timers.wasCancelled(1))
+    #expect(model.copiedCommand == .login(beta.id))
+    #expect(copiedStrings == ["opm run alpha", "opm login beta"])
+
+    timers.resume(0)
+    await Task.yield()
+    #expect(model.copiedCommand == .login(beta.id))
+
+    timers.resume(1)
+    let deadline = ContinuousClock.now + .seconds(5)
+    while model.copiedCommand != nil {
+      guard ContinuousClock.now < deadline else { throw CancellationError() }
+      await Task.yield()
+    }
+    #expect(model.copiedCommand == nil)
+  }
+
+  @Test("Failed pasteboard writes clear copied feedback and cancel any active timer")
+  func failedPasteboardWriteSkipsFeedback() async throws {
+    let root = try privateTemporaryDirectory()
+    defer { try? FileManager.default.removeItem(at: root) }
+    let profile = try Profile(
+      id: ProfileID("alpha"),
+      displayName: "Alpha",
+      codexHome: root.appendingPathComponent("alpha", isDirectory: true)
+    )
+    let shouldSucceed = Mutex(true)
+    let timers = PendingTimers()
+    let model = AppModel(
+      manager: nil,
+      writePasteboard: { _ in shouldSucceed.withLock { $0 } },
+      sleep: { _ in try await timers.wait() }
+    )
+    model.copyCLICommand(for: profile)
+    try await timers.waitForCount(1)
+    #expect(model.copiedCommand == .cli(profile.id))
+
+    shouldSucceed.withLock { $0 = false }
+    model.copyCLICommand(for: profile)
+    #expect(model.copiedCommand == nil)
+    #expect(timers.wasCancelled(0))
+    timers.resume(0)
+  }
+
+  @Test("Profile menu shortcuts are disabled while a modal editor or alert is presented")
+  func profileShortcutsDisabledDuringModalState() throws {
+    let root = try privateTemporaryDirectory()
+    defer { try? FileManager.default.removeItem(at: root) }
+    let profile = try Profile(
+      id: ProfileID("alpha"),
+      displayName: "Alpha",
+      codexHome: root.appendingPathComponent("alpha", isDirectory: true)
+    )
+    let model = AppModel(manager: nil)
+    model.profiles = [profile]
+    model.selectedProfileID = profile.id
+    #expect(model.canPerformProfileShortcut)
+
+    model.presentEditor(for: profile)
+    #expect(!model.canPerformProfileShortcut)
+
+    model.editor = nil
+    model.isShowingRemoveConfirmation = true
+    #expect(!model.canPerformProfileShortcut)
+
+    model.isShowingRemoveConfirmation = false
+    model.isShowingAlert = true
+    #expect(!model.canPerformProfileShortcut)
+  }
+}
+
+private func privateTemporaryDirectory() throws -> URL {
+  let url = FileManager.default.temporaryDirectory
+    .appendingPathComponent("AppModelTests-\(UUID().uuidString)", isDirectory: true)
+  try FileManager.default.createDirectory(at: url, withIntermediateDirectories: false)
+  guard chmod(url.path, S_IRWXU) == 0 else {
+    throw CocoaError(.fileWriteNoPermission)
+  }
+  return url
 }
 
 /// Starts a reload for profile "alpha", adds "beta", then starts a second reload; both status reads
@@ -65,7 +223,7 @@ private struct OverlappingReloads {
   let currentReload: Task<Void, Never>
 
   init() async throws {
-    root = try Self.privateTemporaryDirectory()
+    root = try privateTemporaryDirectory()
     let manager = try ProfileManager(
       registryURL: root.appendingPathComponent("registry/profiles.json"),
       applicationSupportDirectory: root.appendingPathComponent("registry", isDirectory: true)
@@ -94,16 +252,6 @@ private struct OverlappingReloads {
 
   func cleanUp() {
     try? FileManager.default.removeItem(at: root)
-  }
-
-  private static func privateTemporaryDirectory() throws -> URL {
-    let url = FileManager.default.temporaryDirectory
-      .appendingPathComponent("AppModelTests-\(UUID().uuidString)", isDirectory: true)
-    try FileManager.default.createDirectory(at: url, withIntermediateDirectories: false)
-    guard chmod(url.path, S_IRWXU) == 0 else {
-      throw CocoaError(.fileWriteNoPermission)
-    }
-    return url
   }
 }
 
@@ -153,5 +301,50 @@ private final class PendingStatusReads: Sendable {
       returning: read.profiles.map {
         ProfileStatus(profileID: $0.id, displayName: $0.displayName, state: .available)
       })
+  }
+}
+
+/// Holds injected sleep calls open until the test advances them explicitly.
+private final class PendingTimers: Sendable {
+  private struct Entry {
+    let id: UUID
+    let continuation: CheckedContinuation<Void, Error>
+  }
+
+  private struct State {
+    var entries: [Entry] = []
+    var cancelledIDs: Set<UUID> = []
+  }
+
+  private let state = Mutex(State())
+
+  func wait() async throws {
+    let id = UUID()
+    return try await withTaskCancellationHandler {
+      try await withCheckedThrowingContinuation { continuation in
+        state.withLock {
+          $0.entries.append(Entry(id: id, continuation: continuation))
+        }
+      }
+    } onCancel: {
+      _ = state.withLock { $0.cancelledIDs.insert(id) }
+    }
+  }
+
+  func waitForCount(_ count: Int) async throws {
+    let deadline = ContinuousClock.now + .seconds(5)
+    while state.withLock({ $0.entries.count }) < count {
+      guard ContinuousClock.now < deadline else { throw CancellationError() }
+      try await Task.sleep(for: .milliseconds(5))
+    }
+  }
+
+  func wasCancelled(_ index: Int) -> Bool {
+    state.withLock { $0.cancelledIDs.contains($0.entries[index].id) }
+  }
+
+  func resume(_ index: Int) {
+    let entry = state.withLock { $0.entries[index] }
+    entry.continuation.resume()
   }
 }

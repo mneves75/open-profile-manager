@@ -1,0 +1,5 @@
+id: no-adapter-standardized-url
+valid:
+  - 'let url = URL(fileURLWithPath: path)'
+invalid:
+  - 'let url = URL(fileURLWithPath: path).standardizedFileURL'

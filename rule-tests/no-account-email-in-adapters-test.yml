@@ -1,0 +1,6 @@
+id: no-account-email-in-adapters
+valid:
+  - 'let plan = status.account?.planType'
+invalid:
+  - 'let email = status.account?.email'
+  - 'print(account.email)'

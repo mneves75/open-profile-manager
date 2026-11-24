@@ -9,8 +9,9 @@ struct ProfileEditorView: View {
   let onSave: (ProfileDraft) -> Void
 
   @Environment(\.dismiss) private var dismiss
-  // Seeded once per presentation: each `sheet(item:)` configuration carries a fresh identity.
   @State private var draft: ProfileDraft
+  @State private var didEditProfileID: Bool
+  @State private var showAdvanced: Bool
   @FocusState private var focusedField: EditorField?
 
   init(
@@ -24,18 +25,41 @@ struct ProfileEditorView: View {
     self.isSaving = isSaving
     self.onSave = onSave
     _draft = State(initialValue: configuration.draft)
+    _didEditProfileID = State(initialValue: configuration.mode == .edit)
+    _showAdvanced = State(initialValue: !configuration.draft.guiDataDirectory.isEmpty)
   }
 
   var body: some View {
     VStack(spacing: 0) {
-      EditorHeader(isEditing: configuration.mode == .edit)
-        .padding(.horizontal, 24)
-        .padding(.top, 24)
-        .padding(.bottom, 8)
+      HStack {
+        Text(
+          verbatim: configuration.mode == .edit
+            ? L10n.string("Edit Profile")
+            : L10n.string("New Profile")
+        )
+        .font(.title3.weight(.semibold))
+        Spacer()
+      }
+      .padding(.horizontal, 20)
+      .padding(.top, 20)
+      .padding(.bottom, 8)
 
       Form {
         Section {
-          // The label closure keeps the row label in the body font; only the typed ID is monospaced.
+          TextField(
+            L10n.string("Display name"),
+            text: $draft.displayName,
+            prompt: Text(verbatim: L10n.string("Work"))
+          )
+          .focused($focusedField, equals: .displayName)
+          .onChange(of: draft.displayName) { _, newValue in
+            guard configuration.mode == .add, !didEditProfileID else { return }
+            draft.profileID = ProfileID.suggested(from: newValue)
+          }
+          .onSubmit {
+            focusedField = configuration.mode == .edit ? .codexHome : .profileID
+          }
+
           TextField(
             text: $draft.profileID,
             prompt: Text(verbatim: L10n.string("work"))
@@ -46,13 +70,13 @@ struct ProfileEditorView: View {
           .font(.body.monospaced())
           .disabled(configuration.mode == .edit)
           .focused($focusedField, equals: .profileID)
-          .onSubmit { focusedField = .displayName }
-          TextField(
-            L10n.string("Display name"),
-            text: $draft.displayName,
-            prompt: Text(verbatim: L10n.string("Work"))
-          )
-          .focused($focusedField, equals: .displayName)
+          .onChange(of: draft.profileID) { _, newValue in
+            if configuration.mode == .add,
+              newValue != ProfileID.suggested(from: draft.displayName)
+            {
+              didEditProfileID = true
+            }
+          }
           .onSubmit { focusedField = .codexHome }
         }
 
@@ -63,26 +87,23 @@ struct ProfileEditorView: View {
             prompt: "~/.codex",
             focus: $focusedField,
             field: .codexHome,
-            onSubmit: { focusedField = .guiDataDirectory }
+            onSubmit: {
+              if canSave, !isSaving {
+                onSave(draft)
+              }
+            }
           )
-          DirectoryField(
-            title: L10n.string("Desktop data directory (optional)"),
-            text: $draft.guiDataDirectory,
-            prompt: L10n.string("Managed automatically"),
-            focus: $focusedField,
-            field: .guiDataDirectory
-          )
-        } footer: {
-          Label {
-            Text(
-              verbatim: L10n.string(
-                "Authentication remains managed by the official Codex CLI inside this home."
-              )
+
+          DisclosureGroup(L10n.string("Advanced"), isExpanded: $showAdvanced) {
+            DirectoryField(
+              title: L10n.string("Desktop data directory"),
+              text: $draft.guiDataDirectory,
+              prompt: L10n.string("Automatic"),
+              focus: $focusedField,
+              field: .guiDataDirectory
             )
-          } icon: {
-            Image(systemName: "lock.shield")
+            .padding(.top, 6)
           }
-          .font(.caption)
         }
 
         if let errorMessage {
@@ -95,26 +116,31 @@ struct ProfileEditorView: View {
         }
       }
       .formStyle(.grouped)
-      .scrollContentBackground(.hidden)
 
       Divider()
-      EditorFooter(
-        isEditing: configuration.mode == .edit,
-        canSave: canSave && !isSaving,
-        onCancel: { dismiss() },
-        onSave: { onSave(draft) }
-      )
+
+      HStack(spacing: 10) {
+        Spacer()
+        Button(L10n.string("Cancel"), role: .cancel) { dismiss() }
+          .keyboardShortcut(.cancelAction)
+        Button(
+          configuration.mode == .edit
+            ? L10n.string("Save Changes")
+            : L10n.string("Add Profile")
+        ) {
+          onSave(draft)
+        }
+        .keyboardShortcut(.defaultAction)
+        .opmProminentButtonStyle()
+        .disabled(!canSave || isSaving)
+      }
+      .padding(.horizontal, 20)
+      .padding(.vertical, 14)
     }
-    .frame(
-      minWidth: 520,
-      idealWidth: 620,
-      maxWidth: 760,
-      minHeight: 520,
-      idealHeight: 650
-    )
-    .background(AppVisualStyle.canvas)
+    .frame(minWidth: 460, idealWidth: 520, maxWidth: 640, minHeight: 380, idealHeight: 430)
+    .background(Color(nsColor: .windowBackgroundColor))
     .onAppear {
-      focusedField = configuration.mode == .edit ? .displayName : .profileID
+      focusedField = .displayName
     }
   }
 
@@ -133,68 +159,10 @@ struct ProfileEditorView: View {
 }
 
 private enum EditorField: Hashable {
-  case profileID
   case displayName
+  case profileID
   case codexHome
   case guiDataDirectory
-}
-
-private struct EditorHeader: View {
-  let isEditing: Bool
-
-  var body: some View {
-    HStack(spacing: 14) {
-      Image(systemName: isEditing ? "pencil" : "plus")
-        .font(.system(size: 18, weight: .semibold))
-        .foregroundStyle(.white)
-        .frame(width: 42, height: 42)
-        .background(.tint, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
-        .accessibilityHidden(true)
-      VStack(alignment: .leading, spacing: 3) {
-        Text(verbatim: isEditing ? L10n.string("Edit Profile") : L10n.string("Add Profile"))
-          .font(.title2.bold())
-        Text(verbatim: L10n.string("Use a separate Codex home for each account or workspace."))
-          .foregroundStyle(.secondary)
-      }
-      .fixedSize(horizontal: false, vertical: true)
-    }
-  }
-}
-
-private struct EditorFooter: View {
-  let isEditing: Bool
-  let canSave: Bool
-  let onCancel: () -> Void
-  let onSave: () -> Void
-
-  var body: some View {
-    ViewThatFits(in: .horizontal) {
-      HStack(spacing: 10) {
-        Spacer()
-        buttons
-      }
-      VStack(alignment: .trailing, spacing: 10) {
-        buttons
-      }
-    }
-    .frame(maxWidth: .infinity, alignment: .trailing)
-    .padding(18)
-    .background(AppVisualStyle.sidebar)
-  }
-
-  @ViewBuilder
-  private var buttons: some View {
-    Button(L10n.string("Cancel"), role: .cancel, action: onCancel)
-      .keyboardShortcut(.cancelAction)
-    Button(saveTitle, action: onSave)
-      .keyboardShortcut(.defaultAction)
-      .buttonStyle(.borderedProminent)
-      .disabled(!canSave)
-  }
-
-  private var saveTitle: String {
-    isEditing ? L10n.string("Save Changes") : L10n.string("Add Profile")
-  }
 }
 
 private struct DirectoryField: View {
@@ -222,13 +190,11 @@ private struct DirectoryField: View {
   }
 
   var body: some View {
-    VStack(alignment: .leading, spacing: 7) {
+    VStack(alignment: .leading, spacing: 6) {
       Text(verbatim: title)
-        .font(.caption.weight(.semibold))
+        .font(.caption.weight(.medium))
         .foregroundStyle(.secondary)
-        .fixedSize(horizontal: false, vertical: true)
-      HStack(spacing: 10) {
-        // The caption above names the field; a grouped Form would otherwise repeat the title as a row label.
+      HStack(spacing: 8) {
         TextField(title, text: $text, prompt: Text(verbatim: prompt))
           .labelsHidden()
           .font(.body.monospaced())
@@ -247,7 +213,6 @@ private struct DirectoryField: View {
     let panel = NSOpenPanel()
     panel.canChooseFiles = false
     panel.canChooseDirectories = true
-    // Panel-created folders inherit the umask (0755) and would fail the 0700 profile-directory check.
     panel.canCreateDirectories = false
     panel.allowsMultipleSelection = false
     Task {

@@ -192,6 +192,33 @@ public struct ProfileID: Codable, Hashable, Comparable, Sendable, CustomStringCo
     }
   }
 
+  public static func suggested(from displayName: String) -> String {
+    var result = ""
+    var previousWasHyphen = false
+    let folded = displayName.folding(
+      options: [.diacriticInsensitive, .caseInsensitive],
+      locale: Locale(identifier: "en_US_POSIX")
+    )
+    for scalar in folded.unicodeScalars {
+      if scalar.value <= 127, isLowercaseLetterOrDigit(UInt8(scalar.value)) {
+        result.unicodeScalars.append(scalar)
+        previousWasHyphen = false
+      } else if scalar == " " || scalar == "-" || scalar == "_", !result.isEmpty,
+        !previousWasHyphen
+      {
+        result.append("-")
+        previousWasHyphen = true
+      }
+      if result.utf8.count >= 32 {
+        break
+      }
+    }
+    while result.hasSuffix("-") {
+      result.removeLast()
+    }
+    return result
+  }
+
   private static func isLowercaseLetterOrDigit(_ byte: UInt8) -> Bool {
     (byte >= 97 && byte <= 122) || (byte >= 48 && byte <= 57)
   }
@@ -367,5 +394,5 @@ public struct ProfileUpdate: Sendable {
 }
 
 public enum OPMVersion {
-  public static let current = "0.1.13"
+  public static let current = "0.2.0"
 }

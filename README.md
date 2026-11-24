@@ -42,9 +42,10 @@ The static product site's repeatable performance and asset-validation contract i
 ## Quick start
 
 ```bash
-# Register existing profiles. Paths are expanded by your shell here.
+# Register or edit profiles. Paths are expanded by your shell here.
 opm profile add work --name "Work" --home "$HOME/.codex"
 opm profile add research --name "Research" --home "$HOME/.codex-research"
+opm profile edit research --name "Research EU"
 
 # Authenticate each profile using the official Codex flow.
 opm login work

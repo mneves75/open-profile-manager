@@ -1,0 +1,9 @@
+id: no-adapter-standardized-url
+language: Swift
+severity: error
+message: Pass raw user URLs to ProfileCore (Profile.normalizedAbsoluteURL or Profile.fileURL); standardizing in adapters first can truncate long paths on macOS 15.
+files:
+  - Sources/OpenProfileManager/**/*.swift
+  - Sources/opm/**/*.swift
+rule:
+  pattern: $URL.standardizedFileURL

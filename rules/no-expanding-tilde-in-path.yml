@@ -1,0 +1,8 @@
+id: no-expanding-tilde-in-path
+language: Swift
+severity: error
+message: Use Profile.fileURL(fromUserPath:field:) instead of expandingTildeInPath; Foundation truncates paths longer than PATH_MAX and expands ~user.
+files:
+  - Sources/**/*.swift
+rule:
+  pattern: $EXPRESSION.expandingTildeInPath

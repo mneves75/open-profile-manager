@@ -12,8 +12,8 @@ for command_name in "${required_commands[@]}"; do
   fi
 done
 
-if [[ $(node --version) != v26.* || $(npm --version) != 11.* ]]; then
-  echo "Node 26 and npm 11 are required; select the runtime in .nvmrc first." >&2
+if [[ $(node --version) != v26.* ]] || [[ $(npm --version) != 11.* && $(npm --version) != 12.* ]]; then
+  echo "Node 26 and npm 11 or 12 are required; select the runtime in .nvmrc first." >&2
   exit 1
 fi
 

@@ -2,7 +2,24 @@
 
 All notable changes to this project are documented in this file. The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and the project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [0.1.14] - Unreleased
+## [0.2.0] - 2026-11-24
+
+### Added
+
+- Native macOS UI redesign with system Light and Dark appearance support, `#available(macOS 26, *)` Liquid Glass action controls (with semantic macOS 15 fallbacks), spacious quota metric cards, progressive disclosure via a toggleable profile Inspector (`⌥⌘I`), sidebar context menus, a Profile menu with modal-safe keyboard shortcuts (`⌘↩`, `⇧⌘C`, `⌘E`, `⌘⌫`), transient clipboard copy confirmation, inline login/doctor remediation actions, and automatic `ProfileID` slug suggestions in the streamlined profile editor.
+- `opm profile edit` CLI command (`--name`, `--home`/`--codex-home`, `--gui-data-dir`, `--clear-gui-data-dir`, `--json`) reusing `ProfileManager.updateProfile`, plus concise help abstracts across all `opm` subcommands.
+- Four structural `ast-grep` rules (`no-expanding-tilde-in-path`, `no-account-email-in-adapters`, `no-panel-create-directories`, `no-adapter-standardized-url`) with positive and negative rule fixtures encoding recurring historical defect classes.
+- Claude Code project settings (`.claude/settings.json`) enforcing read denies on `~/.codex*/**/auth.json` at both tool and shell-sandbox layers, interactive prompts before release/push/install/branch actions, and optional `claude-gate` Stop verification when installed.
+
+### Changed
+
+- Pin `.nvmrc` to Node `26.13.0` and allow npm 11 or 12 in `video/package.json`, `Scripts/bootstrap.sh`, and `Scripts/check_web_video.sh`.
+- Synchronize 149 localized strings in `en-US` and `pt-BR` and prune 14 redundant helper sentences from the native UI.
+
+### Fixed
+
+- Guard `AppModel` profile removals against overlapping saves/mutations, clear removed status entries immediately, move Finder existence checks off `@MainActor`, and show copy feedback only when `NSPasteboard.setString` succeeds.
+- Update the development-only video toolchain to Remotion `4.0.544` and `source-map-js` `1.2.2` to clear high-severity npm advisories.
 
 ## [0.1.13] - 2026-10-04
 

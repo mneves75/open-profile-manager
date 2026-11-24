@@ -5,30 +5,42 @@ struct ProfileSidebar: View {
   let profiles: [Profile]
   let statuses: [ProfileID: ProfileStatus]
   @Binding var selection: ProfileID?
+  let onLaunch: (Profile) -> Void
+  let onCopyCLI: (Profile) -> Void
+  let onEdit: (Profile) -> Void
+  let onInstallLauncher: (Profile) -> Void
+  let onRemove: (Profile) -> Void
 
   var body: some View {
-    ZStack {
-      LinearGradient(
-        colors: [AppVisualStyle.sidebar.opacity(0.98), AppVisualStyle.canvas],
-        startPoint: .top,
-        endPoint: .bottom
+    List(profiles, id: \.id, selection: $selection) { profile in
+      ProfileRow(
+        displayName: profile.displayName,
+        profileID: profile.id.rawValue,
+        status: statuses[profile.id]
       )
-      .ignoresSafeArea()
-
-      List(profiles, id: \.id, selection: $selection) { profile in
-        ProfileRow(
-          displayName: profile.displayName,
-          profileID: profile.id.rawValue,
-          status: statuses[profile.id]
-        )
-        .tag(profile.id)
-        .listRowInsets(EdgeInsets(top: 5, leading: 10, bottom: 5, trailing: 10))
-        .listRowSeparator(.hidden)
+      .tag(profile.id)
+      .contextMenu {
+        Button(L10n.string("Launch Desktop App"), systemImage: "arrow.up.forward.app") {
+          onLaunch(profile)
+        }
+        Button(L10n.string("Copy CLI Command"), systemImage: "terminal") {
+          onCopyCLI(profile)
+        }
+        Divider()
+        Button(L10n.string("Edit Profile"), systemImage: "pencil") {
+          onEdit(profile)
+        }
+        Button(L10n.string("Install Finder Launcher"), systemImage: "macwindow.badge.plus") {
+          onInstallLauncher(profile)
+        }
+        Divider()
+        Button(L10n.string("Remove Profile"), systemImage: "trash", role: .destructive) {
+          onRemove(profile)
+        }
       }
-      .scrollContentBackground(.hidden)
-      .listStyle(.plain)
-      .accessibilityLabel(L10n.string("Codex profiles"))
     }
+    .listStyle(.sidebar)
+    .accessibilityLabel(L10n.string("Codex profiles"))
     .navigationTitle(L10n.string("Profiles"))
   }
 }
@@ -39,27 +51,16 @@ private struct ProfileRow: View {
   let status: ProfileStatus?
 
   var body: some View {
-    HStack(spacing: 12) {
-      ZStack(alignment: .bottomTrailing) {
-        RoundedRectangle(cornerRadius: 11, style: .continuous)
-          .fill(.white.opacity(0.07))
-          .frame(width: 38, height: 38)
-          .overlay {
-            Image(systemName: "terminal")
-              .font(.system(size: 15, weight: .medium))
-              .foregroundStyle(.primary.opacity(0.82))
-          }
-        StatusIndicator(state: status?.state)
-          .offset(x: 2, y: 2)
-      }
+    HStack(spacing: 10) {
+      StatusDot(state: status?.state)
 
-      VStack(alignment: .leading, spacing: 4) {
+      VStack(alignment: .leading, spacing: 2) {
         Text(verbatim: displayName)
-          .font(.system(.body, design: .rounded, weight: .semibold))
+          .font(.body.weight(.medium))
           .lineLimit(1)
-        HStack(spacing: 5) {
+        HStack(spacing: 4) {
           Text(verbatim: profileID)
-          if let planType = status?.account?.planType {
+          if let planType = ProfileStatusPresentation.formattedPlanType(for: status) {
             Text(verbatim: "·")
             Text(verbatim: planType)
           }
@@ -69,40 +70,31 @@ private struct ProfileRow: View {
         .lineLimit(1)
       }
 
-      Spacer(minLength: 4)
+      Spacer(minLength: 6)
 
       if let usedPercent = status?.rateLimits?.primary?.usedPercent {
         Text(verbatim: "\(usedPercent)%")
-          .font(.caption2.monospacedDigit().weight(.medium))
+          .font(.caption.monospacedDigit().weight(.medium))
           .foregroundStyle(.secondary)
-          .padding(.horizontal, 7)
-          .padding(.vertical, 4)
-          .background(.white.opacity(0.055), in: Capsule())
       }
     }
-    .padding(.vertical, 5)
+    .padding(.vertical, 4)
     .contentShape(Rectangle())
   }
 }
 
-private struct StatusIndicator: View {
+private struct StatusDot: View {
   let state: ProfileStatusState?
 
   var body: some View {
-    Circle()
-      .fill(color)
-      .frame(width: 10, height: 10)
-      .overlay { Circle().stroke(AppVisualStyle.sidebar, lineWidth: 2) }
+    color
+      .frame(width: 8, height: 8)
+      .clipShape(Circle())
       .accessibilityLabel(label)
   }
 
   private var color: Color {
-    switch state {
-    case .available: .green
-    case .notAuthenticated: .orange
-    case .unavailable: .red
-    case nil: .secondary
-    }
+    state == nil ? .secondary.opacity(0.5) : ProfileStatusPresentation.color(for: state)
   }
 
   private var label: String {

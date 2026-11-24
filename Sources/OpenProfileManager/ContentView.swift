@@ -9,30 +9,50 @@ struct ContentView: View {
       ProfileSidebar(
         profiles: model.profiles,
         statuses: model.statuses,
-        selection: $model.selectedProfileID
+        selection: $model.selectedProfileID,
+        onLaunch: { model.launchApp(for: $0) },
+        onCopyCLI: { model.copyCLICommand(for: $0) },
+        onEdit: { model.presentEditor(for: $0) },
+        onInstallLauncher: { model.installLauncher(for: $0) },
+        onRemove: { model.requestRemoval(of: $0) }
       )
-      .navigationSplitViewColumnWidth(min: 260, ideal: 300, max: 380)
+      .navigationSplitViewColumnWidth(min: 220, ideal: 256, max: 320)
     } detail: {
-      ZStack {
-        AppVisualStyle.canvas.ignoresSafeArea()
+      Group {
         if let profile = model.selectedProfile {
           ProfileDetailView(
             profile: profile,
             status: model.statuses[profile.id],
             isRefreshing: model.isRefreshing,
+            copiedCommand: model.copiedCommand,
             onLaunch: { model.launchApp(for: profile) },
-            onInstallLauncher: { model.installLauncher(for: profile) },
             onCopyCLI: { model.copyCLICommand(for: profile) },
+            onCopyLogin: { model.copyLoginCommand(for: profile) },
+            onCopyDoctor: { model.copyDoctorCommand(for: profile) },
+            onRefresh: { Task { await model.reload() } },
             onEdit: { model.presentEditor(for: profile) },
+            onInstallLauncher: { model.installLauncher(for: profile) },
+            onShowDetails: { model.isInspectorPresented = true },
             onRemove: { model.requestRemoval(of: profile) }
           )
+          .inspector(isPresented: $model.isInspectorPresented) {
+            ProfileInspectorView(
+              profile: profile,
+              onRevealCodexHome: { model.revealInFinder(profile.codexHome) },
+              onInstallLauncher: { model.installLauncher(for: profile) },
+              onEdit: { model.presentEditor(for: profile) },
+              onRemove: { model.requestRemoval(of: profile) }
+            )
+            .inspectorColumnWidth(min: 240, ideal: 276, max: 340)
+          }
         } else {
           EmptyProfilesView(onAdd: model.presentNewProfile)
         }
       }
+      .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
     .toolbar {
-      ToolbarItemGroup {
+      ToolbarItemGroup(placement: .primaryAction) {
         Button(L10n.string("Add Profile"), systemImage: "plus", action: model.presentNewProfile)
           .help(L10n.string("Add a Codex profile"))
         Button(L10n.string("Refresh"), systemImage: "arrow.clockwise") {
@@ -40,6 +60,16 @@ struct ContentView: View {
         }
         .disabled(model.isRefreshing)
         .help(L10n.string("Refresh account and quota status"))
+        if model.selectedProfile != nil {
+          Button(
+            model.isInspectorPresented
+              ? L10n.string("Hide Inspector")
+              : L10n.string("Show Inspector"),
+            systemImage: "sidebar.right",
+            action: model.toggleInspector
+          )
+          .help(L10n.string("Show profile paths and details"))
+        }
       }
     }
     .sheet(item: $model.editor) { configuration in
@@ -71,7 +101,6 @@ struct ContentView: View {
       )
     }
     .task { model.start() }
-    .preferredColorScheme(.dark)
   }
 }
 
@@ -82,14 +111,13 @@ private struct EmptyProfilesView: View {
     ContentUnavailableView {
       Label(L10n.string("No Profiles"), systemImage: "person.crop.rectangle.stack")
     } description: {
-      Text(
-        verbatim: L10n.string(
-          "Add a Codex home to launch the CLI or desktop app with an explicit account."
-        )
-      )
+      Text(verbatim: L10n.string("Add a Codex profile to get started."))
     } actions: {
       Button(L10n.string("Add Profile"), action: onAdd)
-        .buttonStyle(.borderedProminent)
+        .opmProminentButtonStyle()
+        .controlSize(.large)
     }
+    .frame(maxWidth: .infinity, maxHeight: .infinity)
+    .background(Color(nsColor: .windowBackgroundColor))
   }
 }
