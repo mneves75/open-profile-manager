@@ -21,8 +21,8 @@ if [[ "$MODE" == --site-only ]]; then
   exit 0
 fi
 
-if [[ $(npm --version) != 11.* ]]; then
-  echo "npm 11 is required for web and video checks" >&2
+if [[ $(npm --version) != 11.* && $(npm --version) != 12.* ]]; then
+  echo "npm 11 or 12 is required for web and video checks" >&2
   exit 1
 fi
 
