@@ -17,9 +17,9 @@ Ship an unofficial MIT-licensed, local-first profile manager for Codex CLI and t
 
 ## Active work
 
-- Version 0.1.13/build 15 is the current source line and latest published release; 0.1.14 is the next unreleased target.
-- The public notarized app is installed at `~/Applications/Open Profile Manager.app` and the CLI at `~/.local/bin/opm`; version 0.1.13/build 15, checksum, attestation, signature, notarization, Gatekeeper, staple and packaged smoke passed. Release evidence is in PROJECT_STATUS.md and memory/2026-10-04.md.
-- Remaining hardening notes (not findings) are listed in docs/SECURITY_AUDIT.md under 0.1.11 and 0.1.12.
+- Version 0.2.0/build 16 is the current source line and latest published release; 0.2.1 is the next unreleased target.
+- The public notarized app is installed at `~/Applications/Open Profile Manager.app` and the CLI at `~/.local/bin/opm`; version 0.2.0/build 16, checksum, attestation, signature, notarization, Gatekeeper, staple and packaged smoke passed. Release evidence is in PROJECT_STATUS.md and docs/SECURITY_AUDIT.md.
+- Remaining hardening notes (not findings) are listed in docs/SECURITY_AUDIT.md under 0.1.11, 0.1.12, and 0.2.0.
 
 ## Project environment
 
@@ -29,6 +29,7 @@ Ship an unofficial MIT-licensed, local-first profile manager for Codex CLI and t
 
 ## Verified state
 
+- Version 0.2.0 and its preceding beta1 are immutable releases from `4336ab1` (notarization submission `d9474f0d-3254-4a5b-b198-4d53b3b76ed8`), with all four asset attestations verified and the public universal (`x86_64 arm64`) app and CLI installed locally. It ships the native macOS UI redesign (`#available(macOS 26, *)` Liquid Glass with macOS 15 fallbacks, Light/Dark support, Inspector, 149 `en-US`/`pt-BR` keys), `opm profile edit`, 4 new `ast-grep` rules, `.claude/settings.json` sandbox/tool denies, and Remotion 4.0.544 / `source-map-js` 1.2.2.
 - Version 0.1.13 and its preceding beta1 are immutable releases from `b1c881b`, with all four asset attestations verified. It folds all Dependabot updates (CI actions, Remotion 4.0.523, ESLint 10.10.0) into one tested change; app and CLI behavior match 0.1.12.
 - Version 0.1.12 and its preceding beta1 are immutable releases from `0bb57fe`, with all four asset attestations verified. The full gate passes under stable Xcode 27.0 (65 core, 6 native and the strict pool test) and Node 26; CI passes natively on x86_64. Verify release assets with `gh release verify-asset`; `gh attestation verify` looks for SLSA provenance and returns 404.
 - Version 0.1.11 and its preceding beta1 are immutable releases from `0a60fc0`, with all four asset attestations verified. The full gate passes under stable Xcode 27.0 (62 core, 6 native and the strict pool test), and CI passes natively on x86_64; the `noowners` regressions attach disk images with `hdiutil` without root on GitHub runners.

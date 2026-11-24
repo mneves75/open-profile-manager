@@ -2,7 +2,7 @@
 
 ## Current release line
 
-Version 0.1.13/build 15 is the latest immutable, signed, notarized, and stapled [stable release](https://github.com/mneves75/open-profile-manager/releases/tag/v0.1.13). The preceding `v0.1.13-beta1` is a GitHub prerelease. Both tags resolve to `b1c881b`; version 0.1.14 is the next unreleased target.
+Version 0.2.0/build 16 is the latest immutable, signed, notarized, and stapled [stable release](https://github.com/mneves75/open-profile-manager/releases/tag/v0.2.0). The preceding `v0.2.0-beta1` is a GitHub prerelease. Both tags resolve to `4336ab1`; version 0.2.1 is the next unreleased target.
 
 ## Scope
 
@@ -23,6 +23,8 @@ Version 0.1.13/build 15 is the latest immutable, signed, notarized, and stapled 
 - Windows or Linux GUI support in 0.1.x
 
 ## Release evidence
+
+Version 0.2.0/build 16 ships the native macOS UI redesign (system Light and Dark appearances, `#available(macOS 26, *)` Liquid Glass controls with semantic macOS 15 fallbacks, spacious quota metric cards, progressive disclosure via toggleable Inspector `⌥⌘I`, sidebar context menus, modal-safe Profile menu shortcuts, transient clipboard copy confirmation, inline login/doctor actions, automatic `ProfileID.suggested(from:)` slugs in the streamlined editor, and 149 synchronized `en-US`/`pt-BR` strings), the `opm profile edit` CLI command and subcommand help abstracts, four new `ast-grep` structural rules with positive/negative fixtures, `.claude/settings.json` sandbox/tool credential denies, and Remotion 4.0.544 + `source-map-js` 1.2.2 clearing high-severity npm advisories. The full local gate (66 core, 10 native, strict pool test, PTY, `opm profile edit` contracts, 8 `ast-grep` suites, localization parity, web/video checks), release-mode secret scans, two-axis code review (Standards + Spec), multi-pass independent Codex P3 autoreviews, `mneves-security` deploy gate (PASS), and PR/main CI (including `macos-15-intel`) and CodeQL passed. Both `v0.2.0-beta1` and `v0.2.0` (`4336ab1`, notarization submission `d9474f0d-3254-4a5b-b198-4d53b3b76ed8`) passed Developer ID verification, Apple notarization, stapling, Gatekeeper (`syspolicy_check distribution`), universal `x86_64 arm64` checks, SBOM/checksums, all four GitHub asset attestations (production attestation verified on immediate follow-up per `docs/RELEASING.md`), and downloaded CLI/native smoke tests. The public production app and CLI were installed at `~/Applications/Open Profile Manager.app` and `~/.local/bin/opm` and passed checksum, attestation, signature, Gatekeeper, staple, version, PTY, and on-screen window checks.
 
 Version 0.1.13 is a maintenance release that folds all open Dependabot updates into one tested change: pinned CI actions (each SHA verified against its tag), Remotion 4.0.523 and ESLint 10.10.0 for the development-only video tooling, and removal of the `brace-expansion` overrides that no longer match any package. App and CLI behavior is unchanged. One sampled frame of each of the three product videos rendered byte-identically under Remotion 4.0.505 and 4.0.523. The full local gate under stable Xcode 27.0, release-mode secret scans, P3 autoreview (scoped-clean), and pull-request/main CI (including the Intel job) and CodeQL passed. Both beta and production passed Apple notarization, Developer ID and Gatekeeper checks, stapling, SBOM/checksums, all four asset attestations, and downloaded CLI/native smoke tests. The public production app and CLI were installed and passed checksum, attestation, signature, Gatekeeper, staple, and packaged smoke checks.
 
