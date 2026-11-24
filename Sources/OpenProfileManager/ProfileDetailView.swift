@@ -364,15 +364,22 @@ private struct StatusNotice: View {
     HStack(spacing: 16) {
       switch state {
       case .available:
-        Label(L10n.string("Ready"), systemImage: "checkmark.circle.fill")
-          .foregroundStyle(.green)
-          .font(.callout.weight(.medium))
+        Label {
+          Text(verbatim: L10n.string("Ready"))
+            .foregroundStyle(.primary)
+        } icon: {
+          Image(systemName: "checkmark.circle.fill")
+            .foregroundStyle(.green)
+        }
+        .font(.callout.weight(.medium))
       case .notAuthenticated:
-        Label(
-          L10n.string("Authenticate with Codex CLI"),
-          systemImage: "person.crop.circle.badge.exclamationmark"
-        )
-        .foregroundStyle(.orange)
+        Label {
+          Text(verbatim: L10n.string("Authenticate with Codex CLI"))
+            .foregroundStyle(.primary)
+        } icon: {
+          Image(systemName: "person.crop.circle.badge.exclamationmark")
+            .foregroundStyle(.orange)
+        }
         .font(.callout.weight(.medium))
         Spacer()
         Button(action: onCopyLogin) {
@@ -385,9 +392,14 @@ private struct StatusNotice: View {
         }
         .opmSecondaryButtonStyle()
       case .unavailable:
-        Label(L10n.string("Status unavailable"), systemImage: "exclamationmark.triangle.fill")
-          .foregroundStyle(.red)
-          .font(.callout.weight(.medium))
+        Label {
+          Text(verbatim: L10n.string("Status unavailable"))
+            .foregroundStyle(.primary)
+        } icon: {
+          Image(systemName: "exclamationmark.triangle.fill")
+            .foregroundStyle(.red)
+        }
+        .font(.callout.weight(.medium))
         Spacer()
         Button(action: onCopyDoctor) {
           Label(
@@ -416,7 +428,7 @@ private struct StatusPill: View {
         .frame(width: 7, height: 7)
       Text(verbatim: label)
         .font(.callout)
-        .foregroundStyle(color)
+        .foregroundStyle(.secondary)
     }
   }
 

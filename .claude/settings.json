@@ -1,6 +1,8 @@
 {
   "sandbox": {
     "enabled": true,
+    "allowUnsandboxedCommands": false,
+    "failIfUnavailable": true,
     "filesystem": {
       "denyRead": [
         "~/.codex/auth.json",
@@ -17,7 +19,15 @@
       "Bash(git push*)",
       "Bash(git * push*)",
       "Bash(Scripts/release.sh*)",
+      "Bash(./Scripts/release.sh*)",
+      "Bash(bash Scripts/release.sh*)",
+      "Bash(sh Scripts/release.sh*)",
+      "Bash(zsh Scripts/release.sh*)",
       "Bash(Scripts/install-local.sh*)",
+      "Bash(./Scripts/install-local.sh*)",
+      "Bash(bash Scripts/install-local.sh*)",
+      "Bash(sh Scripts/install-local.sh*)",
+      "Bash(zsh Scripts/install-local.sh*)",
       "Bash(gh release*)",
       "Bash(git worktree add*)",
       "Bash(git * worktree add*)",
