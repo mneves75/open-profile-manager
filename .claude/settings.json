@@ -1,0 +1,40 @@
+{
+  "permissions": {
+    "deny": [
+      "Read(~/.codex/auth.json)",
+      "Read(~/.codex*/**/auth.json)"
+    ],
+    "ask": [
+      "Bash(git push*)",
+      "Bash(Scripts/release.sh*)",
+      "Bash(Scripts/install-local.sh*)",
+      "Bash(gh release*)",
+      "Bash(git worktree add*)",
+      "Bash(git switch*)",
+      "Bash(git checkout -b*)"
+    ]
+  },
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "[ ! -x \"$HOME/.claude/hooks/claude-gate\" ] || \"$HOME/.claude/hooks/claude-gate\" baseline"
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "[ ! -x \"$HOME/.claude/hooks/claude-gate\" ] || \"$HOME/.claude/hooks/claude-gate\" stop -- 'Scripts/check.sh'",
+            "timeout": 900
+          }
+        ]
+      }
+    ]
+  }
+}
